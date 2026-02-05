@@ -22,14 +22,15 @@ public class GetPrivacyPolicyQueryHandler : IRequestHandler<GetPrivacyPolicyQuer
 
     public async Task<PrivacyPolicyDto> Handle(GetPrivacyPolicyQuery request, CancellationToken cancellationToken = default)
     {
-        var privacyPolicy = await _privacyPolicyService.GetByIdAsync(request.Id,cancellationToken);
-        if (privacyPolicy == null) {
+        var privacyPolicy = await _privacyPolicyService.GetByIdAsync(request.Id, cancellationToken);
+        if (privacyPolicy == null)
+        {
             _logger.LogWarning("Privacy policy with ID {PrivacyPolicyId} not found.", request.Id);
             throw new PrivacyPolicyNotFoundException($"Privacy policy with ID {request.Id} not found.");
         }
         var privacyPolicyDto = privacyPolicy.ToDto();
         _logger.LogInformation("Privacy policy with ID {PrivacyPolicyId} retrieved successfully,result {privacyPolicyDto}.",
-            request.Id,JsonSerializer.Serialize(privacyPolicyDto,new JsonSerializerOptions { WriteIndented=true}));
+            request.Id, JsonSerializer.Serialize(privacyPolicyDto, new JsonSerializerOptions { WriteIndented = true }));
         return privacyPolicyDto;
     }
 }

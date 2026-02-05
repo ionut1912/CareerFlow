@@ -13,7 +13,7 @@ public class CreateTermAndConditonsCommandHandler : IRequestHandler<CreateTermAn
     public ITermsAndConditionsService _termsAndConditionsService;
     public IUnitOfWork _unitOfWork;
 
-    public CreateTermAndConditonsCommandHandler(ILogger<CreateTermAndConditonsCommandHandler> logger,ITermsAndConditionsService termsAndConditionsService,IUnitOfWork unitOfWork)
+    public CreateTermAndConditonsCommandHandler(ILogger<CreateTermAndConditonsCommandHandler> logger, ITermsAndConditionsService termsAndConditionsService, IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(termsAndConditionsService, nameof(termsAndConditionsService));
@@ -25,7 +25,7 @@ public class CreateTermAndConditonsCommandHandler : IRequestHandler<CreateTermAn
 
     public async Task<Guid> Handle(CreateTermAndConditionsCommand request, CancellationToken cancellationToken = default)
     {
-        var termAndConditions= TermsAndCondition.CreateContent(request.Content);
+        var termAndConditions = TermsAndCondition.CreateContent(request.Content);
         await _termsAndConditionsService.AddAsync(termAndConditions, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Term and Conditions created with Id: {TermAndConditionsId}", termAndConditions.Id);

@@ -10,7 +10,7 @@ using Shared.Application.Mediator;
 
 namespace CareerFlow.Core.Api.Endpoints;
 
-public class LegalEndpointGroup:EndpointGroup
+public class LegalEndpointGroup : EndpointGroup
 {
     public override void Map(IEndpointRouteBuilder endpoints)
     {

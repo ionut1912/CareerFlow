@@ -59,7 +59,7 @@ app.UseGlobalExceptionHandler<Program>()
 app.UseCors("AllowMyFrontend");
 
 app.MapApiDocumentation();
-app.MapEndpoints(typeof(UserEndpointGroup).Assembly);
+app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
 
 app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", serviceName, environmentName);
 

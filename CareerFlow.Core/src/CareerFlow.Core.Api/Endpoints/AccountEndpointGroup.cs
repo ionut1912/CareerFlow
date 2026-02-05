@@ -11,19 +11,20 @@ using System.Security.Claims;
 
 namespace CareerFlow.Core.Api.Endpoints;
 
-public class UserEndpointGroup : EndpointGroup
+public class AccountEndpointGroup : EndpointGroup
 {
     public override void Map(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup(this);
-        group.MapPost(RegisterUser, "/register");
-        group.MapPost(LoginUser, "/login");
+        group.MapPost(Register, "/register");
+        group.MapPost(Login, "/login");
         group.MapPost(ResetPassword, "/reset-password");
-        group.MapGet(GetCurrentUser, "/current");
+        group.MapGet(GetCurrentAccount, "/current");
+        group.MapGet(GetAllAccounts);
         group.MapDelete(DeleteUserAccount, "/");
     }
 
-    private static async Task<IResult> RegisterUser(IMediator mediator, CreateAccountRequest createAccountRequest,
+    private static async Task<IResult> Register(IMediator mediator, CreateAccountRequest createAccountRequest,
         CancellationToken ct)
     {
         var createAccountCommand = createAccountRequest.ToCreateCommand();
@@ -31,7 +32,7 @@ public class UserEndpointGroup : EndpointGroup
         return Results.Ok(createdAccount);
     }
 
-    private static async Task<IResult> LoginUser(IMediator mediator, LoginRequest loginRequset,
+    private static async Task<IResult> Login(IMediator mediator, LoginRequest loginRequset,
         CancellationToken ct)
     {
         var loginQuery = loginRequset.ToLoginQuery();
@@ -39,8 +40,15 @@ public class UserEndpointGroup : EndpointGroup
         return Results.Ok(result);
     }
 
+    private static async Task<IResult> GetAllAccounts(IMediator mediator, CancellationToken ct)
+    {
+        var getAllAcountsQuery = new GetAllAcountsQuery();
+        var result = await mediator.Send(getAllAcountsQuery, ct);
+        return Results.Ok(result);
+    }
+
     [Authorize]
-    private static async Task<IResult> GetCurrentUser(IMediator mediator, HttpContext httpContext, CancellationToken ct)
+    private static async Task<IResult> GetCurrentAccount(IMediator mediator, HttpContext httpContext, CancellationToken ct)
     {
         var username = httpContext.User.FindFirst(ClaimTypes.Name)?.Value;
         if (string.IsNullOrEmpty(username)) return Results.Unauthorized();

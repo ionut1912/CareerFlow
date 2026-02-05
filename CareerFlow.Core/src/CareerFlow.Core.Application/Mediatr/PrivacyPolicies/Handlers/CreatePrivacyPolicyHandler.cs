@@ -13,7 +13,7 @@ public class CreatePrivacyPolicyHandler : IRequestHandler<CreatePrivacyPolicyCom
     private readonly IPrivacyPolicyService _privacyPolicyService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreatePrivacyPolicyHandler(ILogger<CreatePrivacyPolicyHandler> logger, IPrivacyPolicyService privacyPolicyService,IUnitOfWork unitOfWork)
+    public CreatePrivacyPolicyHandler(ILogger<CreatePrivacyPolicyHandler> logger, IPrivacyPolicyService privacyPolicyService, IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(privacyPolicyService, nameof(privacyPolicyService));

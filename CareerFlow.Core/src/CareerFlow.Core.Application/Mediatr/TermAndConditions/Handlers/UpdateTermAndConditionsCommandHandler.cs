@@ -20,7 +20,7 @@ public class UpdateTermAndConditionsCommandHandler : IRequestHandler<UpdateTerms
         ITermsAndConditionsService termsAndConditionsService,
         IUnitOfWork unitOfWork)
     {
-       ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(termsAndConditionsService, nameof(termsAndConditionsService));
         ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
         _logger = logger;

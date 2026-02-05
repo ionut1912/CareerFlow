@@ -15,21 +15,21 @@ public class AcceptPrivacyPolicyCommandHandler : IRequestHandler<AcceptPrivacyPo
     private readonly IPrivacyPolicyService _privacyPolicyService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public AcceptPrivacyPolicyCommandHandler(ILogger<AcceptPrivacyPolicyCommandHandler> logger, IPrivacyPolicyService privacyPolicyService,IUnitOfWork unitOfWork )
+    public AcceptPrivacyPolicyCommandHandler(ILogger<AcceptPrivacyPolicyCommandHandler> logger, IPrivacyPolicyService privacyPolicyService, IUnitOfWork unitOfWork)
     {
-            ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-            ArgumentNullException.ThrowIfNull(privacyPolicyService, nameof(privacyPolicyService));
-            ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-            _logger = logger;
-            _privacyPolicyService = privacyPolicyService;
-            _unitOfWork = unitOfWork;
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(privacyPolicyService, nameof(privacyPolicyService));
+        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
+        _logger = logger;
+        _privacyPolicyService = privacyPolicyService;
+        _unitOfWork = unitOfWork;
     }
 
 
     public async Task<PrivacyPolicyDto> Handle(AcceptPrivacyPolicyCommand request, CancellationToken cancellationToken = default)
     {
-        var privacyPolicy= await _privacyPolicyService.GetByIdAsync(request.Id,cancellationToken);
-        if(privacyPolicy is null)
+        var privacyPolicy = await _privacyPolicyService.GetByIdAsync(request.Id, cancellationToken);
+        if (privacyPolicy is null)
         {
             _logger.LogWarning("Privacy policy with id {Id} not found.", request.Id);
             throw new PrivacyPolicyNotFoundException($"Privacy policy with id {request.Id} not found.");

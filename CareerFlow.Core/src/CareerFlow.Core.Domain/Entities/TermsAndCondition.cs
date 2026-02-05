@@ -29,5 +29,5 @@ public class TermsAndCondition : Entity
     {
         Content = content;
         UpdatedAt = DateTime.UtcNow;
-    }   
+    }
 }

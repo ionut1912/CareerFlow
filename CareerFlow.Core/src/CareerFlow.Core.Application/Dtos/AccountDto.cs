@@ -1,6 +1,8 @@
 ﻿namespace CareerFlow.Core.Application.Dtos;
 
-public record AccountDto(string Email,
+public record AccountDto(
+    Guid Id,
+    string Email,
     string Username,
     string? Token,
     bool IsFounder)

@@ -11,7 +11,7 @@ namespace CareerFlow.Core.Application.Mediatr.TermAndConditions.Handlers;
 
 public class AcceptTermAndConditionsCommandHandler : IRequestHandler<AcceptTermAndConditionsCommand, TermsAndConditionDto>
 {
-    private readonly ILogger<AcceptTermAndConditionsCommandHandler> _logger; 
+    private readonly ILogger<AcceptTermAndConditionsCommandHandler> _logger;
     private readonly ITermsAndConditionsService _termsAndConditionsService;
     private readonly IUnitOfWork _unitOfWork;
 
@@ -29,7 +29,7 @@ public class AcceptTermAndConditionsCommandHandler : IRequestHandler<AcceptTermA
     }
 
     public async Task<TermsAndConditionDto> Handle(AcceptTermAndConditionsCommand request, CancellationToken cancellationToken = default)
-    {    
+    {
         var termsAndConditions = await _termsAndConditionsService.GetByIdAsync(request.Id, cancellationToken);
         if (termsAndConditions is null)
         {

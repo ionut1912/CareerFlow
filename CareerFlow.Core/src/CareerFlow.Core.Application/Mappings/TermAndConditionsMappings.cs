@@ -13,7 +13,7 @@ public static class TermAndConditionsMappings
             termsAndCondition.Content,
             termsAndCondition.Accepted,
             termsAndCondition.CreatedAt,
-           termsAndCondition.UpdatedAt?? new DateTime()
+           termsAndCondition.UpdatedAt ?? new DateTime()
         );
     }
 }

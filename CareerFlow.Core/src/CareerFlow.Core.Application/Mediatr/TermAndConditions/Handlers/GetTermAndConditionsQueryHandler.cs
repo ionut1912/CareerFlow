@@ -25,14 +25,14 @@ public class GetTermAndConditionsQueryHandler : IRequestHandler<GetTermAndCondit
     public async Task<TermsAndConditionDto> Handle(GetTermAndConditionsQuery request, CancellationToken cancellationToken = default)
     {
         var termsAndConditions = await _termsAndConditionsService.GetByIdAsync(request.Id, cancellationToken);
-        if(termsAndConditions is null)
+        if (termsAndConditions is null)
         {
             _logger.LogWarning("Terms and Conditions with Id {Id} not found.", request.Id);
             throw new TermsAndConditionsNotFoundException($"Terms and Conditions with Id {request.Id} not found.");
         }
         var termsAndConditionsDto = termsAndConditions.ToDto();
         _logger.LogInformation("Terms and Conditions with Id {Id} retrieved successfully,result {termAndConditionsDto}.",
-            request.Id,JsonSerializer.Serialize(termsAndConditionsDto,new JsonSerializerOptions { WriteIndented=true}));
+            request.Id, JsonSerializer.Serialize(termsAndConditionsDto, new JsonSerializerOptions { WriteIndented = true }));
         return termsAndConditionsDto;
     }
 }
