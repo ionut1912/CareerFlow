@@ -38,6 +38,6 @@ public class UpdatePrivacyPolicyCommandHandler : IRequestHandler<UpdatePrivacyPo
         _privacyPolicyService.Update(privacyPolicy);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Privacy policy with id {Id} updated successfully.", request.Id);
-        return privacyPolicy.ToDto();
+        return privacyPolicy.ToPrivacyPolicyDto();
     }
 }

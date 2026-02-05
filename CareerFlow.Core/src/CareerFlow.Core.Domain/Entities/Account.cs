@@ -30,7 +30,9 @@ namespace CareerFlow.Core.Domain.Entities
         public string Email { get; private set; } = string.Empty;
         public string Password { get; private set; } = string.Empty;
         public string Username { get; private set; } = string.Empty;
-        public bool IsFounder { get; private set; }
+        public bool IsFounder { get; private set; } = false;
+        public bool TermsAccepted { get; private set; } = false;
+        public bool PrivacyPolicyAccepted { get; private set; } = false;
 
         public static Account Create(string email, string password, string username)
         {
@@ -56,6 +58,18 @@ namespace CareerFlow.Core.Domain.Entities
         public void MarkAsFounder()
         {
             IsFounder = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void AcceptTerms()
+        {
+            TermsAccepted = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void AcceptPrivacyPolicy()
+        {
+            PrivacyPolicyAccepted = true;
             UpdatedAt = DateTime.UtcNow;
         }
     }

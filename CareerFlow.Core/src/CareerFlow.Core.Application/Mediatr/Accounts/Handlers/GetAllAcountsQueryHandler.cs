@@ -24,7 +24,7 @@ public class GetAllAcountsQueryHandler : IRequestHandler<GetAllAcountsQuery, Lis
     public async Task<List<AccountDto>> Handle(GetAllAcountsQuery request, CancellationToken cancellationToken)
     {
         var accounts = await _accountRepository.GetAllAsync(cancellationToken);
-        var accountDtos = accounts.ToDtoList();
+        var accountDtos = accounts.ToAccountsDto();
         _logger.LogInformation("Retrieved {accountDtos}  from the repository.", JsonSerializer.Serialize(accountDtos, new JsonSerializerOptions { WriteIndented = true }));
         return accountDtos;
     }

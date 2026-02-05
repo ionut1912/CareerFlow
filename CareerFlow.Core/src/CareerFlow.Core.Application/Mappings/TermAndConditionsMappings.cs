@@ -5,13 +5,12 @@ namespace CareerFlow.Core.Application.Mappings;
 
 public static class TermAndConditionsMappings
 {
-    public static TermsAndConditionDto ToDto(this TermsAndCondition termsAndCondition)
+    public static TermsAndConditionDto ToTermAndConditionsDto(this TermsAndCondition termsAndCondition)
     {
         return new TermsAndConditionDto
         (
             termsAndCondition.Id,
             termsAndCondition.Content,
-            termsAndCondition.Accepted,
             termsAndCondition.CreatedAt,
            termsAndCondition.UpdatedAt ?? new DateTime()
         );

@@ -46,7 +46,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
 
         }
 
-        var accountDto = account.ToDto(_jwtTokenService.GenerateToken(account));
+        var accountDto = account.ToAccountDto(_jwtTokenService.GenerateToken(account));
         _logger.LogInformation("Login successfully");
         return accountDto;
     }

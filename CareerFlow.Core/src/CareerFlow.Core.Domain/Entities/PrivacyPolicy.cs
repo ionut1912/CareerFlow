@@ -5,7 +5,6 @@ namespace CareerFlow.Core.Domain.Entities;
 public class PrivacyPolicy : Entity
 {
     public string Content { get; private set; }
-    public bool Accepted { get; private set; } = false;
 
     public PrivacyPolicy(string content)
     {
@@ -21,12 +20,6 @@ public class PrivacyPolicy : Entity
     public void UpdateContent(string content)
     {
         Content = content;
-        UpdatedAt = DateTime.UtcNow;
-    }
-
-    public void Accept()
-    {
-        Accepted = true;
         UpdatedAt = DateTime.UtcNow;
     }
 

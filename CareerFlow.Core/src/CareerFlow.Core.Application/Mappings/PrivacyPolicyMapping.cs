@@ -5,12 +5,11 @@ namespace CareerFlow.Core.Application.Mappings;
 
 public static class PrivacyPolicyMapping
 {
-    public static PrivacyPolicyDto ToDto(this PrivacyPolicy privacyPolicy)
+    public static PrivacyPolicyDto ToPrivacyPolicyDto(this PrivacyPolicy privacyPolicy)
     {
         return new PrivacyPolicyDto(
             privacyPolicy.Id,
             privacyPolicy.Content,
-            privacyPolicy.Accepted,
             privacyPolicy.CreatedAt,
             privacyPolicy.UpdatedAt ?? new DateTime()
         );

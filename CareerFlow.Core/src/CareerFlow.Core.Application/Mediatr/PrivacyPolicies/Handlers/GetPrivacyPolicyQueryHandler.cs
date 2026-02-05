@@ -28,7 +28,7 @@ public class GetPrivacyPolicyQueryHandler : IRequestHandler<GetPrivacyPolicyQuer
             _logger.LogWarning("Privacy policy with ID {PrivacyPolicyId} not found.", request.Id);
             throw new PrivacyPolicyNotFoundException($"Privacy policy with ID {request.Id} not found.");
         }
-        var privacyPolicyDto = privacyPolicy.ToDto();
+        var privacyPolicyDto = privacyPolicy.ToPrivacyPolicyDto();
         _logger.LogInformation("Privacy policy with ID {PrivacyPolicyId} retrieved successfully,result {privacyPolicyDto}.",
             request.Id, JsonSerializer.Serialize(privacyPolicyDto, new JsonSerializerOptions { WriteIndented = true }));
         return privacyPolicyDto;

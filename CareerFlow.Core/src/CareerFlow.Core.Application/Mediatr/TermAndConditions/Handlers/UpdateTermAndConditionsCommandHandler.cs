@@ -40,6 +40,6 @@ public class UpdateTermAndConditionsCommandHandler : IRequestHandler<UpdateTerms
         _termsAndConditionsService.Update(termsAndConditions);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Terms and Conditions with Id {Id} updated successfully.", request.Id);
-        return termsAndConditions.ToDto();
+        return termsAndConditions.ToTermAndConditionsDto();
     }
 }

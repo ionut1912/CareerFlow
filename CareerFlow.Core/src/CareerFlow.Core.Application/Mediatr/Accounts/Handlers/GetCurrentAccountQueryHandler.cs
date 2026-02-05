@@ -31,7 +31,7 @@ public class GetCurrentAccountQueryHandler : IRequestHandler<GetCurrentAccountQu
             throw new AccountNotFoundException($"Account with username '{request.Username}' was not found.");
         }
 
-        var accountDto = account.ToDto(null);
+        var accountDto = account.ToAccountDto(null);
         _logger.LogInformation("Current Account: {AccountDto}",
             JsonSerializer.Serialize(accountDto, new JsonSerializerOptions { WriteIndented = true }));
         return accountDto;

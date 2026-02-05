@@ -28,7 +28,10 @@ public class JwtTokenService : IJwtTokenService
             new(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
             new(ClaimTypes.Name, account.Username),
             new(JwtRegisteredClaimNames.Email, account.Email),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new("is_founder", account.IsFounder.ToString()),
+            new("terms_accepted", account.TermsAccepted.ToString()),
+            new("policy_accepted",account.PrivacyPolicyAccepted.ToString())
         };
 
         var token = new JwtSecurityToken(

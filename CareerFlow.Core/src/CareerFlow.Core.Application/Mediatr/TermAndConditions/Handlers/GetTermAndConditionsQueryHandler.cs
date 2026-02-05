@@ -30,7 +30,7 @@ public class GetTermAndConditionsQueryHandler : IRequestHandler<GetTermAndCondit
             _logger.LogWarning("Terms and Conditions with Id {Id} not found.", request.Id);
             throw new TermsAndConditionsNotFoundException($"Terms and Conditions with Id {request.Id} not found.");
         }
-        var termsAndConditionsDto = termsAndConditions.ToDto();
+        var termsAndConditionsDto = termsAndConditions.ToTermAndConditionsDto();
         _logger.LogInformation("Terms and Conditions with Id {Id} retrieved successfully,result {termAndConditionsDto}.",
             request.Id, JsonSerializer.Serialize(termsAndConditionsDto, new JsonSerializerOptions { WriteIndented = true }));
         return termsAndConditionsDto;
