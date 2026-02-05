@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/CareerFlow.Core.Api/CareerFlow.Core.Api.csproj" Id="6a2700de-8e5e-4d98-bc9a-72bca3775a14" />
+    <Project Path="src/CareerFlow.Core.Application/CareerFlow.Core.Application.csproj" Id="668cb328-b9b4-45ab-9068-eeee3299ce83" />
+    <Project Path="src/CareerFlow.Core.Domain/CareerFlow.Core.Domain.csproj" Id="8770f7cf-27a7-480f-bac9-2de45755ea0a" />
+    <Project Path="src/CarrerFlow.Core.Infrastructure/CarrerFlow.Core.Infrastructure.csproj" Id="d3d75c86-3183-422a-9f55-55665eee489d" />
+  </Folder>
+</Solution>
