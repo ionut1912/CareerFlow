@@ -8,7 +8,7 @@ using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Application.Mediatr.Accounts.Handlers;
 
-public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Account>
+public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand, Guid>
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IPasswordService _passwordService;
@@ -16,7 +16,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
     private readonly ILogger<CreateAccountCommandHandler> _logger;
 
     public CreateAccountCommandHandler(IAccountRepository accountRepository,
-        IPasswordService passwordService, IUnitOfWork unitOfWork,ILogger<CreateAccountCommandHandler> logger)
+        IPasswordService passwordService, IUnitOfWork unitOfWork, ILogger<CreateAccountCommandHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
@@ -28,7 +28,7 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
         _logger = logger;
     }
 
-    public async Task<Account> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
+    public async Task<Guid> Handle(CreateAccountCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetAccountByUsernameAsync(request.Username, cancellationToken);
         if (account is not null)
@@ -42,6 +42,6 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
         await _accountRepository.AddAsync(accountToCreate, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Account with id {Id} was created", accountToCreate.Id);
-        return accountToCreate;
+        return accountToCreate.Id;
     }
 }

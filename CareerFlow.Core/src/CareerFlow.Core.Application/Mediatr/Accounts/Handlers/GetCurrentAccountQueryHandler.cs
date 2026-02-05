@@ -14,9 +14,9 @@ public class GetCurrentAccountQueryHandler : IRequestHandler<GetCurrentAccountQu
     private readonly IAccountRepository _accountRepository;
     private readonly ILogger<GetCurrentAccountQueryHandler> _logger;
 
-    public GetCurrentAccountQueryHandler(IAccountRepository accountRepository,ILogger<GetCurrentAccountQueryHandler> logger)
+    public GetCurrentAccountQueryHandler(IAccountRepository accountRepository, ILogger<GetCurrentAccountQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(accountRepository,nameof(accountRepository));
+        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         _accountRepository = accountRepository;
         _logger = logger;

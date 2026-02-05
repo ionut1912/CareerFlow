@@ -10,6 +10,8 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Account> Accounts { get; set; }
+    public DbSet<PrivacyPolicy> PrivacyPolicies { get; set; }
+    public DbSet<TermsAndCondition> TermsAndConditions { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -19,6 +19,6 @@ namespace CareerFlow.Core.Api.Mappings
         public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request, string username)
         {
             return new ResetPasswordCommand(username, request.NewPassword);
-        }   
+        }
     }
 }

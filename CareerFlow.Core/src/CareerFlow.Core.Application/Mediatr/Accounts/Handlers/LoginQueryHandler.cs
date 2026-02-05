@@ -15,7 +15,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
     private readonly IJwtTokenService _jwtTokenService;
     private readonly ILogger<LoginQueryHandler> _logger;
 
-    public LoginQueryHandler(IAccountRepository accountRepository, IPasswordService passwordService, IJwtTokenService jwtTokenService,ILogger<LoginQueryHandler> logger)
+    public LoginQueryHandler(IAccountRepository accountRepository, IPasswordService passwordService, IJwtTokenService jwtTokenService, ILogger<LoginQueryHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
@@ -33,7 +33,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
 
         if (account is null)
         {
-            _logger.LogError("We can't login because account with username :{Username} was not found",request.Username);
+            _logger.LogError("We can't login because account with username :{Username} was not found", request.Username);
             throw new AccountNotFoundException($"Account with {request.Username} not found");
         }
 
@@ -45,7 +45,7 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
             throw new PasswordNotMatchException("Passwords do not match");
 
         }
-            
+
         var accountDto = account.ToDto(_jwtTokenService.GenerateToken(account));
         _logger.LogInformation("Login successfully");
         return accountDto;

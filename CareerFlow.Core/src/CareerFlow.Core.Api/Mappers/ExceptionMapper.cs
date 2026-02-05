@@ -4,11 +4,11 @@ using Shared.Api.Abstractions;
 using Shared.Domain.Exceptions;
 namespace CareerFlow.Core.Api.Mappers;
 
-public sealed class IdentityExceptionMapper : IExceptionProblemDetailsMapper
+public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
 {
-    private readonly ILogger<IdentityExceptionMapper> _logger;
+    private readonly ILogger<ExceptionMapper> _logger;
 
-    public IdentityExceptionMapper(ILogger<IdentityExceptionMapper> logger)
+    public ExceptionMapper(ILogger<ExceptionMapper> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
@@ -22,7 +22,9 @@ public sealed class IdentityExceptionMapper : IExceptionProblemDetailsMapper
             AccountNotFoundException ex => Create(404, "Account Not Found", ex.Message),
             PasswordNotMatchException ex => Create(400, "Password Not Match", ex.Message),
             UserAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
-            PasswordNotEmptyException ex=> Create(400, "Password Not Empty", ex.Message),
+            PasswordNotEmptyException ex => Create(400, "Password Not Empty", ex.Message),
+            TermsAndConditionsNotFoundException ex => Create(404, "Terms And Conditions Not Found", ex.Message),
+            PrivacyPolicyNotFoundException ex => Create(404, "Privacy Policy Not Found", ex.Message),
             CustomValidationException ex => CreateValidation(ex),
 
             _ => Create(500, "Internal Server Error", "An unexpected error occurred")

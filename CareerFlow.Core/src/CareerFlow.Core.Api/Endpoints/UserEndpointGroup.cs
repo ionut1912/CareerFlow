@@ -28,7 +28,7 @@ public class UserEndpointGroup : EndpointGroup
     {
         var createAccountCommand = createAccountRequest.ToCreateCommand();
         var createdAccount = await mediator.Send(createAccountCommand, ct);
-        return Results.Created($"/api/auth/{createdAccount.Id}", createdAccount);
+        return Results.Ok(createdAccount);
     }
 
     private static async Task<IResult> LoginUser(IMediator mediator, LoginRequest loginRequset,
@@ -51,11 +51,11 @@ public class UserEndpointGroup : EndpointGroup
     }
 
     [Authorize]
-    private static async Task<IResult> ResetPassword(IMediator mediator, HttpContext httpContext,ResetPasswordRequest resetPasswordRequest,CancellationToken ct)
+    private static async Task<IResult> ResetPassword(IMediator mediator, HttpContext httpContext, ResetPasswordRequest resetPasswordRequest, CancellationToken ct)
     {
         var username = httpContext.User.FindFirst(ClaimTypes.Name)?.Value;
         if (string.IsNullOrEmpty(username)) return Results.Unauthorized();
-        var resetPasswordCommand=resetPasswordRequest.ToResetPasswordCommand(username);
+        var resetPasswordCommand = resetPasswordRequest.ToResetPasswordCommand(username);
         await mediator.Send(resetPasswordCommand, ct);
         return Results.NoContent();
     }

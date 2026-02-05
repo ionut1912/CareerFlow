@@ -1,7 +1,7 @@
 ﻿using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
 using FluentValidation;
 
-namespace CareerFlow.Core.Application.Validators;
+namespace CareerFlow.Core.Application.Validators.Account;
 
 public class CreateAccountCommandValidator : AbstractValidator<CreateAccountCommand>
 {

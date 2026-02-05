@@ -13,7 +13,7 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<DeleteAccountCommandHandler> _logger;
 
-    public DeleteAccountCommandHandler(IAccountRepository accountRepository, IUnitOfWork unitOfWork,ILogger<DeleteAccountCommandHandler> logger)
+    public DeleteAccountCommandHandler(IAccountRepository accountRepository, IUnitOfWork unitOfWork, ILogger<DeleteAccountCommandHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
@@ -28,7 +28,7 @@ public class DeleteAccountCommandHandler : IRequestHandler<DeleteAccountCommand,
         var account = await _accountRepository.GetByIdAsync(request.Id);
         if (account == null)
         {
-            _logger.LogError("Account with id : {Id} can not be deleted because is not found",request.Id);
+            _logger.LogError("Account with id : {Id} can not be deleted because is not found", request.Id);
             throw new AccountNotFoundException($"Account with Id {request.Id} was not found.");
         }
         _accountRepository.Delete(account);

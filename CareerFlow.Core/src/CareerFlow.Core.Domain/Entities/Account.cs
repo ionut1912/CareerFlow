@@ -56,7 +56,7 @@ namespace CareerFlow.Core.Domain.Entities
         public void MarkAsFounder()
         {
             IsFounder = true;
-            UpdatedAt= DateTime.UtcNow;
+            UpdatedAt = DateTime.UtcNow;
         }
     }
 }

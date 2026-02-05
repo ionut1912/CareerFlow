@@ -14,14 +14,14 @@ public class ResetPasswordCommandHandler : IRequestHandler<ResetPasswordCommand,
     private readonly IPasswordService _passwordService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ResetPasswordCommandHandler(ILogger<ResetPasswordCommandHandler> logger,IAccountRepository accountRepository,IPasswordService passwordService,IUnitOfWork unitOfWork)
+    public ResetPasswordCommandHandler(ILogger<ResetPasswordCommandHandler> logger, IAccountRepository accountRepository, IPasswordService passwordService, IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
         ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
         _logger = logger;
-       _accountRepository = accountRepository;
+        _accountRepository = accountRepository;
         _passwordService = passwordService;
         _unitOfWork = unitOfWork;
     }

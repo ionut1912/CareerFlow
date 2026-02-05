@@ -1,7 +1,7 @@
 ﻿
 using CareerFlow.Core.Api.Endpoints;
 using CareerFlow.Core.Api.Mappers;
-using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
+using CareerFlow.Core.Application.Mediatr;
 using CareerFlow.Core.Application.Validators;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Interfaces;
@@ -28,11 +28,24 @@ builder.AddOpenTelemetry(lokiEndpoint, resourceBuilder);
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
+    .AddRepository<TermsAndCondition, TermAndConditionService, ITermsAndConditionsService, ApplicationDbContext>()
+    .AddRepository<PrivacyPolicy, PrivacyPolicyService, IPrivacyPolicyService, ApplicationDbContext>()
     .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
-    .AddAplicationConfig(typeof(CreateAccountCommand).Assembly, typeof(CreateAccountCommandValidator).Assembly)
-    .AddPresentation<IdentityExceptionMapper>(builder.Configuration, otelEndpoint, serviceName, environmentName);
+    .AddAplicationConfig(typeof(MediatrAssemblyReference).Assembly, typeof(ValidationsAssemblyReference).Assembly)
+    .AddPresentation<ExceptionMapper>(builder.Configuration, otelEndpoint, serviceName, environmentName);
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowMyFrontend",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:3000")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 
 var app = builder.Build();
 
@@ -42,6 +55,8 @@ app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()
     .UseStandardMiddleware()
     .MapStandardEndpoints();
+
+app.UseCors("AllowMyFrontend");
 
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(UserEndpointGroup).Assembly);

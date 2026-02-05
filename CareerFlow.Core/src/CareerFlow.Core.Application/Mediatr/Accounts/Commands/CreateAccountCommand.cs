@@ -1,6 +1,5 @@
-﻿using CareerFlow.Core.Domain.Entities;
-using Shared.Application.Mediator;
+﻿using Shared.Application.Mediator;
 
 namespace CareerFlow.Core.Application.Mediatr.Accounts.Commands;
 
-public record CreateAccountCommand(string Email, string Password, string Username) : IRequest<Account>;
+public record CreateAccountCommand(string Email, string Password, string Username) : IRequest<Guid>;

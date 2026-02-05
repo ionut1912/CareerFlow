@@ -1,7 +1,7 @@
 ﻿using CareerFlow.Core.Application.Mediatr.Accounts.Query;
 using FluentValidation;
 
-namespace CareerFlow.Core.Application.Validators;
+namespace CareerFlow.Core.Application.Validators.Account;
 
 public class LoginQueryValidator : AbstractValidator<LoginQuery>
 {
