@@ -1,4 +1,4 @@
-﻿namespace CareerFlow.Core.Domain.Interfaces;
+﻿namespace CareerFlow.Core.Domain.Abstractions.Services;
 
 public interface IPasswordService
 {

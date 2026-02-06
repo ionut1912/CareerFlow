@@ -3,10 +3,12 @@ using CareerFlow.Core.Api.Endpoints;
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Application.Mediatr;
 using CareerFlow.Core.Application.Validators;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Interfaces;
 using CarrerFlow.Core.Infrastructure.Persistance;
 using CarrerFlow.Core.Infrastructure.Persistance.Repositories;
+using CarrerFlow.Core.Infrastructure.Services;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Shared.Domain.Interfaces;
@@ -23,17 +25,24 @@ var lokiEndpoint = configuration["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] ?? "http://
 
 var resourceBuilder = OpenTelemetryExtensions.CreateServiceResourceBuilder(serviceName, environmentName);
 
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = builder.Configuration.GetConnectionString("Redis");
+    options.InstanceName = "CarrerFlow_"; 
+});
+
 builder.AddOpenTelemetry(lokiEndpoint, resourceBuilder);
 
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
-    .AddRepository<TermsAndCondition, TermAndConditionService, ITermsAndConditionsService, ApplicationDbContext>()
-    .AddRepository<PrivacyPolicy, PrivacyPolicyService, IPrivacyPolicyService, ApplicationDbContext>()
-    .AddRepository<RefreshToken, RefreshTokenService, IRefreshTokenService, ApplicationDbContext>()
+    .AddRepository<TermsAndCondition, TermAndConditionRepository, ITermsAndConditionsRepository, ApplicationDbContext>()
+    .AddRepository<PrivacyPolicy, PrivacyPolicyRepository, IPrivacyPolicyRepository, ApplicationDbContext>()
+    .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
     .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
+    .AddRepositoriesConfig<ICacheService,CacheService>() 
     .AddAplicationConfig(typeof(MediatrAssemblyReference).Assembly, typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, otelEndpoint, serviceName, environmentName);
 

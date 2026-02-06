@@ -1,8 +1,10 @@
 ﻿using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Mediatr.PrivacyPolicies.Query;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Mediator;
 using System.Text.Json;
@@ -12,16 +14,30 @@ namespace CareerFlow.Core.Application.Mediatr.PrivacyPolicies.Handlers;
 public class GetPrivacyPolicyQueryHandler : IRequestHandler<GetPrivacyPolicyQuery, PrivacyPolicyDto>
 {
     private readonly ILogger<GetPrivacyPolicyQueryHandler> _logger;
-    private readonly IPrivacyPolicyService _privacyPolicyService;
+    private readonly IPrivacyPolicyRepository _privacyPolicyService;
+    private readonly ICacheService _cacheService;
 
-    public GetPrivacyPolicyQueryHandler(ILogger<GetPrivacyPolicyQueryHandler> logger, IPrivacyPolicyService privacyPolicyService)
+    public GetPrivacyPolicyQueryHandler(ILogger<GetPrivacyPolicyQueryHandler> logger, IPrivacyPolicyRepository privacyPolicyService,ICacheService cacheService)
     {
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(privacyPolicyService, nameof(privacyPolicyService));
+        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
+
         _logger = logger;
         _privacyPolicyService = privacyPolicyService;
+        _cacheService = cacheService;
     }
 
     public async Task<PrivacyPolicyDto> Handle(GetPrivacyPolicyQuery request, CancellationToken cancellationToken = default)
     {
+        var privacyFromCache=await _cacheService.GetCacheValueAsync<PrivacyPolicy>($"PrivacyPolicy_{request.Id}");
+        if (privacyFromCache != null)
+        {
+            var privacyPolicyDtoCache = privacyFromCache.ToPrivacyPolicyDto();
+            _logger.LogInformation("Privacy policy with ID {PrivacyPolicyId} retrieved successfully,result {privacyPolicyDto}.",
+                request.Id, JsonSerializer.Serialize(privacyPolicyDtoCache, new JsonSerializerOptions { WriteIndented = true }));
+            return privacyPolicyDtoCache;
+        }
         var privacyPolicy = await _privacyPolicyService.GetByIdAsync(request.Id, cancellationToken);
         if (privacyPolicy == null)
         {

@@ -1,6 +1,6 @@
-﻿using CareerFlow.Core.Domain.Interfaces;
+﻿using CareerFlow.Core.Domain.Abstractions.Services;
 
-namespace CarrerFlow.Core.Infrastructure.Persistance.Repositories;
+namespace CarrerFlow.Core.Infrastructure.Services;
 
 public class PasswordService : IPasswordService
 {

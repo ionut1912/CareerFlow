@@ -1,11 +1,11 @@
-﻿using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Interfaces;
+﻿using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infra.Services;
 
 namespace CarrerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class RefreshTokenService(DbSet<RefreshToken> dbSet) :GenericRepository<RefreshToken>(dbSet), IRefreshTokenService
+public class RefreshTokenRepository(DbSet<RefreshToken> dbSet) :GenericRepository<RefreshToken>(dbSet), IRefreshTokenRepository
 {
 
 

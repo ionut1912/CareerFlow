@@ -1,7 +1,8 @@
 ﻿using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Mediator;
 using Shared.Domain.Interfaces;
@@ -14,12 +15,12 @@ namespace CareerFlow.Core.Application.Mediatr.Accounts.Handlers;
 public class CreateRefreshTokenCommandHandler : IRequestHandler<CreateRefreshTokenCommand, RefreshTokenDto>
 {
     private readonly ILogger<CreateRefreshTokenCommandHandler> _logger;
-    private readonly IRefreshTokenService _refreshTokenService;
+    private readonly IRefreshTokenRepository _refreshTokenService;
     private readonly IAccountRepository _accountRepository;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreateRefreshTokenCommandHandler(ILogger<CreateRefreshTokenCommandHandler> logger,IAccountRepository accountRepository,IJwtTokenService jwtTokenService, IRefreshTokenService refreshTokenService,IUnitOfWork unitOfWork)
+    public CreateRefreshTokenCommandHandler(ILogger<CreateRefreshTokenCommandHandler> logger,IAccountRepository accountRepository,IJwtTokenService jwtTokenService, IRefreshTokenRepository refreshTokenService,IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(refreshTokenService, nameof(refreshTokenService));

@@ -1,5 +1,5 @@
-﻿using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Interfaces;
+﻿using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Exceptions;
 using Shared.Domain.Common;
 
 

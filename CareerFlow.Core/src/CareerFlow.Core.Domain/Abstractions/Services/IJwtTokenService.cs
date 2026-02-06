@@ -1,7 +1,7 @@
 ﻿using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
 
-namespace CareerFlow.Core.Domain.Interfaces;
+namespace CareerFlow.Core.Domain.Abstractions.Services;
 
 public interface IJwtTokenService
 {

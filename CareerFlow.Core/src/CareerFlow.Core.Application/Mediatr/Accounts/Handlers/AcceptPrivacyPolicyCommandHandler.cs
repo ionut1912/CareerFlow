@@ -1,8 +1,8 @@
 ﻿using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Interfaces;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Mediator;
 using Shared.Domain.Interfaces;

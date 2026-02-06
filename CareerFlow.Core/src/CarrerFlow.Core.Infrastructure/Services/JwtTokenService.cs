@@ -1,5 +1,5 @@
-﻿using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Interfaces;
+﻿using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CarrerFlow.Core.Infrastructure.Persistance.Repositories;
+namespace CarrerFlow.Core.Infrastructure.Services;
 
 public class JwtTokenService : IJwtTokenService
 {

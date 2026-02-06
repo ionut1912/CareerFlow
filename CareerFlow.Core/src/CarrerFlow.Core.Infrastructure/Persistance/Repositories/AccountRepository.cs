@@ -1,5 +1,5 @@
-﻿using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Interfaces;
+﻿using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infra.Services;
 
