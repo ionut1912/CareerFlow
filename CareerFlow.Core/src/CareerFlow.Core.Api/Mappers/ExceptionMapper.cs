@@ -25,6 +25,10 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             PasswordNotEmptyException ex => Create(400, "Password Not Empty", ex.Message),
             TermsAndConditionsNotFoundException ex => Create(404, "Terms And Conditions Not Found", ex.Message),
             PrivacyPolicyNotFoundException ex => Create(404, "Privacy Policy Not Found", ex.Message),
+            InvalidRefreshTokenException ex=> Create(401, "Invalid Refresh Token", ex.Message),
+            TokenAlreadyUsedExcception ex => Create(400, "Token Already Used", ex.Message),
+            TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
+            TokenExpiredException ex => Create(401, "Token Expired", ex.Message),
             CustomValidationException ex => CreateValidation(ex),
 
             _ => Create(500, "Internal Server Error", "An unexpected error occurred")

@@ -4,7 +4,12 @@ namespace CareerFlow.Core.Domain.Entities;
 
 public class PrivacyPolicy : Entity
 {
-    public string Content { get; private set; }
+    public string Content { get; private set; } = string.Empty;
+
+    private PrivacyPolicy()
+    {
+        
+    }
 
     public PrivacyPolicy(string content)
     {

@@ -20,5 +20,10 @@ namespace CareerFlow.Core.Api.Mappings
         {
             return new ResetPasswordCommand(username, request.NewPassword);
         }
+
+        public static CreateRefreshTokenCommand ToCreateRefreshTokenCommand(this RefreshTokenRequest request)
+        {
+            return new CreateRefreshTokenCommand(request.Token, request.RefreshToken);
+        }
     }
 }

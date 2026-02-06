@@ -18,6 +18,7 @@ public class AccountEndpointGroup : EndpointGroup
         var group = endpoints.MapGroup(this);
         group.MapPost(Register, "/register");
         group.MapPost(Login, "/login");
+        group.MapPost(RefreshToken,"/refresh-token");
         group.MapPost(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
         group.MapGet(GetAllAccounts);
@@ -61,6 +62,13 @@ public class AccountEndpointGroup : EndpointGroup
         var acceptPrivacyPolicyCommand = new AcceptPrivacyPolicyCommand(id);
         await mediator.Send(acceptPrivacyPolicyCommand, ct);
         return Results.NoContent();
+    }
+
+    private static async Task<IResult> RefreshToken(IMediator mediator, RefreshTokenRequest refreshTokenRequest, CancellationToken ct)
+    {
+        var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();
+        var result = await mediator.Send(refreshTokenCommand, ct);
+        return Results.Ok(result);
     }
 
     [Authorize]

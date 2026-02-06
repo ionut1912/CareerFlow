@@ -30,6 +30,7 @@ builder.Services
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
     .AddRepository<TermsAndCondition, TermAndConditionService, ITermsAndConditionsService, ApplicationDbContext>()
     .AddRepository<PrivacyPolicy, PrivacyPolicyService, IPrivacyPolicyService, ApplicationDbContext>()
+    .AddRepository<RefreshToken, RefreshTokenService, IRefreshTokenService, ApplicationDbContext>()
     .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()

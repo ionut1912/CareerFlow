@@ -45,8 +45,8 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
             throw new PasswordNotMatchException("Passwords do not match");
 
         }
-
-        var accountDto = account.ToAccountDto(_jwtTokenService.GenerateToken(account));
+        var jwtToken = _jwtTokenService.GenerateToken(account);
+        var accountDto = account.ToAccountDto(jwtToken.Token,_jwtTokenService.GenerateRefreshToken(account.Id,jwtToken.Jti).Token);
         _logger.LogInformation("Login successfully");
         return accountDto;
     }

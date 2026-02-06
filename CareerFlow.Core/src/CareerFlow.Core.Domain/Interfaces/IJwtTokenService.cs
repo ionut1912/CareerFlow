@@ -1,8 +1,10 @@
 ﻿using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.Models.Authentication;
 
 namespace CareerFlow.Core.Domain.Interfaces;
 
 public interface IJwtTokenService
 {
-    string GenerateToken(Account account);
+    AuthResult GenerateToken(Account account);
+    RefreshToken GenerateRefreshToken(Guid userId, string jwtId);
 }

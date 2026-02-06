@@ -5,6 +5,7 @@ public record AccountDto(
     string Email,
     string Username,
     string? Token,
+    string? RefreshToken,
     bool IsFounder,
     bool PrivacyPolicyAccepted,
     bool TermsAccepted)
