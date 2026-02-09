@@ -34,17 +34,18 @@ public class UpdatePrivacyPolicyCommandHandler : IRequestHandler<UpdatePrivacyPo
     }
     public async Task<PrivacyPolicyDto> Handle(UpdatePrivacyPolicyCommand request, CancellationToken cancellationToken = default)
     {
-        var privacyPolicy = await _privacyPolicyService.GetByIdAsync(request.Id, cancellationToken);
-        if (privacyPolicy is null)
+        var privacyPolicy = await _privacyPolicyService.GetAllAsync(cancellationToken);
+        var privacyPolicyEntity=privacyPolicy.FirstOrDefault();
+        if (privacyPolicyEntity is null)
         {
-            _logger.LogWarning("Privacy policy with id {Id} not found.", request.Id);
-            throw new PrivacyPolicyNotFoundException($"Privacy policy with id {request.Id} not found.");
+            _logger.LogWarning("Privacy policy  not found.");
+            throw new PrivacyPolicyNotFoundException($"Privacy policy with id  not found.");
         }
-        privacyPolicy.UpdateContent(request.Content);
-        _privacyPolicyService.Update(privacyPolicy);
+        privacyPolicyEntity.UpdateContent(request.Content);
+        _privacyPolicyService.Update(privacyPolicyEntity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Privacy policy with id {Id} updated successfully.", request.Id);
-        await _cacheService.SetCacheValueAsync($"PrivacyPolicy_{privacyPolicy.Id}", privacyPolicy);
-        return privacyPolicy.ToPrivacyPolicyDto();
+        _logger.LogInformation("Privacy policy updated successfully.");
+        await _cacheService.SetCacheValueAsync("PrivacyPolicy", privacyPolicyEntity);
+        return privacyPolicyEntity.ToPrivacyPolicyDto();
     }
 }

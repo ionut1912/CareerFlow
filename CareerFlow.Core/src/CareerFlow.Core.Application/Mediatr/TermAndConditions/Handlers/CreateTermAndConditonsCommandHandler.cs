@@ -33,7 +33,7 @@ public class CreateTermAndConditonsCommandHandler : IRequestHandler<CreateTermAn
         await _termsAndConditionsService.AddAsync(termAndConditions, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Term and Conditions created with Id: {TermAndConditionsId}", termAndConditions.Id);
-        await _cacheService.SetCacheValueAsync($"TermAndConditions_{termAndConditions.Id}", termAndConditions);
+        await _cacheService.SetCacheValueAsync("TermAndConditions", termAndConditions);
         return termAndConditions.Id;
     }
 }

@@ -36,17 +36,18 @@ public class UpdateTermAndConditionsCommandHandler : IRequestHandler<UpdateTerms
 
     public async Task<TermsAndConditionDto> Handle(UpdateTermsAndConditionsCommand request, CancellationToken cancellationToken = default)
     {
-        var termsAndConditions = await _termsAndConditionsService.GetByIdAsync(request.Id, cancellationToken);
-        if (termsAndConditions is null)
+        var termsAndConditions = await _termsAndConditionsService.GetAllAsync(cancellationToken);
+        var termsAndConditionsEntity = termsAndConditions.FirstOrDefault();
+        if (termsAndConditionsEntity is null)
         {
-            _logger.LogWarning("Terms and Conditions with Id {Id} not found.", request.Id);
-            throw new TermsAndConditionsNotFoundException($"Terms and Conditions with Id {request.Id} not found.");
+            _logger.LogWarning("Terms and Conditions not found.");
+            throw new TermsAndConditionsNotFoundException("Terms and Conditions with Id  not found.");
         }
-        termsAndConditions.UpdateContent(request.Content);
-        _termsAndConditionsService.Update(termsAndConditions);
+        termsAndConditionsEntity.UpdateContent(request.Content);
+        _termsAndConditionsService.Update(termsAndConditionsEntity);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Terms and Conditions with Id {Id} updated successfully.", request.Id);
-        await _cacheService.SetCacheValueAsync($"TermAndConditions_{termsAndConditions.Id}", termsAndConditions);
-        return termsAndConditions.ToTermAndConditionsDto();
+        _logger.LogInformation("Terms and Conditions updated successfully.");
+        await _cacheService.SetCacheValueAsync("TermAndConditions", termsAndConditions);
+        return termsAndConditionsEntity.ToTermAndConditionsDto();
     }
 }

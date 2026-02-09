@@ -33,7 +33,7 @@ public class CreatePrivacyPolicyHandler : IRequestHandler<CreatePrivacyPolicyCom
         await _privacyPolicyService.AddAsync(privacyPolicy, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Privacy policy created with ID: {PrivacyPolicyId}", privacyPolicy.Id);
-        await _cacheService.SetCacheValueAsync($"PrivacyPolicy_{privacyPolicy.Id}", privacyPolicy);
+        await _cacheService.SetCacheValueAsync("PrivacyPolicy", privacyPolicy);
         return privacyPolicy.Id;
     }
 }

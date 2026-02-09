@@ -7,7 +7,7 @@ namespace CareerFlow.Core.Api.Mappings
     {
         public static CreateTermAndConditionsCommand ToCreateTermAndConditionsCommand(this LegalRequest request)
             => new CreateTermAndConditionsCommand(request.Content);
-        public static UpdateTermsAndConditionsCommand ToUpdateTermsAndConditionsCommand(this LegalRequest request, Guid id)
-            => new UpdateTermsAndConditionsCommand(id, request.Content);
+        public static UpdateTermsAndConditionsCommand ToUpdateTermsAndConditionsCommand(this LegalRequest request)
+            => new UpdateTermsAndConditionsCommand(request.Content);
     }
 }

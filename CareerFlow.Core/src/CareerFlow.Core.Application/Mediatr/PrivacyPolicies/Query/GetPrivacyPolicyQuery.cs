@@ -3,6 +3,6 @@ using Shared.Application.Mediator;
 
 namespace CareerFlow.Core.Application.Mediatr.PrivacyPolicies.Query;
 
-public record GetPrivacyPolicyQuery(Guid Id) : IRequest<PrivacyPolicyDto>
+public record GetPrivacyPolicyQuery : IRequest<PrivacyPolicyDto>
 {
 }

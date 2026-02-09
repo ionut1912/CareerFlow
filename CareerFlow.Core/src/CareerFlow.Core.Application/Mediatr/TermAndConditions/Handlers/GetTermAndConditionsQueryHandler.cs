@@ -29,24 +29,26 @@ public class GetTermAndConditionsQueryHandler : IRequestHandler<GetTermAndCondit
 
     public async Task<TermsAndConditionDto> Handle(GetTermAndConditionsQuery request, CancellationToken cancellationToken = default)
     {
-        var termsAndConditionsFromCache = await _cacheService.GetCacheValueAsync<TermsAndCondition>($"TermAndConditions_{request.Id}");
+        var termsAndConditionsFromCache = await _cacheService.GetCacheValueAsync<TermsAndCondition>("TermAndConditions");
         if (termsAndConditionsFromCache is not null)
         {
             var termsAndConditionsFromCacheDto = termsAndConditionsFromCache.ToTermAndConditionsDto();
-            _logger.LogInformation("Terms and Conditions with Id {Id} retrieved successfully from cache,result {termAndConditionsDto}.",
-                request.Id, JsonSerializer.Serialize(termsAndConditionsFromCacheDto, new JsonSerializerOptions { WriteIndented = true }));
+            _logger.LogInformation("Terms and Conditions retrieved successfully from cache,result {termAndConditionsDto}.",
+               JsonSerializer.Serialize(termsAndConditionsFromCacheDto, new JsonSerializerOptions { WriteIndented = true }));
             return termsAndConditionsFromCacheDto;
         }
 
-        var termsAndConditions = await _termsAndConditionsService.GetByIdAsync(request.Id, cancellationToken);
-        if (termsAndConditions is null)
+        var termsAndConditions = await _termsAndConditionsService.GetAllAsync(cancellationToken);
+        var termsAndConditionsEntity = termsAndConditions.FirstOrDefault();
+        if (termsAndConditionsEntity is null)
         {
-            _logger.LogWarning("Terms and Conditions with Id {Id} not found.", request.Id);
-            throw new TermsAndConditionsNotFoundException($"Terms and Conditions with Id {request.Id} not found.");
+            _logger.LogWarning("Terms and Conditions not found.");
+            throw new TermsAndConditionsNotFoundException("Terms and Conditions with Id not found.");
         }
-        var termsAndConditionsDto = termsAndConditions.ToTermAndConditionsDto();
-        _logger.LogInformation("Terms and Conditions with Id {Id} retrieved successfully,result {termAndConditionsDto}.",
-            request.Id, JsonSerializer.Serialize(termsAndConditionsDto, new JsonSerializerOptions { WriteIndented = true }));
+        var termsAndConditionsDto = termsAndConditionsEntity.ToTermAndConditionsDto();
+        _logger.LogInformation("Terms and Conditions retrieved successfully from database,result {termAndConditionsDto}.",
+            JsonSerializer.Serialize(termsAndConditionsDto, new JsonSerializerOptions { WriteIndented = true }));
+        await _cacheService.SetCacheValueAsync("TermAndConditions", termsAndConditionsEntity);
         return termsAndConditionsDto;
     }
 }

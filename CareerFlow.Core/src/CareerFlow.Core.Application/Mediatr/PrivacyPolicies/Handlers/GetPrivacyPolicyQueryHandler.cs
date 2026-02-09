@@ -30,23 +30,27 @@ public class GetPrivacyPolicyQueryHandler : IRequestHandler<GetPrivacyPolicyQuer
 
     public async Task<PrivacyPolicyDto> Handle(GetPrivacyPolicyQuery request, CancellationToken cancellationToken = default)
     {
-        var privacyFromCache=await _cacheService.GetCacheValueAsync<PrivacyPolicy>($"PrivacyPolicy_{request.Id}");
+        var privacyFromCache=await _cacheService.GetCacheValueAsync<PrivacyPolicy>("PrivacyPolicy");
+        
         if (privacyFromCache != null)
         {
             var privacyPolicyDtoCache = privacyFromCache.ToPrivacyPolicyDto();
-            _logger.LogInformation("Privacy policy with ID {PrivacyPolicyId} retrieved successfully,result {privacyPolicyDto}.",
-                request.Id, JsonSerializer.Serialize(privacyPolicyDtoCache, new JsonSerializerOptions { WriteIndented = true }));
+            _logger.LogInformation("Privacy policy  retrieved successfully from cache,result {privacyPolicyDto}.",
+                 JsonSerializer.Serialize(privacyPolicyDtoCache, new JsonSerializerOptions { WriteIndented = true }));
             return privacyPolicyDtoCache;
         }
-        var privacyPolicy = await _privacyPolicyService.GetByIdAsync(request.Id, cancellationToken);
-        if (privacyPolicy == null)
+        var privacyPolicy = await _privacyPolicyService.GetAllAsync(cancellationToken);
+        var privacyPolicyEntity = privacyPolicy.FirstOrDefault();
+        if (privacyPolicyEntity == null)
         {
-            _logger.LogWarning("Privacy policy with ID {PrivacyPolicyId} not found.", request.Id);
-            throw new PrivacyPolicyNotFoundException($"Privacy policy with ID {request.Id} not found.");
+            _logger.LogWarning("Privacy policy not found.");
+            throw new PrivacyPolicyNotFoundException("Privacy policy with ID  not found.");
         }
-        var privacyPolicyDto = privacyPolicy.ToPrivacyPolicyDto();
-        _logger.LogInformation("Privacy policy with ID {PrivacyPolicyId} retrieved successfully,result {privacyPolicyDto}.",
-            request.Id, JsonSerializer.Serialize(privacyPolicyDto, new JsonSerializerOptions { WriteIndented = true }));
+
+        var privacyPolicyDto = privacyPolicyEntity.ToPrivacyPolicyDto();
+        _logger.LogInformation("Privacy policy  retrieved successfully from database,result {privacyPolicyDto}.",
+             JsonSerializer.Serialize(privacyPolicyDto, new JsonSerializerOptions { WriteIndented = true }));
+        await _cacheService.SetCacheValueAsync("PrivacyPolicy", privacyPolicyEntity);
         return privacyPolicyDto;
     }
 }
