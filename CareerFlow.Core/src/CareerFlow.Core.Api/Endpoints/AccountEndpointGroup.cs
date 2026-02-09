@@ -1,7 +1,7 @@
-﻿using CareerFlow.Core.Api.Mappings;
-using CareerFlow.Core.Api.Requests;
+﻿using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
 using CareerFlow.Core.Application.Mediatr.Accounts.Query;
+using CareerFlow.Core.Application.Requests;
 using Microsoft.AspNetCore.Authorization;
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
@@ -18,12 +18,12 @@ public class AccountEndpointGroup : EndpointGroup
         var group = endpoints.MapGroup(this);
         group.MapPost(Register, "/register");
         group.MapPost(Login, "/login");
-        group.MapPost(RefreshToken,"/refresh-token");
+        group.MapPost(LoginWithGoogle, "/google");
+        group.MapPost(LoginWithLinkedin, "/linkedin");
+        group.MapPost(RefreshToken, "/refresh-token");
         group.MapPost(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
         group.MapGet(GetAllAccounts);
-        group.MapPut(AcceptTermsAndConditions, "/terms-and-conditions/{id:guid}/accept");
-        group.MapPut(AcceptPrivacyPolicy, "/privacy-policy/{id:guid}/accept");
         group.MapDelete(DeleteUserAccount, "/");
     }
 
@@ -43,25 +43,27 @@ public class AccountEndpointGroup : EndpointGroup
         return Results.Ok(result);
     }
 
+    private static async Task<IResult> LoginWithGoogle(IMediator mediator, GoogleLoginRequest googleLoginRequest,
+        CancellationToken ct)
+    {
+        var googleLoginQuery = googleLoginRequest.ToLoginWithGoogleQuery();
+        var result = await mediator.Send(googleLoginQuery, ct);
+        return Results.Ok(result);
+    }
+
+    private static async Task<IResult> LoginWithLinkedin(IMediator mediator, LinkedInLoginRequest linkedinLoginRequest,
+        CancellationToken ct)
+    {
+        var linkedinLoginQuery = linkedinLoginRequest.ToLoginWithLinkedinQuery();
+        var result = await mediator.Send(linkedinLoginQuery, ct);
+        return Results.Ok(result);
+    }
+
     private static async Task<IResult> GetAllAccounts(IMediator mediator, CancellationToken ct)
     {
         var getAllAcountsQuery = new GetAllAcountsQuery();
         var result = await mediator.Send(getAllAcountsQuery, ct);
         return Results.Ok(result);
-    }
-
-    private static async Task<IResult> AcceptTermsAndConditions(IMediator mediator, Guid id, CancellationToken ct)
-    {
-        var acceptTermsAndConditionsCommand = new AcceptTermAndConditionsCommand(id);
-        await mediator.Send(acceptTermsAndConditionsCommand, ct);
-        return Results.NoContent();
-    }
-
-    private static async Task<IResult> AcceptPrivacyPolicy(IMediator mediator, Guid id, CancellationToken ct)
-    {
-        var acceptPrivacyPolicyCommand = new AcceptPrivacyPolicyCommand(id);
-        await mediator.Send(acceptPrivacyPolicyCommand, ct);
-        return Results.NoContent();
     }
 
     private static async Task<IResult> RefreshToken(IMediator mediator, RefreshTokenRequest refreshTokenRequest, CancellationToken ct)

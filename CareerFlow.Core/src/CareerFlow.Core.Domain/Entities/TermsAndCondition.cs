@@ -5,7 +5,7 @@ namespace CareerFlow.Core.Domain.Entities;
 public class TermsAndCondition : Entity
 {
 
-    public string Content { get; private set; }= string.Empty;
+    public string Content { get; private set; } = string.Empty;
 
     private TermsAndCondition()
     {

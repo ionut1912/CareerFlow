@@ -61,9 +61,21 @@ namespace CareerFlow.Core.Domain.Entities
             UpdatedAt = DateTime.UtcNow;
         }
 
+        public void UpdateTerns()
+        {
+            TermsAccepted = false;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
         public void AcceptTerms()
         {
             TermsAccepted = true;
+            UpdatedAt = DateTime.UtcNow;
+        }
+
+        public void UpdatePrivacyPolicy()
+        {
+            PrivacyPolicyAccepted = false;
             UpdatedAt = DateTime.UtcNow;
         }
 

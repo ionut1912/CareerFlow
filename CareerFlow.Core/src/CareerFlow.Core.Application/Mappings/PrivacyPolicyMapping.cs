@@ -1,4 +1,6 @@
 ﻿using CareerFlow.Core.Application.Dtos;
+using CareerFlow.Core.Application.Mediatr.PrivacyPolicies.Commands;
+using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Domain.Entities;
 
 namespace CareerFlow.Core.Application.Mappings;
@@ -14,4 +16,10 @@ public static class PrivacyPolicyMapping
             privacyPolicy.UpdatedAt ?? new DateTime()
         );
     }
+
+    public static CreatePrivacyPolicyCommand ToCreatePrivacyPolicyCommand(this LegalRequest request)
+    => new CreatePrivacyPolicyCommand(request.Content);
+
+    public static UpdatePrivacyPolicyCommand ToUpdatePrivacyPolicyCommand(this LegalRequest request)
+        => new UpdatePrivacyPolicyCommand(request.Content);
 }

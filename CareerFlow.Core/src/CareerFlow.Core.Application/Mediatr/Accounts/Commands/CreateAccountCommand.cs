@@ -2,4 +2,4 @@
 
 namespace CareerFlow.Core.Application.Mediatr.Accounts.Commands;
 
-public record CreateAccountCommand(string Email, string Password, string Username) : IRequest<Guid>;
+public record CreateAccountCommand(string Email, string Password, string Username, bool AcceptedPrivacyPolicy, bool AcceptedTermsAndConditions) : IRequest<Guid>;

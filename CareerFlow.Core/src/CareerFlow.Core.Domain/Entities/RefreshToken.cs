@@ -2,11 +2,11 @@
 
 namespace CareerFlow.Core.Domain.Entities
 {
-    public class RefreshToken:Entity
+    public class RefreshToken : Entity
     {
         public Guid UserId { get; private set; }
-        public string Token { get; private set; }=string.Empty;
-        public string JwtId { get; private  set; } =string.Empty;
+        public string Token { get; private set; } = string.Empty;
+        public string JwtId { get; private set; } = string.Empty;
         public bool IsUsed { get; private set; }
         public bool IsRevoked { get; private set; }
         public DateTime ExpiryDate { get; private set; }
@@ -35,6 +35,6 @@ namespace CareerFlow.Core.Domain.Entities
         {
             IsUsed = true;
             UpdatedAt = DateTime.UtcNow;
-        }   
+        }
     }
 }

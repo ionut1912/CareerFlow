@@ -17,7 +17,7 @@ public class GetPrivacyPolicyQueryHandler : IRequestHandler<GetPrivacyPolicyQuer
     private readonly IPrivacyPolicyRepository _privacyPolicyService;
     private readonly ICacheService _cacheService;
 
-    public GetPrivacyPolicyQueryHandler(ILogger<GetPrivacyPolicyQueryHandler> logger, IPrivacyPolicyRepository privacyPolicyService,ICacheService cacheService)
+    public GetPrivacyPolicyQueryHandler(ILogger<GetPrivacyPolicyQueryHandler> logger, IPrivacyPolicyRepository privacyPolicyService, ICacheService cacheService)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(privacyPolicyService, nameof(privacyPolicyService));
@@ -30,8 +30,8 @@ public class GetPrivacyPolicyQueryHandler : IRequestHandler<GetPrivacyPolicyQuer
 
     public async Task<PrivacyPolicyDto> Handle(GetPrivacyPolicyQuery request, CancellationToken cancellationToken = default)
     {
-        var privacyFromCache=await _cacheService.GetCacheValueAsync<PrivacyPolicy>("PrivacyPolicy");
-        
+        var privacyFromCache = await _cacheService.GetCacheValueAsync<PrivacyPolicy>("PrivacyPolicy");
+
         if (privacyFromCache != null)
         {
             var privacyPolicyDtoCache = privacyFromCache.ToPrivacyPolicyDto();

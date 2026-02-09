@@ -14,8 +14,8 @@ public class CreateTermAndConditonsCommandHandler : IRequestHandler<CreateTermAn
     private readonly ITermsAndConditionsRepository _termsAndConditionsService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
-    
-    public CreateTermAndConditonsCommandHandler(ILogger<CreateTermAndConditonsCommandHandler> logger, ITermsAndConditionsRepository termsAndConditionsService, IUnitOfWork unitOfWork,ICacheService cacheService)
+
+    public CreateTermAndConditonsCommandHandler(ILogger<CreateTermAndConditonsCommandHandler> logger, ITermsAndConditionsRepository termsAndConditionsService, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(termsAndConditionsService, nameof(termsAndConditionsService));

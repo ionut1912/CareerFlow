@@ -15,7 +15,7 @@ public class CreatePrivacyPolicyHandler : IRequestHandler<CreatePrivacyPolicyCom
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cacheService;
 
-    public CreatePrivacyPolicyHandler(ILogger<CreatePrivacyPolicyHandler> logger, IPrivacyPolicyRepository privacyPolicyService, IUnitOfWork unitOfWork,ICacheService cacheService)
+    public CreatePrivacyPolicyHandler(ILogger<CreatePrivacyPolicyHandler> logger, IPrivacyPolicyRepository privacyPolicyService, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(privacyPolicyService, nameof(privacyPolicyService));

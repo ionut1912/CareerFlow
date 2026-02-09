@@ -6,4 +6,5 @@ namespace CareerFlow.Core.Domain.Abstractions.Repositories;
 public interface IAccountRepository : IGenericRepository<Account>
 {
     Task<Account?> GetAccountByUsernameAsync(string username, CancellationToken cancellationToken);
+    Task<Account?> GetAccountByEmailAsync(string email, CancellationToken cancellationToken);
 }

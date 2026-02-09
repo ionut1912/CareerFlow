@@ -8,7 +8,7 @@ public class PrivacyPolicy : Entity
 
     private PrivacyPolicy()
     {
-        
+
     }
 
     public PrivacyPolicy(string content)

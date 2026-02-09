@@ -9,10 +9,10 @@ public class CacheService(IDistributedCache cache) : ICacheService
     public async Task<T?> GetCacheValueAsync<T>(string key)
     {
         string? jsonValue = await cache.GetStringAsync(key);
-        if(jsonValue == null)
+        if (jsonValue == null)
         {
             return default;
-        }  
+        }
 
         return JsonSerializer.Deserialize<T>(jsonValue);
     }
@@ -22,7 +22,7 @@ public class CacheService(IDistributedCache cache) : ICacheService
         var options = new DistributedCacheEntryOptions
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24),
-            SlidingExpiration=TimeSpan.FromHours(6)
+            SlidingExpiration = TimeSpan.FromHours(6)
         };
 
         var jsonValue = JsonSerializer.Serialize(value);

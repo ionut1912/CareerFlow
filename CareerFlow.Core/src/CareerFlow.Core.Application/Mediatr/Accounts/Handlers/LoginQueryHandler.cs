@@ -6,6 +6,7 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using Shared.Application.Mediator;
+using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Application.Mediatr.Accounts.Handlers;
 
@@ -14,17 +15,23 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
     private readonly IAccountRepository _accountRepository;
     private readonly IPasswordService _passwordService;
     private readonly IJwtTokenService _jwtTokenService;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginQueryHandler> _logger;
 
-    public LoginQueryHandler(IAccountRepository accountRepository, IPasswordService passwordService, IJwtTokenService jwtTokenService, ILogger<LoginQueryHandler> logger)
+    public LoginQueryHandler(IAccountRepository accountRepository, IPasswordService passwordService, IJwtTokenService jwtTokenService, IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork, ILogger<LoginQueryHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
         ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
+        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         _accountRepository = accountRepository;
         _passwordService = passwordService;
         _jwtTokenService = jwtTokenService;
+        _refreshTokenRepository = refreshTokenRepository;
+        _unitOfWork = unitOfWork;
         _logger = logger;
     }
 
@@ -47,7 +54,11 @@ public class LoginQueryHandler : IRequestHandler<LoginQuery, AccountDto>
 
         }
         var jwtToken = _jwtTokenService.GenerateToken(account);
-        var accountDto = account.ToAccountDto(jwtToken.Token,_jwtTokenService.GenerateRefreshToken(account.Id,jwtToken.Jti).Token);
+        var refreshToken = _jwtTokenService.GenerateRefreshToken(account.Id, jwtToken.Jti);
+        await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var accountDto = account.ToAccountDto(jwtToken.Token, refreshToken.Token);
+
         _logger.LogInformation("Login successfully");
         return accountDto;
     }

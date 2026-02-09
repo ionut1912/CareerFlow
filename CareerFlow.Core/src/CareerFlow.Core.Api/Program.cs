@@ -6,6 +6,7 @@ using CareerFlow.Core.Application.Validators;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+using CarrerFlow.Core.Infrastructure.Configurations;
 using CarrerFlow.Core.Infrastructure.Persistance;
 using CarrerFlow.Core.Infrastructure.Persistance.Repositories;
 using CarrerFlow.Core.Infrastructure.Services;
@@ -28,10 +29,14 @@ var resourceBuilder = OpenTelemetryExtensions.CreateServiceResourceBuilder(servi
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "CarrerFlow_"; 
+    options.InstanceName = "CarrerFlow_";
 });
 
 builder.AddOpenTelemetry(lokiEndpoint, resourceBuilder);
+builder.Services.Configure<SocialAuthSettings>(
+    builder.Configuration.GetSection("Authentication"));
+
+builder.Services.AddHttpClient<IAuthService, AuthService>();
 
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
@@ -41,8 +46,9 @@ builder.Services
     .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
     .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
+    .AddRepositoriesConfig<IAuthService, AuthService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
-    .AddRepositoriesConfig<ICacheService,CacheService>() 
+    .AddRepositoriesConfig<ICacheService, CacheService>()
     .AddAplicationConfig(typeof(MediatrAssemblyReference).Assembly, typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, otelEndpoint, serviceName, environmentName);
 

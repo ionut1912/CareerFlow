@@ -39,6 +39,17 @@ public class CreateAccountCommandHandler : IRequestHandler<CreateAccountCommand,
         }
 
         var accountToCreate = Account.Create(request.Email, request.Password, request.Username);
+
+        if (request.AcceptedPrivacyPolicy)
+        {
+            accountToCreate.AcceptPrivacyPolicy();
+        }
+
+        if (request.AcceptedTermsAndConditions)
+        {
+            accountToCreate.AcceptTerms();
+        }
+
         accountToCreate.HashPassword(_passwordService);
         await _accountRepository.AddAsync(accountToCreate, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);

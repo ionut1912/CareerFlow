@@ -1,7 +1,7 @@
-﻿using CareerFlow.Core.Api.Mappings;
-using CareerFlow.Core.Api.Requests;
+﻿using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Mediatr.PrivacyPolicies.Query;
 using CareerFlow.Core.Application.Mediatr.TermAndConditions.Query;
+using CareerFlow.Core.Application.Requests;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 using Shared.Application.Mediator;
