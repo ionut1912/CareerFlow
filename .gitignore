@@ -32,3 +32,5 @@
 /CareerFlow.Core/src/CareerFlow.Rabbit.Events/obj/project.nuget.cache
 /CareerFlow.Core/src/CareerFlow.Rabbit.Events/obj/Debug/net10.0/CareerFlow.Rabbit.Events.AssemblyInfoInputs.cache
 /CareerFlow.Core/src/CareerFlow.Rabbit.Events/obj/Debug/net10.0/CareerFlow.Rabbit.Events.AssemblyInfo.cs
+/CareerFlow.Core/src/CareerFlow.Core.Infrastructure/bin/Debug/net10.0
+/CareerFlow.Core/src/CareerFlow.Core.Infrastructure/obj
