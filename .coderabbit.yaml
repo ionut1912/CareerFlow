@@ -1,0 +1,45 @@
+language: "en"
+early_access: true
+
+reviews:
+  auto_review:
+    enabled: true
+    ignore_title_keywords: ["WIP", "DRAFT", "SKIP"]
+  
+  instructions: |
+    You are a Lead Architect. Focus on O-complexity, security (OWASP 2026), 
+    and Clean Architecture / Vertical Slices.
+
+  path_instructions:
+    # --- .NET 10 & C# 14 (.cs files) ---
+    - path: "CareerFlow.Core/**/*.cs"
+      instructions: |
+        Review for .NET 10/C# 14 standards:
+        - Use C# 14 'field' keyword in properties to remove boilerplate backing fields.
+        - Leverage 'extension' blocks for static and instance members.
+        - Prioritize 'HybridCache' for distributed/local caching.
+        - Ensure Native AOT compatibility; flag non-AOT reflection or dynamic code.
+        - Check for .NET 10 JIT optimizations like array interface devirtualization.
+
+    # --- Python 3.14 (.py files) ---
+    - path: "CareerFlow.AI/**/*.py"
+      instructions: |
+        Review for Python 3.14 standards:
+        - Validate usage of 'free-threaded' (no-GIL) patterns for multi-core scaling.
+        - Ensure 'Deferred evaluation of annotations' (PEP 649) is respected.
+        - Suggest 'Parallel Subinterpreters' for CPU-bound tasks instead of multiprocessing.
+        - Use Pydantic v2 for data validation and 'uv' for dependency management.
+        - Flag insecure string interpolation; suggest 'Template Strings' (t-strings).
+
+    # --- React Native / TS (.ts, .tsx files) ---
+    - path: "CareerFlow.UI/**/*.{ts,tsx}"
+      instructions: |
+        Review for React Native New Architecture (Fabric/TurboModules):
+        - Ensure all native calls are Bridge-less using JSI.
+        - Validate that 'Codegen' specs are strictly typed to prevent runtime crashes.
+        - Suggest 'React 19 Concurrent' features (Transitions/Suspense) for UI fluidity.
+        - Flag any JS blocking the UI thread; suggest Worklets or off-thread processing.
+        - Verify accessibility roles and labels for mobile compliance.
+
+chat:
+  auto_reply: true
