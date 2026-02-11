@@ -5,6 +5,7 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -25,14 +26,14 @@ public class GetLegalDocQueryHandler
 
     public async Task<LegalDocDto?> Handle(GetLegalDocQuery query, CancellationToken ct)
     {
-        var cacheKey = $"LegalDoc_{query.Type}";
-        var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDoc>(cacheKey);
+        var cacheKey = $"LegalDoc_{LegalDocType.FromString(query.Type).Value}";
+        var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDocDto>(cacheKey);
         if (cachedLegalDoc != null)
         {
-            var cacheLegalDocDto = cachedLegalDoc.ToDto();
+          
             _logger.LogInformation("Legal document of type {Type} retrieved from cache ,result {cacheLegalDocDto}.", query.Type,
-                JsonSerializer.Serialize(cacheLegalDocDto,new JsonSerializerOptions { WriteIndented=true}));
-            return cacheLegalDocDto;
+                JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented=true}));
+            return cachedLegalDoc;
         }
         var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, ct);
 

@@ -9,7 +9,7 @@ public static class LegalDocMapping
 {
     public static LegalDocDto ToDto(this LegalDoc legalDoc)
     {
-        return new LegalDocDto(legalDoc.Content, legalDoc.Type.ToString()!);
+        return new LegalDocDto(legalDoc.Content, legalDoc.Type.Value!);
     }
 
     public static CreateLegalDocCommand ToCreateLegalDocCommand(this LegalRequest legalRequest)

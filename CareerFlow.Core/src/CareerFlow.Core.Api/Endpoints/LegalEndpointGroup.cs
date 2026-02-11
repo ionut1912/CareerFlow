@@ -4,6 +4,7 @@ using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
+using System.Net;
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Endpoints;
@@ -61,7 +62,7 @@ public class LegalEndpointGroup : EndpointGroup
             <h1>Politica de Confidențialitate</h1>
             
             <div class='content'>
-                {result.Content} 
+                {WebUtility.HtmlEncode(result.Content)} 
             </div>
 
             <div class='footer'>

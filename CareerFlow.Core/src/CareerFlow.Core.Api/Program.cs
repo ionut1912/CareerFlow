@@ -10,6 +10,7 @@ using CarrerFlow.Core.Infrastructure.Configurations;
 using CarrerFlow.Core.Infrastructure.Persistance;
 using CarrerFlow.Core.Infrastructure.Persistance.Repositories;
 using CarrerFlow.Core.Infrastructure.Services;
+using InfisicalConfiguration;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Shared.Domain.Interfaces;
@@ -18,6 +19,21 @@ using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+var infisicalClientId = configuration["Infisical:ClientId"];
+var infisicalClientSecret = configuration["Infisical:ClientSecret"];
+var infisicalProjectId = configuration["Infisical:ProjectId"];
+
+if (!string.IsNullOrWhiteSpace(infisicalClientId)&&!string.IsNullOrWhiteSpace(infisicalProjectId)&&!string.IsNullOrWhiteSpace(infisicalClientSecret))
+{
+    builder.Configuration.AddInfisical(new InfisicalConfigBuilder()
+        .SetProjectId(infisicalProjectId)
+        .SetEnvironment("dev") // or "prod", based on logic
+        .SetAuth(new InfisicalAuthBuilder()
+            .SetUniversalAuth(infisicalClientId, infisicalClientSecret)
+            .Build())
+        .Build());
+}
+
 var otelEndpoint = configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://tempo:4317";
 var serviceName = configuration["OTEL_SERVICE_NAME"] ?? "CarrerFlowCore";
 var environmentName = builder.Environment.EnvironmentName ?? "Development";

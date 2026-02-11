@@ -1,7 +1,9 @@
 ﻿using CareerFlow.Core.Application.CQRS.Legal.Command;
+using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 
@@ -28,7 +30,7 @@ public class CreateLegalDocCommandHandler
         await _legalDocRepository.AddAsync(legalDoc, ct);
         await _unitOfWork.SaveChangesAsync(ct);
         _logger.LogInformation("Legal document created with ID: {LegalDocId}", legalDoc.Id);
-        await _cacheService.SetCacheValueAsync($"LegalDoc_{legalDoc.Type.Value}", legalDoc);
+        await _cacheService.SetCacheValueAsync($"LegalDoc_{LegalDocType.FromString(command.Type).Value}", legalDoc.ToDto());
         return legalDoc.Id;
     }
 }
