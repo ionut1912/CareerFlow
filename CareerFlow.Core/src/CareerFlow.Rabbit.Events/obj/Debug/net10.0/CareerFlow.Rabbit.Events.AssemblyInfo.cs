@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("CareerFlow.Rabbit.Events")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+775510660e4ce27785347452b634f462194038df")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+717f46e363aee7da4350fc9dc5a01703d5771b4d")]
 [assembly: System.Reflection.AssemblyProductAttribute("CareerFlow.Rabbit.Events")]
 [assembly: System.Reflection.AssemblyTitleAttribute("CareerFlow.Rabbit.Events")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

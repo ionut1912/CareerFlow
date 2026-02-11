@@ -34,10 +34,10 @@ public class AccountEndpointGroup : EndpointGroup
         return Results.Ok(createdAccount);
     }
 
-    private static async Task<IResult> Login(IMessageBus bus, LoginRequest loginRequset,
+    private static async Task<IResult> Login(IMessageBus bus, LoginRequest loginRequest,
         CancellationToken ct)
     {
-        var loginQuery = loginRequset.ToLoginQuery();
+        var loginQuery = loginRequest.ToLoginQuery();
         var result = await bus.InvokeAsync<AccountDto>(loginQuery, ct);
         return Results.Ok(result);
     }

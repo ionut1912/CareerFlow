@@ -14,7 +14,7 @@ public class LegalEndpointGroup : EndpointGroup
     {
         var group = endpoints.MapGroup(this);
         group.MapPost(CreateLegalDoc);
-        group.MapPut(UpdateLegalDoc,"/legal");
+        group.MapPut(UpdateLegalDoc);
         group.MapGet(GetLegalDoc);
     }
 
