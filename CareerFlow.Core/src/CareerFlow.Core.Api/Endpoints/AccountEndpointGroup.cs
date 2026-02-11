@@ -23,7 +23,7 @@ public class AccountEndpointGroup : EndpointGroup
         group.MapPost(RefreshToken, "/refresh-token");
         group.MapPost(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
-        group.MapDelete(DeleteUserAccount, "/");
+        group.MapDelete(DeleteUserAccount);
     }
 
     private static async Task<IResult> Register(IMessageBus bus, CreateAccountRequest createAccountRequest,

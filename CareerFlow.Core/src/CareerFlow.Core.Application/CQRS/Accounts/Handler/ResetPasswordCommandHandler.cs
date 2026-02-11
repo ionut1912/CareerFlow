@@ -31,7 +31,7 @@ public class ResetPasswordCommandHandler
         var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("Account with Id {iD} was not found", request.AccountId);
+            _logger.LogError("Account with Id {AccountId} was not found", request.AccountId);
             throw new AccountNotFoundException($"Account with Id'{request.AccountId}' was not found.");
         }
 

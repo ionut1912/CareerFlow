@@ -32,7 +32,7 @@ public class LegalEndpointGroup : EndpointGroup
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> GetLegalDoc(IMessageBus bus,string type, CancellationToken ct)
+    private static async Task<IResult> GetLegalDoc(IMessageBus bus, string type, CancellationToken ct)
     {
         var getLegalDocQuery = new GetLegalDocQuery(type);
         var result = await bus.InvokeAsync<LegalDocDto>(getLegalDocQuery, ct);
