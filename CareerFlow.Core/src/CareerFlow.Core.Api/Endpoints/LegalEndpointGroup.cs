@@ -19,24 +19,24 @@ public class LegalEndpointGroup : EndpointGroup
         group.MapGet(GetLegalDoc);
     }
 
-    private static async Task<IResult> CreateLegalDoc(IMessageBus bus, LegalRequest request, CancellationToken ct)
+    private static async Task<IResult> CreateLegalDoc(IMessageBus bus, LegalRequest request, CancellationToken cancellationToken)
     {
         var createLegalDocCommand = request.ToCreateLegalDocCommand();
-        var result = await bus.InvokeAsync<Guid>(createLegalDocCommand, ct);
+        var result = await bus.InvokeAsync<Guid>(createLegalDocCommand, cancellationToken);
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> UpdateLegalDoc(IMessageBus bus, LegalRequest request, CancellationToken ct)
+    private static async Task<IResult> UpdateLegalDoc(IMessageBus bus, LegalRequest request, CancellationToken cancellationToken)
     {
         var updateLegalDocCommand = request.ToUpdateLegalDocCommand();
-        var result = await bus.InvokeAsync<LegalDocDto>(updateLegalDocCommand, ct);
+        var result = await bus.InvokeAsync<LegalDocDto>(updateLegalDocCommand, cancellationToken);
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> GetLegalDoc(IMessageBus bus, string type, CancellationToken ct)
+    private static async Task<IResult> GetLegalDoc(IMessageBus bus, string type, CancellationToken cancellationToken)
     {
         var getLegalDocQuery = new GetLegalDocQuery(type);
-        var result = await bus.InvokeAsync<LegalDocDto>(getLegalDocQuery, ct);
+        var result = await bus.InvokeAsync<LegalDocDto>(getLegalDocQuery, cancellationToken);
         if (result == null)
         {
             return Results.NotFound("Politica nu a fost gasita.");

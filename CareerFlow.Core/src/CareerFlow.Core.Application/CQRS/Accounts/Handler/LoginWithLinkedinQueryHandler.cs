@@ -30,9 +30,9 @@ public class LoginWithLinkedinQueryHandler
         _logger = logger;
     }
 
-    public async Task<AccountDto> Handle(LoginWithLinkedinQuery request, CancellationToken cancellationToken = default)
+    public async Task<AccountDto> Handle(LoginWithLinkedinQuery request, CancellationToken cancellationToken)
     {
-        var linkedinUser = await _authService.LoginWithLinkedInAsync(request.AuthorizationCode);
+        var linkedinUser = await _authService.LoginWithLinkedInAsync(request.AuthorizationCode,cancellationToken);
         var jwtToken = _jwtTokenService.GenerateToken(linkedinUser);
         var refreshToken = _jwtTokenService.GenerateRefreshToken(linkedinUser.Id, jwtToken.Jti);
         await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);

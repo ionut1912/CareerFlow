@@ -26,7 +26,7 @@ public class GetLegalDocQueryHandler
         _logger = logger;
     }
 
-    public async Task<LegalDocDto> Handle(GetLegalDocQuery query, CancellationToken ct)
+    public async Task<LegalDocDto> Handle(GetLegalDocQuery query, CancellationToken cancellationToken)
     {
         var cacheKey = $"LegalDoc_{LegalDocType.FromString(query.Type).Value}";
         var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDocDto>(cacheKey);
@@ -37,7 +37,7 @@ public class GetLegalDocQueryHandler
                 JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented = true }));
             return cachedLegalDoc;
         }
-        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, ct);
+        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, cancellationToken);
 
         if (legalDoc == null)
         {

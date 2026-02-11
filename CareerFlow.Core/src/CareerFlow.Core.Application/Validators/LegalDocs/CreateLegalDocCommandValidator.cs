@@ -13,7 +13,7 @@ public class CreateLegalDocCommandValidator : AbstractValidator<CreateLegalDocCo
 
         RuleFor(x => x.Type)
             .NotEmpty()
-            .Must(type => type.IsValid())
-            .WithMessage($"Type must be one of: {string.Join(", ", LegalDocValidationExtensions._allowedTypes)}");
+            .Must(type => type.IsValidLegalDocType())
+            .WithMessage($"Type must be one of: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
     }
 }

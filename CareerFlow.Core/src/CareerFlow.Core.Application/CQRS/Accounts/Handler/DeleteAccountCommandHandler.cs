@@ -25,7 +25,7 @@ public class DeleteAccountCommandHandler
     public async Task Handle(DeleteAccountCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetByIdAsync(request.Id, cancellationToken);
-        if (account == null)
+        if (account is null)
         {
             _logger.LogError("Account with id : {Id} can not be deleted because is not found", request.Id);
             throw new AccountNotFoundException($"Account with Id {request.Id} was not found.");

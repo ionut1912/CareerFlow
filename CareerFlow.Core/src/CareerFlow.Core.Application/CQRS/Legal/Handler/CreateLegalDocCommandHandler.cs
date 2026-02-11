@@ -22,19 +22,19 @@ public class CreateLegalDocCommandHandler
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
         ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
         ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
-        _legalDocRepository = legalDocRepository ?? throw new ArgumentNullException(nameof(legalDocRepository));
+        _legalDocRepository = legalDocRepository;
         _logger = logger;
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
     }
 
-    public async Task<Guid> Handle(CreateLegalDocCommand command, CancellationToken ct)
+    public async Task<Guid> Handle(CreateLegalDocCommand command, CancellationToken cancellationToken)
     {
         var legalDoc = LegalDoc.Create(command.Content, command.Type);
-        await _legalDocRepository.AddAsync(legalDoc, ct);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _legalDocRepository.AddAsync(legalDoc, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Legal document created with ID: {LegalDocId}", legalDoc.Id);
-        await _cacheService.SetCacheValueAsync($"LegalDoc_{LegalDocType.FromString(command.Type).Value}", legalDoc.ToDto());
+        await _cacheService.SetCacheValueAsync($"LegalDoc_{legalDoc.Type.Value}", legalDoc.ToDto());
         return legalDoc.Id;
     }
 }

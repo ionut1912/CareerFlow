@@ -25,9 +25,9 @@ public class UpdateLegalDocCommandHandler
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     }
 
-    public async Task<LegalDocDto> Handle(UpdateLegalDocCommand command, CancellationToken ct)
+    public async Task<LegalDocDto> Handle(UpdateLegalDocCommand command, CancellationToken cancellationToken)
     {
-        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(command.Type, ct);
+        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(command.Type, cancellationToken);
         if (legalDoc is null)
         {
             _logger.LogError("No legal document found for type {Type}.", command.Type);
@@ -36,7 +36,7 @@ public class UpdateLegalDocCommandHandler
 
         legalDoc.Update(command.Content, command.Type);
         _legalDocRepository.Update(legalDoc);
-        await _unitOfWork.SaveChangesAsync(ct);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
         await _cacheService.SetCacheValueAsync($"LegalDoc_{command.Type}", legalDoc);
         var legalDocDto = legalDoc.ToDto();
         _logger.LogInformation("Legal document of type {Type} updated successfully,updatedDoc {legalDocDto}.", command.Type,

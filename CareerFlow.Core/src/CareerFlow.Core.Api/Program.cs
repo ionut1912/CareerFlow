@@ -9,7 +9,7 @@ using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Persistance;
 using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
-using CareerFlow.Rabbit.Events.Events;
+using CareerFlow.Core.Rabbit.Events.Events;
 using InfisicalConfiguration;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
@@ -36,7 +36,7 @@ if (!string.IsNullOrWhiteSpace(infisicalClientId) && !string.IsNullOrWhiteSpace(
 }
 
 var otelEndpoint = configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://tempo:4317";
-var serviceName = configuration["OTEL_SERVICE_NAME"] ?? "CarrerFlowCore";
+var serviceName = configuration["OTEL_SERVICE_NAME"] ?? "CareerFlowCore";
 var environmentName = builder.Environment.EnvironmentName ?? "Development";
 
 // Use the correct Loki OTLP endpoint

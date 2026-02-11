@@ -2,8 +2,8 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -19,39 +19,43 @@ public class JwtTokenService : IJwtTokenService
         _configuration = configuration;
     }
 
-    public AuthResult GenerateToken(Account account) // <--- Return type schimbat
+    public AuthResult GenerateToken(Account account)
     {
         var jwtSettings = _configuration.GetSection("JwtSettings");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-
         var jti = Guid.NewGuid().ToString();
 
+ 
         var claims = new List<Claim>
-    {
-        new(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
-        new(ClaimTypes.Name, account.Username),
-        new(JwtRegisteredClaimNames.Email, account.Email),
-        
-        // 2. Folosim variabila 'jti' aici
-        new(JwtRegisteredClaimNames.Jti, jti),
+        {
+            new(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
+            new(JwtRegisteredClaimNames.Name, account.Username), 
+            new(JwtRegisteredClaimNames.Email, account.Email),
+            new(JwtRegisteredClaimNames.Jti, jti),
 
-        new("is_founder", account.IsFounder.ToString()),
-        new("terms_accepted", account.TermsAccepted.ToString()),
-        new("policy_accepted", account.PrivacyPolicyAccepted.ToString())
-    };
-
-        var token = new JwtSecurityToken(
-            jwtSettings["Issuer"],
-            jwtSettings["Audience"],
-            claims,
-            expires: DateTime.UtcNow.AddHours(2),
-            signingCredentials: creds
-        );
+     
+            new("is_founder", account.IsFounder.ToString().ToLower()),
+            new("terms_accepted", account.TermsAccepted.ToString().ToLower()),
+            new("policy_accepted", account.PrivacyPolicyAccepted.ToString().ToLower())
+        };
 
 
-        return new AuthResult(new JwtSecurityTokenHandler().WriteToken(token), jti);
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Issuer = jwtSettings["Issuer"],
+            Audience = jwtSettings["Audience"],
+            Subject = new ClaimsIdentity(claims), 
+            Expires = DateTime.UtcNow.AddHours(2),
+            SigningCredentials = creds
+        };
+
+  
+        var handler = new JsonWebTokenHandler();
+        var tokenString = handler.CreateToken(tokenDescriptor);
+
+        return new AuthResult(tokenString, jti);
     }
 
     public RefreshToken GenerateRefreshToken(Guid userId, string jwtId)

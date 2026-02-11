@@ -26,7 +26,7 @@ public class ResetPasswordCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken = default)
+    public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)

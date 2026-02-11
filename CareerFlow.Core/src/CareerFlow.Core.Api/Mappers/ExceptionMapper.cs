@@ -61,7 +61,7 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
     {
         var pd = Create(400, "Validation Error", "One or more validation errors occurred.");
         pd.Extensions["errors"] = ex.Errors
-            .GroupBy(x => x.PropertyName)
+            .GroupBy(x => string.IsNullOrEmpty(x.PropertyName) ? "_general" : x.PropertyName)
             .ToDictionary(
                 g => g.Key,
                 g => g.Select(x => x.ErrorMessage).ToArray()

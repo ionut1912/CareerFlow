@@ -27,73 +27,73 @@ public class AccountEndpointGroup : EndpointGroup
     }
 
     private static async Task<IResult> Register(IMessageBus bus, CreateAccountRequest createAccountRequest,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var createAccountCommand = createAccountRequest.ToCreateCommand();
-        var createdAccount = await bus.InvokeAsync<Guid>(createAccountCommand, ct);
+        var createdAccount = await bus.InvokeAsync<Guid>(createAccountCommand, cancellationToken);
         return Results.Ok(createdAccount);
     }
 
     private static async Task<IResult> Login(IMessageBus bus, LoginRequest loginRequest,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var loginQuery = loginRequest.ToLoginQuery();
-        var result = await bus.InvokeAsync<AccountDto>(loginQuery, ct);
+        var result = await bus.InvokeAsync<AccountDto>(loginQuery, cancellationToken);
         return Results.Ok(result);
     }
 
     private static async Task<IResult> LoginWithGoogle(IMessageBus bus, GoogleLoginRequest googleLoginRequest,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var googleLoginQuery = googleLoginRequest.ToLoginWithGoogleQuery();
-        var result = await bus.InvokeAsync<AccountDto>(googleLoginQuery, ct);
+        var result = await bus.InvokeAsync<AccountDto>(googleLoginQuery, cancellationToken);
         return Results.Ok(result);
     }
 
     private static async Task<IResult> LoginWithLinkedin(IMessageBus bus, LinkedInLoginRequest linkedinLoginRequest,
-        CancellationToken ct)
+        CancellationToken cancellationToken)
     {
         var linkedinLoginQuery = linkedinLoginRequest.ToLoginWithLinkedinQuery();
-        var result = await bus.InvokeAsync<AccountDto>(linkedinLoginQuery, ct);
+        var result = await bus.InvokeAsync<AccountDto>(linkedinLoginQuery, cancellationToken);
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest, CancellationToken ct)
+    private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest, CancellationToken cancellationToken)
     {
         var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();
-        var result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, ct);
+        var result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, cancellationToken);
         return Results.Ok(result);
     }
 
     [Authorize]
-    private static async Task<IResult> GetCurrentAccount(IMessageBus bus, HttpContext httpContext, CancellationToken ct)
+    private static async Task<IResult> GetCurrentAccount(IMessageBus bus, HttpContext httpContext, CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return Results.Unauthorized();
 
         var currentUserQuery = new GetCurrentAccountQuery(accountId);
-        var result = await bus.InvokeAsync<AccountDto>(currentUserQuery, ct);
+        var result = await bus.InvokeAsync<AccountDto>(currentUserQuery, cancellationToken);
         return Results.Ok(result);
     }
 
     [Authorize]
-    private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext, ResetPasswordRequest resetPasswordRequest, CancellationToken ct)
+    private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext, ResetPasswordRequest resetPasswordRequest, CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return Results.Unauthorized();
         var resetPasswordCommand = resetPasswordRequest.ToResetPasswordCommand(accountId);
-        await bus.InvokeAsync(resetPasswordCommand, ct);
+        await bus.InvokeAsync(resetPasswordCommand, cancellationToken);
         return Results.NoContent();
     }
 
     [Authorize]
-    private static async Task<IResult> DeleteUserAccount(IMessageBus bus, HttpContext httpContext, CancellationToken ct)
+    private static async Task<IResult> DeleteUserAccount(IMessageBus bus, HttpContext httpContext, CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return Results.Unauthorized();
 
         var deleteAccountCommand = new DeleteAccountCommand(accountId);
-        await bus.InvokeAsync(deleteAccountCommand, ct);
+        await bus.InvokeAsync(deleteAccountCommand, cancellationToken);
         return Results.NoContent();
     }
 }

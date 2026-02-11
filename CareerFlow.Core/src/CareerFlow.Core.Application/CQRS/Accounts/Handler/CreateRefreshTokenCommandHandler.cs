@@ -11,28 +11,28 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class CreateRefreshTokenCommandHandler
 {
     private readonly ILogger<CreateRefreshTokenCommandHandler> _logger;
-    private readonly IRefreshTokenRepository _refreshTokenService;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IAccountRepository _accountRepository;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public CreateRefreshTokenCommandHandler(ILogger<CreateRefreshTokenCommandHandler> logger, IAccountRepository accountRepository, IJwtTokenService jwtTokenService, IRefreshTokenRepository refreshTokenService, IUnitOfWork unitOfWork)
+    public CreateRefreshTokenCommandHandler(ILogger<CreateRefreshTokenCommandHandler> logger, IAccountRepository accountRepository, IJwtTokenService jwtTokenService, IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork)
     {
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-        ArgumentNullException.ThrowIfNull(refreshTokenService, nameof(refreshTokenService));
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
         ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
         ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
         ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
         _logger = logger;
-        _refreshTokenService = refreshTokenService;
+        _refreshTokenRepository = refreshTokenRepository;
         _accountRepository = accountRepository;
         _jwtTokenService = jwtTokenService;
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<RefreshTokenDto> Handle(CreateRefreshTokenCommand request, CancellationToken cancellationToken = default)
+    public async Task<RefreshTokenDto> Handle(CreateRefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        var storedToken = await _refreshTokenService.GetExistingTokenAsync(request.RefreshToken, cancellationToken);
+        var storedToken = await _refreshTokenRepository.GetExistingTokenAsync(request.RefreshToken, cancellationToken);
         if (storedToken is null)
         {
             _logger.LogInformation("Refresh token already exists for token: {Token}", request.Token);
@@ -54,7 +54,7 @@ public class CreateRefreshTokenCommandHandler
             throw new TokenExpiredException("Token expired");
         }
         storedToken.MarkAsUsed();
-        _refreshTokenService.Update(storedToken);
+        _refreshTokenRepository.Update(storedToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var user = await _accountRepository.GetByIdAsync(storedToken.UserId, cancellationToken);
         if (user is null)
@@ -65,7 +65,7 @@ public class CreateRefreshTokenCommandHandler
 
         var newJwtToken = _jwtTokenService.GenerateToken(user);
         var newRefreshToken = _jwtTokenService.GenerateRefreshToken(user.Id, newJwtToken.Jti);
-        await _refreshTokenService.AddAsync(newRefreshToken, cancellationToken);
+        await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Refresh token created successfully for user: {UserId}", user.Id);
         return new RefreshTokenDto(newJwtToken.Token, newRefreshToken.Token);
