@@ -11,10 +11,4 @@ public class AccountRepository(DbSet<Account> dbSet) : GenericRepository<Account
     {
         return await dbSet.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
-
-    public async Task<Account?> GetAccountByUsernameAsync(string username, CancellationToken cancellationToken)
-    {
-
-        return await dbSet.FirstOrDefaultAsync(x => x.Username == username, cancellationToken);
-    }
 }

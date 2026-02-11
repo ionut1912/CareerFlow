@@ -1,4 +1,4 @@
-﻿using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using FluentValidation;
 
 namespace CareerFlow.Core.Application.Validators.Account;

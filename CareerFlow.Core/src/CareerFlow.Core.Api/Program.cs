@@ -1,11 +1,11 @@
-﻿
-using CareerFlow.Core.Api.Endpoints;
+﻿using CareerFlow.Core.Api.Endpoints;
 using CareerFlow.Core.Api.Mappers;
-using CareerFlow.Core.Application.Mediatr;
+using CareerFlow.Core.Application.Messages;
 using CareerFlow.Core.Application.Validators;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Rabbit.Events.Events;
 using CarrerFlow.Core.Infrastructure.Configurations;
 using CarrerFlow.Core.Infrastructure.Persistance;
 using CarrerFlow.Core.Infrastructure.Persistance.Repositories;
@@ -14,6 +14,7 @@ using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Shared.Domain.Interfaces;
 using Shared.Infra.Services;
+using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -25,6 +26,16 @@ var environmentName = builder.Environment.EnvironmentName ?? "Development";
 var lokiEndpoint = configuration["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] ?? "http://loki:3100";
 
 var resourceBuilder = OpenTelemetryExtensions.CreateServiceResourceBuilder(serviceName, environmentName);
+
+builder.AddWolverineMessaging(
+    typeof(EmailNotificationMessageHandler).Assembly,
+    (appBuilder, opt) =>
+    {
+
+        opt.ListenToRabbitQueue("email-notifications").UseDurableInbox();
+
+        opt.PublishMessage<EmailNotificationMessage>().ToRabbitQueue("email-notifications");
+    });
 
 builder.Services.AddStackExchangeRedisCache(options =>
 {
@@ -41,27 +52,15 @@ builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
-    .AddRepository<TermsAndCondition, TermAndConditionRepository, ITermsAndConditionsRepository, ApplicationDbContext>()
-    .AddRepository<PrivacyPolicy, PrivacyPolicyRepository, IPrivacyPolicyRepository, ApplicationDbContext>()
+    .AddRepository<LegalDoc, LegalDocRepository, ILegalDocRepository, ApplicationDbContext>()
     .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
     .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IAuthService, AuthService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
     .AddRepositoriesConfig<ICacheService, CacheService>()
-    .AddAplicationConfig(typeof(MediatrAssemblyReference).Assembly, typeof(ValidationsAssemblyReference).Assembly)
+    .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, otelEndpoint, serviceName, environmentName);
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowMyFrontend",
-        policy =>
-        {
-            policy.WithOrigins("http://localhost:3000")
-                  .AllowAnyHeader()
-                  .AllowAnyMethod();
-        });
-});
 
 var app = builder.Build();
 
@@ -71,8 +70,6 @@ app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()
     .UseStandardMiddleware()
     .MapStandardEndpoints();
-
-app.UseCors("AllowMyFrontend");
 
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);

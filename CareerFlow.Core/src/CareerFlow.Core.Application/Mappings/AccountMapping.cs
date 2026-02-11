@@ -1,6 +1,6 @@
-﻿using CareerFlow.Core.Application.Dtos;
-using CareerFlow.Core.Application.Mediatr.Accounts.Commands;
-using CareerFlow.Core.Application.Mediatr.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+using CareerFlow.Core.Application.CQRS.Accounts.Query;
+using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Domain.Entities;
 
@@ -22,12 +22,12 @@ public static class AccountMapping
 
     public static LoginQuery ToLoginQuery(this LoginRequest request)
     {
-        return new LoginQuery(request.Username, request.Password);
+        return new LoginQuery(request.Email, request.Password);
     }
 
-    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request, string username)
+    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request, Guid accountId)
     {
-        return new ResetPasswordCommand(username, request.NewPassword);
+        return new ResetPasswordCommand(accountId, request.NewPassword);
     }
 
     public static CreateRefreshTokenCommand ToCreateRefreshTokenCommand(this RefreshTokenRequest request)

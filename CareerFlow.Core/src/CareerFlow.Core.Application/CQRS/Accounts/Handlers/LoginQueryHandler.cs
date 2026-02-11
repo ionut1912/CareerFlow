@@ -1,0 +1,64 @@
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Query;
+using CareerFlow.Core.Application.Dtos;
+using CareerFlow.Core.Application.Mappings;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Exceptions;
+using Microsoft.Extensions.Logging;
+using Shared.Domain.Interfaces;
+
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+
+public class LoginQueryHandler
+{
+    private readonly IAccountRepository _accountRepository;
+    private readonly IPasswordService _passwordService;
+    private readonly IJwtTokenService _jwtTokenService;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly ILogger<LoginQueryHandler> _logger;
+
+    public LoginQueryHandler(IAccountRepository accountRepository, IPasswordService passwordService, IJwtTokenService jwtTokenService, IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork, ILogger<LoginQueryHandler> logger)
+    {
+        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
+        ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
+        ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
+        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        _accountRepository = accountRepository;
+        _passwordService = passwordService;
+        _jwtTokenService = jwtTokenService;
+        _refreshTokenRepository = refreshTokenRepository;
+        _unitOfWork = unitOfWork;
+        _logger = logger;
+    }
+
+    public async Task<AccountDto> Handle(LoginQuery request, CancellationToken cancellationToken)
+    {
+        var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
+
+        if (account is null)
+        {
+            _logger.LogError("We can't login because account with Email :{Email} was not found", request.Email);
+            throw new AccountNotFoundException($"Account with {request.Email} not found");
+        }
+
+        var isPasswordValid = _passwordService.VerifyPassword(request.Password, account.Password);
+
+        if (!isPasswordValid)
+        {
+            _logger.LogError("We can t login because the passwords do not match");
+            throw new PasswordNotMatchException("Passwords do not match");
+
+        }
+        var jwtToken = _jwtTokenService.GenerateToken(account);
+        var refreshToken = _jwtTokenService.GenerateRefreshToken(account.Id, jwtToken.Jti);
+        await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var accountDto = account.ToAccountDto(jwtToken.Token, refreshToken.Token);
+
+        _logger.LogInformation("Login successfully");
+        return accountDto;
+    }
+}
