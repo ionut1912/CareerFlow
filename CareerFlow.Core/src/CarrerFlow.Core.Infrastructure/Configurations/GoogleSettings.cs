@@ -1,4 +1,4 @@
-﻿namespace CarrerFlow.Core.Infrastructure.Configurations;
+﻿namespace CareerFlow.Core.Infrastructure.Configurations;
 
 public class GoogleSettings
 {

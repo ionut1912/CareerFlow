@@ -3,7 +3,7 @@ using CareerFlow.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infra.Services;
 
-namespace CarrerFlow.Core.Infrastructure.Persistance.Repositories;
+namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
 public class RefreshTokenRepository(DbSet<RefreshToken> dbSet) : GenericRepository<RefreshToken>(dbSet), IRefreshTokenRepository
 {

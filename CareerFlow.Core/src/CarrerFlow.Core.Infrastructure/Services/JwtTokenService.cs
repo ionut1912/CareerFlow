@@ -8,7 +8,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CarrerFlow.Core.Infrastructure.Services;
+namespace CareerFlow.Core.Infrastructure.Services;
 
 public class JwtTokenService : IJwtTokenService
 {

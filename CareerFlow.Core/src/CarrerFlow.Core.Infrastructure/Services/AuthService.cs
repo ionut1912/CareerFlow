@@ -2,13 +2,13 @@
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models;
-using CarrerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Configurations;
 using Google.Apis.Auth;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Json;
 
-namespace CarrerFlow.Core.Infrastructure.Services;
+namespace CareerFlow.Core.Infrastructure.Services;
 
 public class AuthService : IAuthService
 {

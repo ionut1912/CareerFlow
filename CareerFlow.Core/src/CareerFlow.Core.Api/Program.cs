@@ -5,11 +5,11 @@ using CareerFlow.Core.Application.Validators;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Persistance;
+using CareerFlow.Core.Infrastructure.Persistance.Repositories;
+using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Rabbit.Events.Events;
-using CarrerFlow.Core.Infrastructure.Configurations;
-using CarrerFlow.Core.Infrastructure.Persistance;
-using CarrerFlow.Core.Infrastructure.Persistance.Repositories;
-using CarrerFlow.Core.Infrastructure.Services;
 using InfisicalConfiguration;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
@@ -23,11 +23,12 @@ var infisicalClientId = configuration["Infisical:ClientId"];
 var infisicalClientSecret = configuration["Infisical:ClientSecret"];
 var infisicalProjectId = configuration["Infisical:ProjectId"];
 
-if (!string.IsNullOrWhiteSpace(infisicalClientId)&&!string.IsNullOrWhiteSpace(infisicalProjectId)&&!string.IsNullOrWhiteSpace(infisicalClientSecret))
+if (!string.IsNullOrWhiteSpace(infisicalClientId) && !string.IsNullOrWhiteSpace(infisicalProjectId) && !string.IsNullOrWhiteSpace(infisicalClientSecret))
 {
+    var env = builder.Environment.IsProduction() ? "prod" : "dev";
     builder.Configuration.AddInfisical(new InfisicalConfigBuilder()
         .SetProjectId(infisicalProjectId)
-        .SetEnvironment("dev") // or "prod", based on logic
+        .SetEnvironment(env)
         .SetAuth(new InfisicalAuthBuilder()
             .SetUniversalAuth(infisicalClientId, infisicalClientSecret)
             .Build())

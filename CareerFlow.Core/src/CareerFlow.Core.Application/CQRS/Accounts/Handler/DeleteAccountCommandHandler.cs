@@ -1,10 +1,10 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Command;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 
-namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
 public class DeleteAccountCommandHandler
 {
@@ -24,7 +24,7 @@ public class DeleteAccountCommandHandler
 
     public async Task Handle(DeleteAccountCommand request, CancellationToken cancellationToken)
     {
-        var account = await _accountRepository.GetByIdAsync(request.Id);
+        var account = await _accountRepository.GetByIdAsync(request.Id, cancellationToken);
         if (account == null)
         {
             _logger.LogError("Account with id : {Id} can not be deleted because is not found", request.Id);

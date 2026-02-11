@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
-namespace CarrerFlow.Core.Infrastructure.Services;
+namespace CareerFlow.Core.Infrastructure.Services;
 
 public class CacheService(IDistributedCache cache) : ICacheService
 {

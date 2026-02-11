@@ -23,6 +23,7 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
         {
             ValidationException ex => CreateFromFluent(ex),
             AccountNotFoundException ex => Create(404, "Account Not Found", ex.Message),
+            InvalidLegalDocTypeException ex => Create(400, "Invalid Legal Doc Type", ex.Message),
             PasswordNotMatchException ex => Create(400, "Password Not Match", ex.Message),
             UserAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
             PasswordNotEmptyException ex => Create(400, "Password Not Empty", ex.Message),

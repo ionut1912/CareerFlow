@@ -7,7 +7,7 @@ using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 
-namespace CareerFlow.Core.Application.CQRS.Legal.Handlers;
+namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
 public class CreateLegalDocCommandHandler
 {
@@ -18,10 +18,14 @@ public class CreateLegalDocCommandHandler
 
     public CreateLegalDocCommandHandler(ILegalDocRepository legalDocRepository, ILogger<CreateLegalDocCommandHandler> logger, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
+        ArgumentNullException.ThrowIfNull(legalDocRepository, nameof(legalDocRepository));
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
+        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
         _legalDocRepository = legalDocRepository ?? throw new ArgumentNullException(nameof(legalDocRepository));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        _logger = logger;
+        _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
     public async Task<Guid> Handle(CreateLegalDocCommand command, CancellationToken ct)

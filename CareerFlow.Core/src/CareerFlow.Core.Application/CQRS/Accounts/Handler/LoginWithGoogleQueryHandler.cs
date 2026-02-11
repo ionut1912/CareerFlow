@@ -6,7 +6,7 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 
-namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
 public class LoginWithGoogleQueryHandler
 {

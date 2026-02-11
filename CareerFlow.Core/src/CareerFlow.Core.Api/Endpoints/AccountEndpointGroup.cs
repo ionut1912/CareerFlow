@@ -1,4 +1,4 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Command;
 using CareerFlow.Core.Application.CQRS.Accounts.Query;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
@@ -61,7 +61,7 @@ public class AccountEndpointGroup : EndpointGroup
     private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest, CancellationToken ct)
     {
         var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();
-        var result = await bus.InvokeAsync<AccountDto>(refreshTokenCommand, ct);
+        var result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, ct);
         return Results.Ok(result);
     }
 

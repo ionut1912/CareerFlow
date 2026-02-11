@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace CarrerFlow.Core.Infrastructure.Persistance.Configurations;
+namespace CareerFlow.Core.Infrastructure.Persistance.Configurations;
 
 public class AccountConfiguration : IEntityTypeConfiguration<Account>
 {

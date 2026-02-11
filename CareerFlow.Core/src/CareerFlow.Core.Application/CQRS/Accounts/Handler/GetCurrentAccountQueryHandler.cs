@@ -6,7 +6,7 @@ using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
 public class GetCurrentAccountQueryHandler
 {

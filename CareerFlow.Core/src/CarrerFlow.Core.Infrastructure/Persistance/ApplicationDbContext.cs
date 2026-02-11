@@ -1,7 +1,7 @@
 ﻿using CareerFlow.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 
-namespace CarrerFlow.Core.Infrastructure.Persistance;
+namespace CareerFlow.Core.Infrastructure.Persistance;
 
 public class ApplicationDbContext : DbContext
 {

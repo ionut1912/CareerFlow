@@ -15,10 +15,7 @@
       "launchBrowser": true,
       "applicationUrl": "https://localhost:7106;http://localhost:5247",
       "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "Infisical__ClientId": "22aa773f-64cb-4187-a3a5-1ec0dcd29d6e",
-        "Infisical__ClientSecret": "0294fe03b7f557df964e83883ec4f8ebbb2c7e41366e002e32c51c772b3d0181",
-        "Infisical__ProjectId": "e9b76d06-4d50-4aa8-8e15-720955d2d7ad"
+        "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
     "Container (Dockerfile)": {

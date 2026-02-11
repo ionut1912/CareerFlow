@@ -25,7 +25,7 @@
 	<ItemGroup>
 		<ProjectReference Include="..\CareerFlow.Core.Application\CareerFlow.Core.Application.csproj" />
 		<ProjectReference Include="..\CareerFlow.Rabbit.Events\CareerFlow.Rabbit.Events.csproj" />
-		<ProjectReference Include="..\CarrerFlow.Core.Infrastructure\CarrerFlow.Core.Infrastructure.csproj" />
+		<ProjectReference Include="..\CarrerFlow.Core.Infrastructure\CareerFlow.Core.Infrastructure.csproj" />
 	</ItemGroup>
 
 </Project>

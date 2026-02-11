@@ -1,4 +1,5 @@
-﻿using Shared.Domain.Common;
+﻿using CareerFlow.Core.Domain.Exceptions;
+using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.ValueObjects;
 
@@ -20,7 +21,7 @@ public class LegalDocType : ValueObject
         {
             "termsofservice" => TermsOfService,
             "privacypolicy" => PrivacyPolicy,
-            _ => throw new ArgumentException($"Invalid legal document type: {value}")
+            _ => throw new InvalidLegalDocTypeException($"Invalid legal document type: {value}")
         };
     }
     protected override IEnumerable<object?> GetEqualityComponents()

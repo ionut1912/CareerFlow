@@ -3,13 +3,12 @@ using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace CareerFlow.Core.Application.CQRS.Legal.Handlers;
+namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
 public class GetLegalDocQueryHandler
 {
@@ -17,22 +16,25 @@ public class GetLegalDocQueryHandler
     private readonly ICacheService _cacheService;
     private readonly ILogger<GetLegalDocQueryHandler> _logger;
 
-    public GetLegalDocQueryHandler(ILegalDocRepository legalDocRepository,ICacheService cacheService,ILogger<GetLegalDocQueryHandler> logger)
+    public GetLegalDocQueryHandler(ILegalDocRepository legalDocRepository, ICacheService cacheService, ILogger<GetLegalDocQueryHandler> logger)
     {
-        _legalDocRepository = legalDocRepository ?? throw new ArgumentNullException(nameof(legalDocRepository));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        ArgumentNullException.ThrowIfNull(legalDocRepository, nameof(legalDocRepository));
+        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        _legalDocRepository = legalDocRepository;
+        _cacheService = cacheService;
+        _logger = logger;
     }
 
-    public async Task<LegalDocDto?> Handle(GetLegalDocQuery query, CancellationToken ct)
+    public async Task<LegalDocDto> Handle(GetLegalDocQuery query, CancellationToken ct)
     {
         var cacheKey = $"LegalDoc_{LegalDocType.FromString(query.Type).Value}";
         var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDocDto>(cacheKey);
         if (cachedLegalDoc != null)
         {
-          
+
             _logger.LogInformation("Legal document of type {Type} retrieved from cache ,result {cacheLegalDocDto}.", query.Type,
-                JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented=true}));
+                JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented = true }));
             return cachedLegalDoc;
         }
         var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, ct);
@@ -46,7 +48,7 @@ public class GetLegalDocQueryHandler
         var legalDocDto = legalDoc.ToDto();
         await _cacheService.SetCacheValueAsync(cacheKey, legalDocDto);
         _logger.LogInformation("Legal document of type {Type} retrieved from database,result {cacheLegalDocDto}", query.Type,
-            JsonSerializer.Serialize(legalDocDto,new JsonSerializerOptions { WriteIndented=true}));
+            JsonSerializer.Serialize(legalDocDto, new JsonSerializerOptions { WriteIndented = true }));
         return legalDocDto;
     }
 }

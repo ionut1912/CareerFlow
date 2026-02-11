@@ -7,7 +7,7 @@ namespace CareerFlow.Core.Domain.Entities;
 public class LegalDoc : Entity
 {
     public string Content { get; private set; } = string.Empty;
-    public LegalDocType Type { get; private set; }=LegalDocType.TermsOfService;
+    public LegalDocType Type { get; private set; } = LegalDocType.TermsOfService;
 
     private LegalDoc()
     {

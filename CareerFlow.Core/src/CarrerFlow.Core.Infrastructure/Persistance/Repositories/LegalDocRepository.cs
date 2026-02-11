@@ -4,7 +4,7 @@ using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infra.Services;
 
-namespace CarrerFlow.Core.Infrastructure.Persistance.Repositories;
+namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
 public class LegalDocRepository(DbSet<LegalDoc> dbSet) : GenericRepository<LegalDoc>(dbSet), ILegalDocRepository
 {
