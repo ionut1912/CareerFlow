@@ -1,7 +1,9 @@
 ﻿using CareerFlow.Core.Domain.Exceptions;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Abstractions;
 using Shared.Domain.Exceptions;
+
 namespace CareerFlow.Core.Api.Mappers;
 
 public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
@@ -19,12 +21,13 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
 
         problemDetails = exception switch
         {
+            ValidationException ex => CreateFromFluent(ex),
             AccountNotFoundException ex => Create(404, "Account Not Found", ex.Message),
+            InvalidLegalDocTypeException ex => Create(400, "Invalid Legal Doc Type", ex.Message),
             PasswordNotMatchException ex => Create(400, "Password Not Match", ex.Message),
             UserAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
             PasswordNotEmptyException ex => Create(400, "Password Not Empty", ex.Message),
-            TermsAndConditionsNotFoundException ex => Create(404, "Terms And Conditions Not Found", ex.Message),
-            PrivacyPolicyNotFoundException ex => Create(404, "Privacy Policy Not Found", ex.Message),
+            LegalDocNotFoundException ex => Create(404, "Legal Doc Not Found", ex.Message),
             InvalidRefreshTokenException ex => Create(401, "Invalid Refresh Token", ex.Message),
             TokenAlreadyUsedExcception ex => Create(400, "Token Already Used", ex.Message),
             TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
@@ -51,6 +54,18 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
     {
         var pd = Create(400, "Validation Error", "One or more validation errors occurred.");
         pd.Extensions["errors"] = ex.ValidationErrors;
+        return pd;
+    }
+
+    private static ProblemDetails CreateFromFluent(ValidationException ex)
+    {
+        var pd = Create(400, "Validation Error", "One or more validation errors occurred.");
+        pd.Extensions["errors"] = ex.Errors
+            .GroupBy(x => string.IsNullOrEmpty(x.PropertyName) ? "_general" : x.PropertyName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.Select(x => x.ErrorMessage).ToArray()
+            );
         return pd;
     }
 }

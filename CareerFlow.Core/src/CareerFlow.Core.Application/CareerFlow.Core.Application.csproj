@@ -7,7 +7,7 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-		<PackageReference Include="Shared.Application" Version="1.0.0" />
+		<PackageReference Include="Shared.Application" Version="1.0.3" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj" />

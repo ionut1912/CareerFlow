@@ -1,4 +1,4 @@
-﻿using CareerFlow.Core.Application.Mediatr.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Query;
 using FluentValidation;
 
 namespace CareerFlow.Core.Application.Validators.Account;
@@ -7,6 +7,6 @@ public class GetCurrentAccountQueryValidator : AbstractValidator<GetCurrentAccou
 {
     public GetCurrentAccountQueryValidator()
     {
-        RuleFor(x => x.Username).NotEmpty().WithMessage("Username is required");
+        RuleFor(x => x.AccountId).NotEmpty().WithMessage("Username is required");
     }
 }
