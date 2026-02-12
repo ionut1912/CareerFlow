@@ -3,7 +3,6 @@ using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 

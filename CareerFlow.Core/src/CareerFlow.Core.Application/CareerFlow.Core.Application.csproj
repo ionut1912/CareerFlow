@@ -7,9 +7,11 @@
 	</PropertyGroup>
 	<ItemGroup>
 		<PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
-		<PackageReference Include="Shared.Application" Version="1.0.3" />
+		<PackageReference Include="Shared.Application" Version="1.0.4" />
+		<PackageReference Include="WolverineFx" Version="5.15.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj" />
+		<ProjectReference Include="..\CareerFlow.Core.Rabbit.Events\CareerFlow.Core.Rabbit.Events.csproj" />
 	</ItemGroup>
 </Project>
