@@ -23,7 +23,7 @@ module.exports = [
 
       // --- React Native Best Practices ---
       // Warns if you write styles directly in the JSX (performance & maintainability)
-      'react-native/no-inline-styles': 'warn',
+      'react-native/no-inline-styles': 'error',
 
       // Errors if you define a style in StyleSheet but never use it
       'react-native/no-unused-styles': 'error',
