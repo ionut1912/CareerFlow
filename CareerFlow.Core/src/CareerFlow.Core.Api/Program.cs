@@ -22,10 +22,12 @@ var configuration = builder.Configuration;
 var infisicalClientId = configuration["Infisical:ClientId"];
 var infisicalClientSecret = configuration["Infisical:ClientSecret"];
 var infisicalProjectId = configuration["Infisical:ProjectId"];
-
-if (!string.IsNullOrWhiteSpace(infisicalClientId) && !string.IsNullOrWhiteSpace(infisicalProjectId) && !string.IsNullOrWhiteSpace(infisicalClientSecret))
+var env = builder.Environment.IsProduction() ? "prod" : "dev";
+if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
+    !string.IsNullOrWhiteSpace(infisicalProjectId) &&
+    !string.IsNullOrWhiteSpace(infisicalClientSecret))
 {
-    var env = builder.Environment.IsProduction() ? "prod" : "dev";
+
     builder.Configuration.AddInfisical(new InfisicalConfigBuilder()
         .SetProjectId(infisicalProjectId)
         .SetEnvironment(env)
@@ -35,23 +37,16 @@ if (!string.IsNullOrWhiteSpace(infisicalClientId) && !string.IsNullOrWhiteSpace(
         .Build());
 }
 
-var otelEndpoint = configuration["OTEL_EXPORTER_OTLP_ENDPOINT"] ?? "http://tempo:4317";
-var serviceName = configuration["OTEL_SERVICE_NAME"] ?? "CareerFlowCore";
-var environmentName = builder.Environment.EnvironmentName ?? "Development";
-
-// Use the correct Loki OTLP endpoint
-var lokiEndpoint = configuration["OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"] ?? "http://loki:3100";
-
-var resourceBuilder = OpenTelemetryExtensions.CreateServiceResourceBuilder(serviceName, environmentName);
 
 builder.AddWolverineMessaging(
     typeof(EmailNotificationMessageHandler).Assembly,
     (appBuilder, opt) =>
     {
 
-        opt.ListenToRabbitQueue("email-notifications").UseDurableInbox();
-
-        opt.PublishMessage<EmailNotificationMessage>().ToRabbitQueue("email-notifications");
+        var emailQueueName = "email-notifications-queue";
+        opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
+        opt.ListenToRabbitQueue(emailQueueName)
+                .UseDurableInbox();
     });
 
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -60,9 +55,11 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.InstanceName = "CarrerFlow_";
 });
 
-builder.AddOpenTelemetry(lokiEndpoint, resourceBuilder);
 builder.Services.Configure<SocialAuthSettings>(
-    builder.Configuration.GetSection("Authentication"));
+    builder.Configuration.GetSection(SocialAuthSettings.SectionName));
+
+builder.Services.Configure<PostmarkSettings>(
+    builder.Configuration.GetSection(PostmarkSettings.SectionName));
 
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 
@@ -76,8 +73,9 @@ builder.Services
     .AddRepositoriesConfig<IAuthService, AuthService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
     .AddRepositoriesConfig<ICacheService, CacheService>()
+    .AddRepositoriesConfig<IEmailService, EmailService>()
     .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
-    .AddPresentation<ExceptionMapper>(builder.Configuration, otelEndpoint, serviceName, environmentName);
+    .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 
 var app = builder.Build();
 
@@ -91,6 +89,6 @@ app.UseGlobalExceptionHandler<Program>()
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
 
-app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", serviceName, environmentName);
+app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
 
 app.Run();

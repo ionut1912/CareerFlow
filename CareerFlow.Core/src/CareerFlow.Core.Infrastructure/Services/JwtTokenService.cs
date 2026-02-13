@@ -27,15 +27,15 @@ public class JwtTokenService : IJwtTokenService
 
         var jti = Guid.NewGuid().ToString();
 
- 
+
         var claims = new List<Claim>
         {
             new(JwtRegisteredClaimNames.Sub, account.Id.ToString()),
-            new(JwtRegisteredClaimNames.Name, account.Username), 
+            new(JwtRegisteredClaimNames.Name, account.Username),
             new(JwtRegisteredClaimNames.Email, account.Email),
             new(JwtRegisteredClaimNames.Jti, jti),
 
-     
+
             new("is_founder", account.IsFounder.ToString().ToLower()),
             new("terms_accepted", account.TermsAccepted.ToString().ToLower()),
             new("policy_accepted", account.PrivacyPolicyAccepted.ToString().ToLower())
@@ -46,12 +46,12 @@ public class JwtTokenService : IJwtTokenService
         {
             Issuer = jwtSettings["Issuer"],
             Audience = jwtSettings["Audience"],
-            Subject = new ClaimsIdentity(claims), 
+            Subject = new ClaimsIdentity(claims),
             Expires = DateTime.UtcNow.AddHours(2),
             SigningCredentials = creds
         };
 
-  
+
         var handler = new JsonWebTokenHandler();
         var tokenString = handler.CreateToken(tokenDescriptor);
 

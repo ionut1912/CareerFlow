@@ -32,7 +32,7 @@ public class LoginWithGoogleQueryHandler
 
     public async Task<AccountDto> Handle(LoginWithGoogleQuery request, CancellationToken cancellationToken)
     {
-        var googleUser = await _authService.LoginWithGoogleAsync(request.IdToken,cancellationToken);
+        var googleUser = await _authService.LoginWithGoogleAsync(request.IdToken, cancellationToken);
         var token = _jwtTokenService.GenerateToken(googleUser);
         var refresh = _jwtTokenService.GenerateRefreshToken(googleUser.Id, token.Jti);
         await _refreshTokenRepository.AddAsync(refresh);

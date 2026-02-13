@@ -6,7 +6,7 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="Shared.Domain" Version="1.0.0" />
+		<PackageReference Include="Shared.Domain" Version="1.0.2" />
 	</ItemGroup>
 
 

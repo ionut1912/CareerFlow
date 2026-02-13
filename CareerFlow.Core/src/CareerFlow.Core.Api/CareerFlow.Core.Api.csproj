@@ -14,11 +14,11 @@
 	<ItemGroup>
 		<PackageReference Include="BouncyCastle.Cryptography" Version="2.6.2" />
 		<PackageReference Include="Infisical.IConfigurationProvider" Version="0.0.2" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.2">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.3">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.23.0" />
-		<PackageReference Include="Shared.Api" Version="1.0.8" />
-		<PackageReference Include="WolverineFx" Version="5.14.0" />
+		<PackageReference Include="Shared.Api" Version="1.1.0" />
 	</ItemGroup>
 
 
@@ -26,7 +26,11 @@
 		<ProjectReference Include="..\CareerFlow.Core.Application\CareerFlow.Core.Application.csproj" />
 		<ProjectReference Include="..\CareerFlow.Core.Infrastructure\CareerFlow.Core.Infrastructure.csproj" />
 		<ProjectReference Include="..\CareerFlow.Core.Rabbit.Events\CareerFlow.Core.Rabbit.Events.csproj" />
-		<ProjectReference Include="..\CareerFlow.Rabbit.Events\CareerFlow.Core.Rabbit.Events.csproj" />
 	</ItemGroup>
-
+	
+	<ItemGroup>
+		<Content Include="EmailTemplates\**">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
+	</ItemGroup>
 </Project>

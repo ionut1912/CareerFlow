@@ -2,8 +2,10 @@
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Rabbit.Events.Events;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
+using Wolverine;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
@@ -26,7 +28,7 @@ public class ResetPasswordCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+    public async Task<OutgoingMessages> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)
@@ -38,7 +40,13 @@ public class ResetPasswordCommandHandler
         account.ResetPassword(request.NewPassword, _passwordService);
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var messages = new OutgoingMessages
+        {
+            new ResetPasswordNotificationMessage(account.Username,account.Email,"test")
+        };
+
         _logger.LogInformation("Password for account with AccountId {AccountId} has been reset", request.AccountId);
+        return messages;
 
     }
 }

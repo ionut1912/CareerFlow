@@ -5,41 +5,42 @@ reviews:
   auto_review:
     enabled: true
     ignore_title_keywords: ["WIP", "DRAFT", "SKIP"]
-  
-  instructions: |
-    You are a Lead Architect. Focus on O-complexity, security (OWASP 2026), 
-    and Clean Architecture / Vertical Slices.
 
   path_instructions:
+    # --- GLOBAL ARCHITECT INSTRUCTIONS (Moved from invalid reviews.instructions) ---
+    - path: "**" 
+      instructions: |
+        You are a Lead Architect. Focus on O-complexity, security (OWASP 2026), 
+        and Clean Architecture / Vertical Slices.
+
     # --- .NET 10 & C# 14 (.cs files) ---
     - path: "CareerFlow.Core/**/*.cs"
       instructions: |
-        Review for .NET 10/C# 14 standards:
-        - Use C# 14 'field' keyword in properties to remove boilerplate backing fields.
-        - Leverage 'extension' blocks for static and instance members.
-        - Prioritize 'HybridCache' for distributed/local caching.
-        - Ensure Native AOT compatibility; flag non-AOT reflection or dynamic code.
-        - Check for .NET 10 JIT optimizations like array interface devirtualization.
+        Review for .NET 10/C# 14 & Minimal API Standards:
+        - **Minimal APIs**: Enforce the use of `RouteGroups` and `TypedResults` for better testability and OpenAPI documentation. Flag legacy `ControllerBase` unless explicitly required.
+        - **C# 14 Features**: Use the 'field' keyword in properties and 'extension' blocks for cleaner service registrations.
+        - **Native AOT & Performance**: Ensure all Minimal API models use `[JsonSerializable]` for source-generated JSON. Check for .NET 10 array interface devirtualization in hot paths.
+        - **Dependency Injection**: Use `[FromKeyedServices]` for specialized implementations within Minimal API Map methods.
+        - **Security**: Validate that `MapHealthChecks` and `MapPrometheusMirror` are configured. Enforce rate limiting per endpoint group using .NET 10 policies.
+        - **Vertical Slices**: Each Minimal API endpoint should reside within its own feature folder (Slice), keeping the `MapEndpoint` logic close to the Command/Query.
 
     # --- Python 3.14 (.py files) ---
     - path: "CareerFlow.AI/**/*.py"
       instructions: |
-        Review for Python 3.14 standards:
-        - Validate usage of 'free-threaded' (no-GIL) patterns for multi-core scaling.
-        - Ensure 'Deferred evaluation of annotations' (PEP 649) is respected.
-        - Suggest 'Parallel Subinterpreters' for CPU-bound tasks instead of multiprocessing.
-        - Use Pydantic v2 for data validation and 'uv' for dependency management.
-        - Flag insecure string interpolation; suggest 'Template Strings' (t-strings).
+        Review for Python 3.14 Standards:
+        - **No-GIL Performance**: Validate thread-safety in shared AI model states. Suggest `threading` for I/O and CPU-bound task overlap.
+        - **Subinterpreters**: Suggest `interpreters` module for true isolation in multi-tenant AI processing.
+        - **Safety**: Enforce `t-strings` (Template Strings) for all dynamic prompts to AI models to prevent prompt injection.
+        - **Tooling**: Enforce `uv` for lightning-fast dependency resolution and strict PEP 649 compliance.
 
     # --- React Native / TS (.ts, .tsx files) ---
     - path: "CareerFlow.UI/**/*.{ts,tsx}"
       instructions: |
-        Review for React Native New Architecture (Fabric/TurboModules):
-        - Ensure all native calls are Bridge-less using JSI.
-        - Validate that 'Codegen' specs are strictly typed to prevent runtime crashes.
-        - Suggest 'React 19 Concurrent' features (Transitions/Suspense) for UI fluidity.
-        - Flag any JS blocking the UI thread; suggest Worklets or off-thread processing.
-        - Verify accessibility roles and labels for mobile compliance.
+        Review for React Native New Architecture:
+        - **Bridge-less & JSI**: Ensure all communication with native modules uses the high-speed JSI layer.
+        - **React 19 Hooks**: Prioritize `useActionState` and `useFormStatus` for modern, concurrent-safe UI patterns.
+        - **Performance**: Flag non-memoized components in large lists; enforce `FlashList` for O(1) layout complexity during scrolling.
+        - **Accessibility**: Verify `accessibilityLiveRegion` for dynamic content updates.
 
 chat:
   auto_reply: true
