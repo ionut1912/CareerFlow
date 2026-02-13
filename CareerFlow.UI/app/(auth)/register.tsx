@@ -1,8 +1,8 @@
-import { AppInput } from '@/components/auth/AppInput';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { GradientButton } from '@/components/auth/GradientButton';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import {AppInput} from '@/components/auth/AppInput';
+import {AuthLayout} from '@/components/auth/AuthLayout';
+import {GradientButton} from '@/components/auth/GradientButton';
+import {useRouter} from 'expo-router';
+import React, {useState} from 'react';
 
 const RegisterScreen = () => {
   const router = useRouter();

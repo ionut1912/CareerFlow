@@ -1,8 +1,8 @@
-import { COLORS } from '@/constants/theme';
-import { MaterialIcons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+import {COLORS} from '@/constants/theme';
+import {MaterialIcons} from '@expo/vector-icons';
+import {LinearGradient} from 'expo-linear-gradient';
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import {StyleSheet, Text, TouchableOpacity} from 'react-native';
 
 interface GradientButtonProps {
   onPress: () => void;

@@ -1,17 +1,17 @@
 import SocialLoginButtons from '@/components/SocialLoginButtons';
-import { COLORS, STYLES } from '@/constants/theme';
-import { MaterialIcons } from '@expo/vector-icons';
-import { usePathname, useRouter } from 'expo-router';
+import {COLORS, STYLES} from '@/constants/theme';
+import {MaterialIcons} from '@expo/vector-icons';
+import {usePathname, useRouter} from 'expo-router';
 import React from 'react';
 import {
-    KeyboardAvoidingView,
-    Platform,
-    SafeAreaView,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  KeyboardAvoidingView,
+  Platform,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface AuthLayoutProps {

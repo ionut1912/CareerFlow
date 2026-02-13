@@ -1,13 +1,13 @@
-import { COLORS } from '@/constants/theme';
-import { MaterialIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import {COLORS} from '@/constants/theme';
+import {MaterialIcons} from '@expo/vector-icons';
+import React, {useState} from 'react';
 import {
-    StyleSheet,
-    Text,
-    TextInput,
-    TextInputProps,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TextInput,
+  TextInputProps,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 interface AppInputProps extends TextInputProps {

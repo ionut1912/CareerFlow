@@ -1,10 +1,10 @@
-import { AppInput } from '@/components/auth/AppInput';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { GradientButton } from '@/components/auth/GradientButton';
-import { COLORS } from '@/constants/theme';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity } from 'react-native';
+import {AppInput} from '@/components/auth/AppInput';
+import {AuthLayout} from '@/components/auth/AuthLayout';
+import {GradientButton} from '@/components/auth/GradientButton';
+import {COLORS} from '@/constants/theme';
+import {useRouter} from 'expo-router';
+import React, {useState} from 'react';
+import {StyleSheet, Text, TouchableOpacity} from 'react-native';
 
 const LoginScreen = () => {
   const router = useRouter();
