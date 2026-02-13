@@ -6,7 +6,6 @@ using CareerFlow.Core.Rabbit.Events.Events;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 using Wolverine;
-using Wolverine.Attributes;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 

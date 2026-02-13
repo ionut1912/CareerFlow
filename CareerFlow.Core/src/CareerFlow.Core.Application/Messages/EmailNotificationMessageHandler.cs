@@ -18,7 +18,7 @@ public class EmailNotificationMessageHandler
         _logger = logger;
     }
 
-    public async Task Handle(ResetPasswordNotificationMessage message)
+    public async Task Handle(ResetPasswordNotificationMessage message, CancellationToken cancellationToken)
     {
 
         var placeholders = new Dictionary<string, string>
@@ -29,14 +29,14 @@ public class EmailNotificationMessageHandler
             {"AnCurent",DateTime.UtcNow.Year.ToString() }
         };
 
-        var result=await _emailService.SendEmailWithTemplateAsync(message.Email,  43498403, placeholders);
+        var result = await _emailService.SendEmailWithTemplateAsync(message.Email, 43498403, placeholders, cancellationToken);
         if (result == true)
         {
-              _logger.LogInformation("Reset password email was send to required email");
+            _logger.LogInformation("Reset password email was send to required email");
         }
         else
         {
-              _logger.LogInformation("Reset password email was not send to required email");
+            _logger.LogInformation("Reset password email was not send to required email");
         }
     }
 }

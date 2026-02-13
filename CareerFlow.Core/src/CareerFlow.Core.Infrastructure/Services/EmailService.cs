@@ -16,19 +16,30 @@ public class EmailService : IEmailService
     {
         ArgumentNullException.ThrowIfNull(options, nameof(options));
         ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-        
+
         _settings = options.Value;
         _logger = logger;
         _client = new PostmarkClient(_settings.ServerToken);
     }
 
-    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> templateModel)
+    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> templateModel, CancellationToken cancellationToken)
     {
+        if (cancellationToken.IsCancellationRequested)
+        {
+            _logger.LogWarning("Email sending cancelled before execution.");
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(to))
+        {
+            _logger.LogError("Receiver email addres is empty");
+        }
+
         var message = new TemplatedPostmarkMessage
         {
             To = to,
             From = _settings.FromAddress,
-            TemplateId = templateId, 
+            TemplateId = templateId,
             TemplateModel = templateModel,
             TrackOpens = true
         };
