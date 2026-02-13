@@ -33,6 +33,7 @@ public class EmailService : IEmailService
         if (string.IsNullOrWhiteSpace(to))
         {
             _logger.LogError("Receiver email addres is empty");
+            return false;
         }
 
         var message = new TemplatedPostmarkMessage
@@ -46,7 +47,7 @@ public class EmailService : IEmailService
 
         try
         {
-            var result = await _client.SendMessageAsync(message);
+            var result = await _client.SendMessageAsync(message).WaitAsync(cancellationToken);
 
             if (result.Status == PostmarkStatus.Success)
             {
