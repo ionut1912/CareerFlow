@@ -65,22 +65,25 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                     name="psychology"
                     size={40}
                     color={COLORS.primary}
+                    importantForAccessibility="no"
                   />
                 </View>
               </View>
-              <Text style={styles.title}>{title}</Text>
+              <Text style={styles.title} accessibilityRole="header">
+                {title}
+              </Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
 
             <View style={styles.card}>
-              <View style={styles.tabBar}>
+              <View style={styles.tabBar} accessibilityRole="tablist">
                 <TabButton
                   title="Inregistrare"
                   active={!isLogin}
                   onPress={() => router.replace('/(auth)/register')}
                 />
                 <TabButton
-                  title="Creare Cont"
+                  title="Autentificare"
                   active={isLogin}
                   onPress={() => router.replace('/(auth)/login')}
                 />
@@ -99,7 +102,11 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             <View style={styles.footer}>
               <Text style={styles.footerMainText}>
                 {footerText}{' '}
-                <Text style={styles.linkText} onPress={onFooterAction}>
+                <Text
+                  style={styles.linkText}
+                  onPress={onFooterAction}
+                  accessibilityRole="button"
+                  accessibilityLabel={footerActionText}>
                   {footerActionText}
                 </Text>
               </Text>
@@ -125,7 +132,10 @@ interface TabButtonProps {
 const TabButton: React.FC<TabButtonProps> = ({title, active, onPress}) => (
   <TouchableOpacity
     style={[styles.tab, active && styles.activeTab]}
-    onPress={onPress}>
+    onPress={onPress}
+    accessibilityRole="tab"
+    accessibilityState={{selected: active}}
+    accessibilityLabel={title}>
     <Text style={[styles.tabText, active && styles.activeTabText]}>
       {title}
     </Text>
@@ -161,7 +171,12 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     opacity: 0.4,
   },
-  title: {fontSize: 28, fontWeight: '700', color: COLORS.text, marginTop: 16},
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: COLORS.text,
+    marginTop: 16,
+  },
   subtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
@@ -183,11 +198,24 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 24,
   },
-  tab: {flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 8},
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
   activeTab: {backgroundColor: COLORS.primary},
-  tabText: {color: COLORS.textSecondary, fontSize: 14, fontWeight: '600'},
+  tabText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
   activeTabText: {color: COLORS.text},
-  dividerRow: {flexDirection: 'row', alignItems: 'center', marginVertical: 24},
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 24,
+  },
   divider: {flex: 1, height: 1, backgroundColor: COLORS.border},
   dividerText: {
     color: COLORS.textMuted,

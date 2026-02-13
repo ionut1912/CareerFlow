@@ -42,6 +42,7 @@ export const AppInput: React.FC<AppInputProps> = ({
           size={20}
           color={showError ? COLORS.error : COLORS.textMuted}
           style={styles.icon}
+          importantForAccessibility="no-hide-descendants"
         />
         <TextInput
           style={styles.input}
@@ -52,10 +53,14 @@ export const AppInput: React.FC<AppInputProps> = ({
           onChangeText={onChangeText}
           onBlur={onBlur}
           autoCapitalize="none"
+          accessibilityLabel={label}
           {...props}
         />
         {isPassword && (
-          <TouchableOpacity onPress={() => setIsVisible(!isVisible)}>
+          <TouchableOpacity
+            onPress={() => setIsVisible(!isVisible)}
+            accessibilityRole="button"
+            accessibilityLabel={isVisible ? 'Ascunde parola' : 'Arata parola'}>
             <MaterialIcons
               name={isVisible ? 'visibility' : 'visibility-off'}
               size={20}
@@ -64,7 +69,14 @@ export const AppInput: React.FC<AppInputProps> = ({
           </TouchableOpacity>
         )}
       </View>
-      {!!showError && <Text style={styles.errorText}>{error}</Text>}
+      {!!showError && (
+        <Text
+          style={styles.errorText}
+          accessibilityLiveRegion="polite"
+          accessibilityRole="alert">
+          {error}
+        </Text>
+      )}
     </View>
   );
 };

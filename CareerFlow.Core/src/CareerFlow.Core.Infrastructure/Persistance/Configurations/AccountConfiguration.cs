@@ -23,6 +23,10 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.Username)
             .HasMaxLength(50)
             .IsRequired();
+        
+        builder.Property(a=>a.Name)
+            .HasMaxLength(50)
+            .IsRequired();
 
         builder.HasIndex(a => a.Username).IsUnique();
 
