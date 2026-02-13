@@ -29,7 +29,7 @@ public class EmailNotificationMessageHandler
             {"AnCurent",DateTime.UtcNow.Year.ToString() }
         };
 
-        await _emailService.SendEmailWithTemplateAsync(message.Email,  "Password reset", placeholders);
+        await _emailService.SendEmailWithTemplateAsync(message.Email,  43498403, placeholders);
         _logger.LogInformation("Email de resetare a parolei trimis către {Email}", message.Email);
     }
 }

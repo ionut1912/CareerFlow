@@ -21,13 +21,13 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task<bool> SendEmailWithTemplateAsync(string to, string templateAlias, Dictionary<string, string> templateModel)
+    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> templateModel)
     {
         var message = new TemplatedPostmarkMessage
         {
             To = to,
             From = _settings.FromAddress,
-            TemplateAlias = templateAlias, 
+            TemplateId = templateId, 
             TemplateModel = templateModel,
             TrackOpens = true
         };
@@ -39,7 +39,7 @@ public class EmailService : IEmailService
 
             if (result.Status == PostmarkStatus.Success)
             {
-                _logger.LogInformation("Email sent successfully to {To} using template {TemplateAlias}", to, templateAlias);
+                _logger.LogInformation("Email sent successfully to {To} using template {TemplateId}", to, templateId);
                 return true;
             }
 
@@ -48,7 +48,7 @@ public class EmailService : IEmailService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception occurred while sending email to {To} with template {TemplateAlias}", to, templateAlias);
+            _logger.LogError(ex, "Exception occurred while sending email to {To} with template {TemplateId}", to, templateId);
             return false;
         }
     }
