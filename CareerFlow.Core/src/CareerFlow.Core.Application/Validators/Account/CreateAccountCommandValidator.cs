@@ -11,5 +11,6 @@ public class CreateAccountCommandValidator : AbstractValidator<CreateAccountComm
         RuleFor(a => a.Username).NotEmpty().WithMessage("Username is required");
         RuleFor(a => a.Email).NotEmpty().WithMessage("Email is required")
             .EmailAddress().WithMessage("Email has invalid format");
+        RuleFor(x=>x.Name).NotEmpty().WithMessage("Name must not be empty");
     }
 }

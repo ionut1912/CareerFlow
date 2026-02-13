@@ -1,0 +1,10 @@
+#!/bin/sh
+. "$(dirname "$0")/_/husky.sh"
+
+set -e
+
+# 1. Format and Lint staged files
+npx lint-staged
+
+# 2. Run tests (See note below)
+npm test

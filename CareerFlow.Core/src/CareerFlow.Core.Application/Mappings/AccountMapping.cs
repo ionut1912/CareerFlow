@@ -17,7 +17,7 @@ public static class AccountMapping
 
     public static CreateAccountCommand ToCreateCommand(this CreateAccountRequest request)
     {
-        return new CreateAccountCommand(request.Email, request.Password, request.Username, request.AcceptedPrivacyPolicy, request.AcceptedTermsAndConditions);
+        return new CreateAccountCommand(request.Email, request.Password, request.Username,request.Name, request.AcceptedPrivacyPolicy, request.AcceptedTermsAndConditions);
     }
 
     public static LoginQuery ToLoginQuery(this LoginRequest request)

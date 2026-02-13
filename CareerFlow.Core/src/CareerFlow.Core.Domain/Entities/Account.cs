@@ -11,7 +11,7 @@ namespace CareerFlow.Core.Domain.Entities
         {
         }
 
-        private Account(string email, string password, string username)
+        private Account(string email, string password, string username,string name)
         {
             if (string.IsNullOrEmpty(email))
                 throw new ArgumentNullException("Email cannot be null or empty");
@@ -20,9 +20,13 @@ namespace CareerFlow.Core.Domain.Entities
             if (string.IsNullOrEmpty(username))
                 throw new ArgumentNullException("Username cannot be null or empty");
 
+            if(string.IsNullOrEmpty(name))
+                throw new ArgumentNullException("Name cannot be null or empty");
+
             Email = email;
             Password = password;
             Username = username;
+            Name=name;
             IsFounder = false;
             CreatedAt = DateTime.UtcNow;
         }
@@ -30,13 +34,14 @@ namespace CareerFlow.Core.Domain.Entities
         public string Email { get; private set; } = string.Empty;
         public string Password { get; private set; } = string.Empty;
         public string Username { get; private set; } = string.Empty;
+        public string  Name{get;private set;}=string.Empty;
         public bool IsFounder { get; private set; } = false;
         public bool TermsAccepted { get; private set; } = false;
         public bool PrivacyPolicyAccepted { get; private set; } = false;
 
-        public static Account Create(string email, string password, string username)
+        public static Account Create(string email, string password, string username,string name)
         {
-            return new Account(email, password, username);
+            return new Account(email, password, username,name);
         }
 
         public void HashPassword(IPasswordService passwordService)

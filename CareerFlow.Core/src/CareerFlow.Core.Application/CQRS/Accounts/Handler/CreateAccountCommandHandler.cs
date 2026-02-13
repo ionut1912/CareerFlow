@@ -37,7 +37,7 @@ public class CreateAccountCommandHandler
             throw new UserAlreadyExistsException($"Account with username {request.Username} already exists");
         }
 
-        var accountToCreate = Account.Create(request.Email, request.Password, request.Username);
+        var accountToCreate = Account.Create(request.Email, request.Password, request.Username,request.Name);
 
         if (request.AcceptedPrivacyPolicy)
         {
