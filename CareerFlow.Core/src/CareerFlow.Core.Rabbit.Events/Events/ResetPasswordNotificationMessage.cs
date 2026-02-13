@@ -1,3 +1,3 @@
 ﻿namespace CareerFlow.Core.Rabbit.Events.Events;
 
-public record ResetPasswordNotificationMessage(string Nume, string Email, string ResetLink);
+public record ResetPasswordNotificationMessage(string Name, string Email, string ResetLink);

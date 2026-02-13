@@ -5,13 +5,14 @@ reviews:
   auto_review:
     enabled: true
     ignore_title_keywords: ["WIP", "DRAFT", "SKIP"]
-  
-  instructions: |
-    You are a Lead Architect. Focus on O-complexity (Big O optimization), security (OWASP 2026), 
-    and Clean Architecture / Vertical Slices. Ensure code is modular, testable, and leverages
-    the latest runtime optimizations.
 
   path_instructions:
+    # --- GLOBAL ARCHITECT INSTRUCTIONS (Moved from invalid reviews.instructions) ---
+    - path: "**" 
+      instructions: |
+        You are a Lead Architect. Focus on O-complexity, security (OWASP 2026), 
+        and Clean Architecture / Vertical Slices.
+
     # --- .NET 10 & C# 14 (.cs files) ---
     - path: "CareerFlow.Core/**/*.cs"
       instructions: |

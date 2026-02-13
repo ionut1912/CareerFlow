@@ -24,12 +24,19 @@ public class EmailNotificationMessageHandler
         var placeholders = new Dictionary<string, string>
         {
             {"NumeAplicatie","CareerFlow" },
-            { "Nume", message.Nume },
+            { "Nume", message.Name },
             { "LinkResetare", message.ResetLink },
             {"AnCurent",DateTime.UtcNow.Year.ToString() }
         };
 
-        await _emailService.SendEmailWithTemplateAsync(message.Email,  43498403, placeholders);
-        _logger.LogInformation("Email de resetare a parolei trimis către {Email}", message.Email);
+        var result=await _emailService.SendEmailWithTemplateAsync(message.Email,  43498403, placeholders);
+        if (result == true)
+        {
+              _logger.LogInformation("Reset password email was send to required email");
+        }
+        else
+        {
+              _logger.LogInformation("Reset password email was not send to required email");
+        }
     }
 }

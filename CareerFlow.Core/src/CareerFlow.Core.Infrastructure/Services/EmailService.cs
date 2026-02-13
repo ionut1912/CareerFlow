@@ -1,6 +1,5 @@
 ﻿using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Infrastructure.Configurations;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using PostmarkDotNet;
@@ -11,6 +10,7 @@ public class EmailService : IEmailService
 {
     private readonly PostmarkSettings _settings;
     private readonly ILogger<EmailService> _logger;
+    private readonly PostmarkClient _client;
 
     public EmailService(IOptions<PostmarkSettings> options, ILogger<EmailService> logger)
     {
@@ -19,6 +19,7 @@ public class EmailService : IEmailService
         
         _settings = options.Value;
         _logger = logger;
+        _client = new PostmarkClient(_settings.ServerToken);
     }
 
     public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> templateModel)
@@ -34,21 +35,20 @@ public class EmailService : IEmailService
 
         try
         {
-            var client = new PostmarkClient(_settings.ServerToken);
-            var result = await client.SendMessageAsync(message);
+            var result = await _client.SendMessageAsync(message);
 
             if (result.Status == PostmarkStatus.Success)
             {
-                _logger.LogInformation("Email sent successfully to {To} using template {TemplateId}", to, templateId);
+                _logger.LogInformation("Email sent successfully  using template {TemplateId}", templateId);
                 return true;
             }
 
-            _logger.LogError("Failed to send email to {To}. Postmark Error: {Message}", to, result.Message);
+            _logger.LogError("Failed to send email.Postmark Error: {Message}", result.Message);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception occurred while sending email to {To} with template {TemplateId}", to, templateId);
+            _logger.LogError(ex, "Exception occurred while sending email with template {TemplateId}", templateId);
             return false;
         }
     }
