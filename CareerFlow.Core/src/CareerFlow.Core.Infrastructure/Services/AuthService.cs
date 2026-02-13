@@ -77,7 +77,7 @@ public class AuthService : IAuthService
 
     private static Account CreateAccount(string email, string? name)
     {
-        var account = Account.Create(email, "SocialAccountPassword", name ?? "SocialLoginUser");
+        var account = Account.Create(email, "SocialAccountPassword", "SocialLoginUser",name??"SocialUser");
         account.AcceptTerms();
         account.AcceptPrivacyPolicy();
         return account;
