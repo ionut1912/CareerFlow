@@ -1,0 +1,38 @@
+include:
+  # This assumes your infra file from the previous step is saved as this name
+  - docker-compose.infra.yml
+
+services:
+  careerflow-api:
+    build:
+      context: CareerFlow.Core
+      dockerfile: src/CareerFlow.Core.Api/Dockerfile
+    container_name: careerflow-api
+    ports:
+      - "5000:8080"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      
+      # --- Infisical (Passed as Arguments) ---
+      # These use ${VAR_NAME} syntax to pull from your host environment or .env file
+      - Infisical__ClientId=${INFISICAL_CLIENT_ID}
+      - Infisical__ClientSecret=${INFISICAL_CLIENT_SECRET}
+      - Infisical__ProjectId=${INFISICAL_PROJECT_ID}
+
+      # --- AppSettings: JwtSettings ---
+      - JwtSettings__Issuer=FreelanceApp
+      - JwtSettings__Audience=FreelanceAppUsers
+
+      - PostmarkSettings__FromAddress=contact@carerflow-api.ro
+      - PostmarkSettings__FromName=CareerFlow
+
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - careerflow-network
