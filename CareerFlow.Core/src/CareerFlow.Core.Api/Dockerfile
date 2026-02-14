@@ -16,8 +16,8 @@ COPY ["nuget.config", "."]
 COPY ["src/CareerFlow.Core.Api/CareerFlow.Core.Api.csproj", "src/CareerFlow.Core.Api/"]
 COPY ["src/CareerFlow.Core.Application/CareerFlow.Core.Application.csproj", "src/CareerFlow.Core.Application/"]
 COPY ["src/CareerFlow.Core.Domain/CareerFlow.Core.Domain.csproj", "src/CareerFlow.Core.Domain/"]
-COPY ["src/CareerFlow.Rabbit.Events/CareerFlow.Rabbit.Events.csproj", "src/CareerFlow.Rabbit.Events/"]
-COPY ["src/CarrerFlow.Core.Infrastructure/CarrerFlow.Core.Infrastructure.csproj", "src/CarrerFlow.Core.Infrastructure/"]
+COPY ["src/CareerFlow.Core.Rabbit.Events/CareerFlow.Core.Rabbit.Events.csproj", "src/CareerFlow.Core.Rabbit.Events/"]
+COPY ["src/CareerFlow.Core.Infrastructure/CareerFlow.Core.Infrastructure.csproj", "src/CareerFlow.Core.Infrastructure/"]
 RUN dotnet restore "./src/CareerFlow.Core.Api/CareerFlow.Core.Api.csproj"
 COPY . .
 WORKDIR "/src/src/CareerFlow.Core.Api"
