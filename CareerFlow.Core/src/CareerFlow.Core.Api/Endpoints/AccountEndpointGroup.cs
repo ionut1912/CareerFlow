@@ -21,7 +21,7 @@ public class AccountEndpointGroup : EndpointGroup
         group.MapPost(LoginWithGoogle, "/google");
         group.MapPost(LoginWithLinkedin, "/linkedin");
         group.MapPost(RefreshToken, "/refresh-token");
-        group.MapPost(ResetPassword, "/reset-password");
+        group.MapPut(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
         group.MapDelete(DeleteUserAccount);
     }
