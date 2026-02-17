@@ -4,9 +4,11 @@ using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Rabbit.Events.Events;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 using System.Text.Json;
+using Wolverine;
 
 namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
@@ -19,28 +21,39 @@ public class UpdateLegalDocCommandHandler
 
     public UpdateLegalDocCommandHandler(ILegalDocRepository legalDocRepository, ILogger<UpdateLegalDocCommandHandler> logger, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
-        _legalDocRepository = legalDocRepository ?? throw new ArgumentNullException(nameof(legalDocRepository));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _unitOfWork = unitOfWork ?? throw new ArgumentNullException(nameof(unitOfWork));
-        _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+        ArgumentNullException.ThrowIfNull(legalDocRepository, nameof(legalDocRepository));
+        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
+        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
+        _legalDocRepository = legalDocRepository;
+        _logger = logger;
+        _unitOfWork = unitOfWork;
+        _cacheService = cacheService;
     }
 
-    public async Task<LegalDocDto> Handle(UpdateLegalDocCommand command, CancellationToken cancellationToken)
+    public async Task<(LegalDocDto, OutgoingMessages)> Handle(UpdateLegalDocCommand command, CancellationToken cancellationToken)
     {
         var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(command.Type, cancellationToken);
         if (legalDoc is null)
         {
-            _logger.LogError("No legal document found for type {Type}.", command.Type);
-            throw new LegalDocNotFoundException($"No legal document found for type {command.Type}");
+            _logger.LogError("Nu a fost gasit documentul cu tipul {Type}.", command.Type);
+            throw new LegalDocNotFoundException($"Nu a fost gasit documentul cu tipul {command.Type}");
         }
 
         legalDoc.Update(command.Content, command.Type);
         _legalDocRepository.Update(legalDoc);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        await _cacheService.SetCacheValueAsync($"LegalDoc_{command.Type}", legalDoc);
+
         var legalDocDto = legalDoc.ToDto();
-        _logger.LogInformation("Legal document of type {Type} updated successfully,updatedDoc {legalDocDto}.", command.Type,
+        await _cacheService.SetCacheValueAsync($"LegalDoc_{command.Type}", legalDocDto);
+        _logger.LogInformation("Documentul cu tipul {Type} modificat cu succes, documentul updatat {legalDocDto}.", command.Type,
             JsonSerializer.Serialize(legalDoc, new JsonSerializerOptions { WriteIndented = true }));
-        return legalDocDto;
+
+        var messages = new OutgoingMessages
+        {
+            new UpdateLegalDocsMessage()
+        };
+
+        return (legalDocDto, messages);
     }
 }

@@ -32,7 +32,7 @@ public class CreateLegalDocCommandHandler
         var legalDoc = LegalDoc.Create(command.Content, command.Type);
         await _legalDocRepository.AddAsync(legalDoc, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Legal document created with ID: {LegalDocId}", legalDoc.Id);
+        _logger.LogInformation("Documentul cu tipul {Type} a fost creat", legalDoc.Type);
         await _cacheService.SetCacheValueAsync($"LegalDoc_{legalDoc.Type.Value}", legalDoc.ToDto());
         return legalDoc.Id;
     }

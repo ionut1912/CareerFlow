@@ -9,8 +9,8 @@ public class RefreshTokenRepository(DbSet<RefreshToken> dbSet) : GenericReposito
 {
 
 
-    public async Task<RefreshToken?> GetExistingTokenAsync(string token, CancellationToken cancellationToken)
+    public async Task<RefreshToken?> GetExistingTokenAsync(string jwtToken, CancellationToken cancellationToken)
     {
-        return await dbSet.FirstOrDefaultAsync(rt => rt.Token == token, cancellationToken);
+        return await dbSet.FirstOrDefaultAsync(rt => rt.JwtToken == jwtToken, cancellationToken);
     }
 }

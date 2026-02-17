@@ -7,7 +7,8 @@ public class LoginQueryValidator : AbstractValidator<LoginQuery>
 {
     public LoginQueryValidator()
     {
-        RuleFor(x => x.Email).NotEmpty().WithMessage("Username is required");
-        RuleFor(x => x.Password).NotEmpty().WithMessage("Password is required");
+        RuleFor(a => a.Email).NotEmpty().WithMessage("Email-ul este necesar")
+           .EmailAddress().WithMessage("Email-ul are format invalid");
+        RuleFor(a => a.Password).NotEmpty().WithMessage("Parola este necesara");
     }
 }

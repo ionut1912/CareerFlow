@@ -33,8 +33,8 @@ public class ResetPasswordCommandHandler
         var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("Account with Id {AccountId} was not found", request.AccountId);
-            throw new AccountNotFoundException($"Account with Id'{request.AccountId}' was not found.");
+            _logger.LogError("User-ul cu Id-ul {AccountId} nu a fost gasit", request.AccountId);
+            throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit.");
         }
 
         account.ResetPassword(request.NewPassword, _passwordService);
@@ -45,7 +45,7 @@ public class ResetPasswordCommandHandler
             new ResetPasswordNotificationMessage(account.Username,account.Email,"test")
         };
 
-        _logger.LogInformation("Password for account with AccountId {AccountId} has been reset", request.AccountId);
+        _logger.LogInformation("Parola pentru contul cu id-ul {AccountId} a fost resetata", request.AccountId);
         return messages;
 
     }

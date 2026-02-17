@@ -12,11 +12,11 @@ public class LoginWithGoogleQueryHandler
 {
     private readonly IAuthService _authService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
-    private readonly IJwtTokenService _jwtTokenService;
+    private readonly ITokenService _jwtTokenService;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginWithGoogleQueryHandler> _logger;
 
-    public LoginWithGoogleQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository, IJwtTokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithGoogleQueryHandler> logger)
+    public LoginWithGoogleQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository, ITokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithGoogleQueryHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(authService, nameof(authService));
         ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
@@ -34,10 +34,10 @@ public class LoginWithGoogleQueryHandler
     {
         var googleUser = await _authService.LoginWithGoogleAsync(request.IdToken, cancellationToken);
         var token = _jwtTokenService.GenerateToken(googleUser);
-        var refresh = _jwtTokenService.GenerateRefreshToken(googleUser.Id, token.Jti);
+        var refresh = _jwtTokenService.GenerateRefreshToken(googleUser.Id, token.Token);
         await _refreshTokenRepository.AddAsync(refresh);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("User {Email} logged in with Google", googleUser.Email);
+        _logger.LogInformation("User-ul cu email-ul {Email} s-a logat cu succes utilizand google", googleUser.Email);
         return googleUser.ToAccountDto(token.Token, refresh.Token);
     }
 }

@@ -26,12 +26,12 @@ public class GetCurrentAccountQueryHandler
         var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("Account with accountId {AccountId} was not found", request.AccountId);
-            throw new AccountNotFoundException($"Account with accountId '{request.AccountId}' was not found.");
+            _logger.LogError("Contul cu id-ul {AccountId} nu a fost gasit", request.AccountId);
+            throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit");
         }
 
         var accountDto = account.ToAccountDto(null);
-        _logger.LogInformation("Current Account: {AccountDto}",
+        _logger.LogInformation("Contul curent: {AccountDto}",
             JsonSerializer.Serialize(accountDto, new JsonSerializerOptions { WriteIndented = true }));
         return accountDto;
     }

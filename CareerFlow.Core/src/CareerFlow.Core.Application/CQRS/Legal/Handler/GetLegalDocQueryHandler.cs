@@ -4,7 +4,6 @@ using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
@@ -28,26 +27,27 @@ public class GetLegalDocQueryHandler
 
     public async Task<LegalDocDto> Handle(GetLegalDocQuery query, CancellationToken cancellationToken)
     {
-        var cacheKey = $"LegalDoc_{LegalDocType.FromString(query.Type).Value}";
+        var cacheKey = $"LegalDoc_{query.Type}";
         var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDocDto>(cacheKey);
         if (cachedLegalDoc != null)
         {
 
-            _logger.LogInformation("Legal document of type {Type} retrieved from cache ,result {cacheLegalDocDto}.", query.Type,
+            _logger.LogInformation("Documentul cu tipul {Type} a fost luat din cache ,resultat {cacheLegalDocDto}.", query.Type,
                 JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented = true }));
             return cachedLegalDoc;
         }
-        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, cancellationToken);
 
+        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, cancellationToken);
         if (legalDoc == null)
         {
-            _logger.LogError("No legal document found for type {Type}.", query.Type);
-            throw new LegalDocNotFoundException($"No legal document found for type {query.Type}");
+            _logger.LogError("Nu exista un document pentru tipul {Type}.", query.Type);
+            throw new LegalDocNotFoundException($"Nu exista document pentru tipul {query.Type}");
 
         }
+
         var legalDocDto = legalDoc.ToDto();
         await _cacheService.SetCacheValueAsync(cacheKey, legalDocDto);
-        _logger.LogInformation("Legal document of type {Type} retrieved from database,result {cacheLegalDocDto}", query.Type,
+        _logger.LogInformation("Documentul cu tipul {Type} preluat din baza de data,rezultat {legalDocDto}", query.Type,
             JsonSerializer.Serialize(legalDocDto, new JsonSerializerOptions { WriteIndented = true }));
         return legalDocDto;
     }

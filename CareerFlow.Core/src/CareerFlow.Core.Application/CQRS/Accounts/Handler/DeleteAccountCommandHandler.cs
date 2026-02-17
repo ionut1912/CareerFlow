@@ -27,11 +27,11 @@ public class DeleteAccountCommandHandler
         var account = await _accountRepository.GetByIdAsync(request.Id, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("Account with id : {Id} can not be deleted because is not found", request.Id);
-            throw new AccountNotFoundException($"Account with Id {request.Id} was not found.");
+            _logger.LogError("User-ul cu id-ul : {Id} nu poate fi sters,deoarce nu a fost gasit", request.Id);
+            throw new AccountNotFoundException($"User-ul cu Id-ul {request.Id} nu a fost gasit.");
         }
         _accountRepository.Delete(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Account with id: {Id} was deleted successfully", request.Id);
+        _logger.LogInformation("User-ul cu id-ul: {Id} a fost sters cu succes", request.Id);
     }
 }

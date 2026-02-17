@@ -23,15 +23,13 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
         {
             ValidationException ex => CreateFromFluent(ex),
             AccountNotFoundException ex => Create(404, "Account Not Found", ex.Message),
-            InvalidLegalDocTypeException ex => Create(400, "Invalid Legal Doc Type", ex.Message),
+            InvalidFieldException ex => Create(400, "Invalid Field", ex.Message),
             PasswordNotMatchException ex => Create(400, "Password Not Match", ex.Message),
             UserAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
-            PasswordNotEmptyException ex => Create(400, "Password Not Empty", ex.Message),
             LegalDocNotFoundException ex => Create(404, "Legal Doc Not Found", ex.Message),
             InvalidRefreshTokenException ex => Create(401, "Invalid Refresh Token", ex.Message),
             TokenAlreadyUsedExcception ex => Create(400, "Token Already Used", ex.Message),
             TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
-            TokenExpiredException ex => Create(401, "Token Expired", ex.Message),
             CustomValidationException ex => CreateValidation(ex),
 
             _ => Create(500, "Internal Server Error", "An unexpected error occurred")

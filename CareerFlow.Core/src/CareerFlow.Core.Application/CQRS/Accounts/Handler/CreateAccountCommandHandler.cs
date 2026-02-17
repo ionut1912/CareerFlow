@@ -33,26 +33,17 @@ public class CreateAccountCommandHandler
         var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
         if (account is not null)
         {
-            _logger.LogError("Accont with username :{Username} can not be created because already exists", request.Username);
-            throw new UserAlreadyExistsException($"Account with username {request.Username} already exists");
+            _logger.LogError("Contul cu email :{Email} nu poate fi creat,deoarece exista", request.Email);
+            throw new UserAlreadyExistsException($"Contul cu email {request.Email} deja exista");
         }
 
-        var accountToCreate = Account.Create(request.Email, request.Password, request.Username,request.Name);
-
-        if (request.AcceptedPrivacyPolicy)
-        {
-            accountToCreate.AcceptPrivacyPolicy();
-        }
-
-        if (request.AcceptedTermsAndConditions)
-        {
-            accountToCreate.AcceptTerms();
-        }
-
+        var accountToCreate = Account.Create(request.Email, request.Password, request.Username, request.Name);
+        accountToCreate.AcceptPrivacyPolicy();
+        accountToCreate.AcceptTerms();
         accountToCreate.HashPassword(_passwordService);
         await _accountRepository.AddAsync(accountToCreate, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Account with id {Id} was created", accountToCreate.Id);
+        _logger.LogInformation("Contul cu  id-ul {Id} a fost creat cu succes", accountToCreate.Id);
         return accountToCreate.Id;
     }
 }

@@ -58,6 +58,7 @@ public class AccountEndpointGroup : EndpointGroup
         return Results.Ok(result);
     }
 
+    [Authorize]
     private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest, CancellationToken cancellationToken)
     {
         var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();

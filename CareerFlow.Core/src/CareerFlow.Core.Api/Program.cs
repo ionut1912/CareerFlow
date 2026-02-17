@@ -2,10 +2,12 @@
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Application.Messages;
 using CareerFlow.Core.Application.Validators;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Gateways;
 using CareerFlow.Core.Infrastructure.Persistance;
 using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
@@ -44,9 +46,15 @@ builder.AddWolverineMessaging(
     {
 
         var emailQueueName = "email-notifications-queue";
+        var legalDocsQueueName = "legal-docs-queue";
+
         opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
+        opt.PublishMessage<UpdateLegalDocsMessage>().ToRabbitQueue(legalDocsQueueName);
+
         opt.ListenToRabbitQueue(emailQueueName)
                 .UseDurableInbox();
+        opt.ListenToRabbitQueue(legalDocsQueueName)
+            .UseDurableInbox();
     });
 
 builder.Services.AddStackExchangeRedisCache(options =>
@@ -68,18 +76,23 @@ builder.Services
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
     .AddRepository<LegalDoc, LegalDocRepository, ILegalDocRepository, ApplicationDbContext>()
     .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
-    .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
+    .AddRepositoriesConfig<ITokenService, TokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IAuthService, AuthService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
     .AddRepositoriesConfig<ICacheService, CacheService>()
     .AddRepositoriesConfig<IEmailService, EmailService>()
+    .AddRepositoriesConfig<IGoogleTokenValidator,GoogleTokenValidator>()
+    .AddRepositoriesConfig<IMailClient,PostmarkMailClient>()
     .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 
 var app = builder.Build();
 
-app.MigrateDatabaseConfig<ApplicationDbContext>();
+if (!app.Environment.IsEnvironment("Testing"))
+{
+    app.MigrateDatabaseConfig<ApplicationDbContext>();
+}
 
 app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()

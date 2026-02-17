@@ -7,9 +7,11 @@ public class UpdateLegalDocCommandValidator : AbstractValidator<UpdateLegalDocCo
 {
     public UpdateLegalDocCommandValidator()
     {
+        RuleFor(x => x.Content)
+            .NotEmpty().WithMessage("Continutul este necesar");
+
         RuleFor(x => x.Type)
-        .NotEmpty()
-        .Must(type => type.IsValidLegalDocType())
-        .WithMessage($"Type must be one of: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
+         .Must(type => type.IsValidLegalDocType())
+         .WithMessage($"Tipul trebuie sa fie una din urmatoarele: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
     }
 }

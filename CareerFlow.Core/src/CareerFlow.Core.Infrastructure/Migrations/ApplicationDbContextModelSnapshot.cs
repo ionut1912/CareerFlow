@@ -112,7 +112,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("JwtId")
+                    b.Property<string>("JwtToken")
                         .IsRequired()
                         .HasColumnType("text");
 

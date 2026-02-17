@@ -10,11 +10,11 @@ using System.Text;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public class JwtTokenService : IJwtTokenService
+public class TokenService : ITokenService
 {
     private readonly IConfiguration _configuration;
 
-    public JwtTokenService(IConfiguration configuration)
+    public TokenService(IConfiguration configuration)
     {
         _configuration = configuration;
     }
@@ -58,9 +58,9 @@ public class JwtTokenService : IJwtTokenService
         return new AuthResult(tokenString, jti);
     }
 
-    public RefreshToken GenerateRefreshToken(Guid userId, string jwtId)
+    public RefreshToken GenerateRefreshToken(Guid userId, string jwtToken)
     {
-        var refreshToken = RefreshToken.Create(userId, jwtId, GenerateRandomString(35), DateTime.UtcNow.AddMonths(6));
+        var refreshToken = RefreshToken.Create(userId, GenerateRandomString(35), jwtToken, DateTime.UtcNow.AddMonths(6));
         return refreshToken;
     }
 
