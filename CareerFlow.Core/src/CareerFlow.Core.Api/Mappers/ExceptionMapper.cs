@@ -45,8 +45,10 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
         return problemDetails != null;
     }
 
-    private static ProblemDetails Create(int status, string title, string detail) =>
-        new() { Status = status, Title = title, Detail = detail };
+    private static ProblemDetails Create(int status, string title, string detail)
+    {
+        return new ProblemDetails { Status = status, Title = title, Detail = detail };
+    }
 
     private static ProblemDetails CreateValidation(CustomValidationException ex)
     {

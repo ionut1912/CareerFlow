@@ -14,10 +14,10 @@ namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
 public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
 {
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
-    private readonly Mock<IPasswordService> _passwordServiceMock;
-    private readonly Mock<ITokenService> _tokenServiceMock;
-    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly LoginQueryHandler _handler;
+    private readonly Mock<IPasswordService> _passwordServiceMock;
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    private readonly Mock<ITokenService> _tokenServiceMock;
 
     public LoginQueryHandlerTests()
     {

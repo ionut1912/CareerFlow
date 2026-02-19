@@ -13,8 +13,8 @@ namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
 public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCommandHandler>
 {
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
-    private readonly Mock<IPasswordService> _passwordServiceMock;
     private readonly CreateAccountCommandHandler _handler;
+    private readonly Mock<IPasswordService> _passwordServiceMock;
 
     public CreateAccountCommandHandlerTests()
     {

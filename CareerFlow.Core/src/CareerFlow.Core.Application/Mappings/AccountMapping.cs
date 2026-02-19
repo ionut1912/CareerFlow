@@ -10,7 +10,8 @@ public static class AccountMapping
 {
     public static AccountDto ToAccountDto(this Account account, string? token = null, string? refreshToken = null)
     {
-        return new AccountDto(account.Id, account.Email, account.Username, token, refreshToken, account.IsFounder, account.PrivacyPolicyAccepted, account.TermsAccepted);
+        return new AccountDto(account.Id, account.Email, account.Username, token, refreshToken, account.IsFounder,
+            account.PrivacyPolicyAccepted, account.TermsAccepted);
     }
 
     public static CreateAccountCommand ToCreateCommand(this CreateAccountRequest request)

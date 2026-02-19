@@ -5,5 +5,5 @@ namespace CareerFlow.Core.Domain.Abstractions.Repositories;
 
 public interface IRefreshTokenRepository : IGenericRepository<RefreshToken>
 {
-    Task<RefreshToken?> GetExistingTokenAsync(string jwtToken, CancellationToken cancellationToken);
+    Task<RefreshToken?> GetExistingTokenAsync(string refreshToken, CancellationToken cancellationToken);
 }

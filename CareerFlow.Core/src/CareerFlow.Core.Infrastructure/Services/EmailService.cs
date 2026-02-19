@@ -6,8 +6,8 @@ namespace CareerFlow.Core.Infrastructure.Services;
 
 public class EmailService : IEmailService
 {
-    private readonly IMailClient _mailClient;
     private readonly ILogger<EmailService> _logger;
+    private readonly IMailClient _mailClient;
 
     public EmailService(IMailClient mailClient, ILogger<EmailService> logger)
     {
@@ -17,7 +17,8 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> templateModel, CancellationToken cancellationToken)
+    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId,
+        Dictionary<string, string> templateModel, CancellationToken cancellationToken)
     {
         if (cancellationToken.IsCancellationRequested)
         {

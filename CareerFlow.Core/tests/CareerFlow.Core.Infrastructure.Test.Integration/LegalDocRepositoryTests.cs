@@ -20,7 +20,7 @@ public class LegalDocRepositoryTests : BaseRepositoryTest
     public async Task GetLegalDocByTypeAsync_ExistingType_ReturnsDocument()
     {
         // Arrange
-        var doc = LegalDoc.Create("termsOfService","TermsAndConditions");
+        var doc = LegalDoc.Create("termsOfService", "TermsAndConditions");
         Context.LegalDocs.Add(doc);
         await Context.SaveChangesAsync();
 

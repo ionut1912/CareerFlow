@@ -11,18 +11,19 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class LoginWithLinkedinQueryHandler
 {
     private readonly IAuthService _authService;
-    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ITokenService _jwtTokenService;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginWithLinkedinQueryHandler> _logger;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public LoginWithLinkedinQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository, ITokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithLinkedinQueryHandler> logger)
+    public LoginWithLinkedinQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository,
+        ITokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithLinkedinQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(authService, nameof(authService));
-        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
-        ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(authService);
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository);
+        ArgumentNullException.ThrowIfNull(jwtTokenService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(logger);
         _authService = authService;
         _refreshTokenRepository = refreshTokenRepository;
         _jwtTokenService = jwtTokenService;

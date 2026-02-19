@@ -12,9 +12,9 @@ namespace CareerFlow.Core.Application.Tests.Handlers.Legal;
 
 public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHandler>
 {
-    private readonly Mock<ILegalDocRepository> _legalDocRepositoryMock;
     private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly GetLegalDocQueryHandler _handler;
+    private readonly Mock<ILegalDocRepository> _legalDocRepositoryMock;
 
     public GetLegalDocQueryHandlerTests()
     {
@@ -49,7 +49,8 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
         var doc = LegalDoc.Create("content", "PrivacyPolicy");
         var query = new GetLegalDocQuery(doc.Type.Value);
 
-        _cacheServiceMock.Setup(x => x.GetCacheValueAsync<LegalDocDto>(It.IsAny<string>())).ReturnsAsync((LegalDocDto?)null);
+        _cacheServiceMock.Setup(x => x.GetCacheValueAsync<LegalDocDto>(It.IsAny<string>()))
+            .ReturnsAsync((LegalDocDto?)null);
         _legalDocRepositoryMock.Setup(x => x.GetLegalDocByTypeAsync(query.Type, Ct)).ReturnsAsync(doc);
 
         // Act

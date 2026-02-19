@@ -16,9 +16,9 @@ public class RefreshTokenRepositoryTests : BaseRepositoryTest
     }
 
     [Fact]
-    public async Task GetExistingTokenAsync_MatchingJwtToken_ReturnsRefreshToken()
+    public async Task GetExistingTokenAsync_MatchingRefreshToken_ReturnsRefreshToken()
     {
-        // Arrange
+        //Arrange
         var account = CreateAccount("rt@test.com");
         Context.Accounts.Add(account);
         await Context.SaveChangesAsync();
@@ -29,18 +29,21 @@ public class RefreshTokenRepositoryTests : BaseRepositoryTest
         Context.RefreshTokens.Add(refreshToken);
         await Context.SaveChangesAsync();
 
-        // Act
-        var result = await _sut.GetExistingTokenAsync("jwt.token.here", CancellationToken.None);
+        //Act
+        var result = await _sut.GetExistingTokenAsync("random-token-string", CancellationToken.None);
 
-        // Assert
+        //Assert
         result.ShouldNotBeNull();
-        result.JwtToken.ShouldBe("jwt.token.here");
+        result.Token.ShouldBe("random-token-string");
     }
 
     [Fact]
     public async Task GetExistingTokenAsync_NoMatchingToken_ReturnsNull()
     {
-        var result = await _sut.GetExistingTokenAsync("non.existent.jwt", CancellationToken.None);
+        //Act
+        var result = await _sut.GetExistingTokenAsync("non.existent.refresh", CancellationToken.None);
+
+        //Assert
         result.ShouldBeNull();
     }
 }

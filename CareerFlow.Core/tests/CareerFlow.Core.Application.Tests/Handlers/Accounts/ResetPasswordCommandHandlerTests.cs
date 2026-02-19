@@ -13,8 +13,8 @@ namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
 public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCommandHandler>
 {
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
-    private readonly Mock<IPasswordService> _passwordServiceMock;
     private readonly ResetPasswordCommandHandler _handler;
+    private readonly Mock<IPasswordService> _passwordServiceMock;
 
     public ResetPasswordCommandHandlerTests()
     {
@@ -39,7 +39,8 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         await _handler.Handle(command, Ct);
 
         // Assert
-        _passwordServiceMock.Verify(x => x.HashPassword(command.NewPassword), Times.Once); // Assuming handler calls this
+        _passwordServiceMock.Verify(x => x.HashPassword(command.NewPassword),
+            Times.Once); // Assuming handler calls this
         _accountRepositoryMock.Verify(x => x.Update(account), Times.Once);
         _unitOfWorkMock.VerifySaveChanges(Times.Once());
     }

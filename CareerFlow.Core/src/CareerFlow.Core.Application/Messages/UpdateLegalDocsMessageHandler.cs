@@ -9,10 +9,11 @@ public class UpdateLegalDocsMessageHandler
     private readonly IAccountRepository _accountRepository;
     private readonly ILogger<UpdateLegalDocsMessageHandler> _logger;
 
-    public UpdateLegalDocsMessageHandler(IAccountRepository accountRepository, ILogger<UpdateLegalDocsMessageHandler> logger)
+    public UpdateLegalDocsMessageHandler(IAccountRepository accountRepository,
+        ILogger<UpdateLegalDocsMessageHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(logger);
         _accountRepository = accountRepository;
         _logger = logger;
     }

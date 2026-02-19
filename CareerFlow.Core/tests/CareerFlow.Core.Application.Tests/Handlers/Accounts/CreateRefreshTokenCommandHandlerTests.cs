@@ -13,10 +13,10 @@ namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
 
 public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefreshTokenCommandHandler>
 {
-    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
-    private readonly Mock<ITokenService> _tokenServiceMock;
     private readonly CreateRefreshTokenCommandHandler _handler;
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock;
+    private readonly Mock<ITokenService> _tokenServiceMock;
 
     public CreateRefreshTokenCommandHandlerTests()
     {
@@ -35,23 +35,23 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     [Fact]
     public async Task Handle_WhenStoredTokenValid_GeneratesNewToken()
     {
-        // Arrange
+        //Arrange
         var command = new CreateRefreshTokenCommand("validToken", "validRefresh");
         var user = TestDataFactory.CreateAccount();
         var storedToken = TestDataFactory.CreateRefreshToken(user.Id);
-
         var newAuthResult = new AuthResult("newJwt", "expiry");
         var newRefreshToken = TestDataFactory.CreateRefreshToken(user.Id);
 
-        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.Token, Ct)).ReturnsAsync(storedToken);
+        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
+            .ReturnsAsync(storedToken);
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(user.Id, Ct)).ReturnsAsync(user);
         _tokenServiceMock.Setup(x => x.GenerateToken(user)).Returns(newAuthResult);
         _tokenServiceMock.Setup(x => x.GenerateRefreshToken(user.Id, newAuthResult.Token)).Returns(newRefreshToken);
 
-        // Act
+        //Act
         var result = await _handler.Handle(command, Ct);
 
-        // Assert
+        //Assert
         result.Token.ShouldBe(newAuthResult.Token);
         result.RefreshToken.ShouldBe(newRefreshToken.Token);
         _refreshTokenRepositoryMock.Verify(x => x.Update(storedToken), Times.Once);
@@ -62,65 +62,69 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     [Fact]
     public async Task Handle_WhenTokenNull_ThrowsInvalidRefreshTokenException()
     {
-        // Arrange
+        //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
-        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.Token, Ct)).ReturnsAsync((RefreshToken?)null);
+        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
+            .ReturnsAsync((RefreshToken?)null);
 
-        // Act
+        //Act
         await Should.ThrowAsync<InvalidRefreshTokenException>(() => _handler.Handle(command, Ct));
 
-        // Assert
+        //Assert
         _loggerMock.VerifyLogError(command.RefreshToken, Times.Once());
     }
 
     [Fact]
     public async Task Handle_WhenTokenUsed_ThrowsTokenAlreadyUsedException()
     {
-        // Arrange
+        //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
         var storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
         storedToken.MarkAsUsed();
 
-        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.Token, Ct)).ReturnsAsync(storedToken);
+        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
+            .ReturnsAsync(storedToken);
 
-        // Act
+        //Act
         await Should.ThrowAsync<TokenAlreadyUsedExcception>(() => _handler.Handle(command, Ct));
 
-        // Assert
+        //Assert
         _loggerMock.VerifyLogError(command.RefreshToken, Times.Once());
     }
 
     [Fact]
     public async Task Handle_WhenTokenRevoked_ThrowsTokenRevokedException()
     {
-        // Arrange
+        //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
         var storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
         storedToken.MarkAsRevoked();
 
-        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.Token, Ct)).ReturnsAsync(storedToken);
+        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
+            .ReturnsAsync(storedToken);
 
-        // Act
+        //Act
         await Should.ThrowAsync<TokenRevokedException>(() => _handler.Handle(command, Ct));
 
-        // Assert
+        //Assert
         _loggerMock.VerifyLogError(command.RefreshToken, Times.Once());
     }
 
     [Fact]
     public async Task Handle_WhenUserNotFound_ThrowsAccountNotFoundException()
     {
-        // Arrange
+        //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
         var storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
 
-        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.Token, Ct)).ReturnsAsync(storedToken);
+        _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
+            .ReturnsAsync(storedToken);
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(storedToken.UserId, Ct)).ReturnsAsync((Account?)null);
 
-        // Act
+        //Act
         await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
-        // Assert
+        //Assert
         _loggerMock.VerifyLogError(storedToken.UserId.ToString(), Times.Once());
     }
 }

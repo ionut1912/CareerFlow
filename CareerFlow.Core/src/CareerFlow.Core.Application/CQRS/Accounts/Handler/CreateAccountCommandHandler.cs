@@ -11,17 +11,17 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class CreateAccountCommandHandler
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly ILogger<CreateAccountCommandHandler> _logger;
     private readonly IPasswordService _passwordService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<CreateAccountCommandHandler> _logger;
 
     public CreateAccountCommandHandler(IAccountRepository accountRepository,
         IPasswordService passwordService, IUnitOfWork unitOfWork, ILogger<CreateAccountCommandHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
-        ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(passwordService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(logger);
         _accountRepository = accountRepository;
         _passwordService = passwordService;
         _unitOfWork = unitOfWork;

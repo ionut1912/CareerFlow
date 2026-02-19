@@ -16,7 +16,8 @@ public class PostmarkMailClient : IMailClient
         _client = new PostmarkClient(_settings.ServerToken);
     }
 
-    public async Task<bool> SendTemplatedEmailAsync(string to, int templateId, Dictionary<string, string> model, CancellationToken cancellationToken)
+    public async Task<bool> SendTemplatedEmailAsync(string to, int templateId, Dictionary<string, string> model,
+        CancellationToken cancellationToken)
     {
         var message = new TemplatedPostmarkMessage
         {

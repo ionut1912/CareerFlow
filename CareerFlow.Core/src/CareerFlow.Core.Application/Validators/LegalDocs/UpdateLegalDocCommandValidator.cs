@@ -11,7 +11,8 @@ public class UpdateLegalDocCommandValidator : AbstractValidator<UpdateLegalDocCo
             .NotEmpty().WithMessage("Continutul este necesar");
 
         RuleFor(x => x.Type)
-         .Must(type => type.IsValidLegalDocType())
-         .WithMessage($"Tipul trebuie sa fie una din urmatoarele: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
+            .Must(type => type.IsValidLegalDocType())
+            .WithMessage(
+                $"Tipul trebuie sa fie una din urmatoarele: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
     }
 }

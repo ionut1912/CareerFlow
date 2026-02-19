@@ -1,10 +1,10 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using System.Text.Json;
+using CareerFlow.Core.Application.CQRS.Accounts.Query;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
@@ -13,10 +13,11 @@ public class GetCurrentAccountQueryHandler
     private readonly IAccountRepository _accountRepository;
     private readonly ILogger<GetCurrentAccountQueryHandler> _logger;
 
-    public GetCurrentAccountQueryHandler(IAccountRepository accountRepository, ILogger<GetCurrentAccountQueryHandler> logger)
+    public GetCurrentAccountQueryHandler(IAccountRepository accountRepository,
+        ILogger<GetCurrentAccountQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(logger);
         _accountRepository = accountRepository;
         _logger = logger;
     }
@@ -30,7 +31,7 @@ public class GetCurrentAccountQueryHandler
             throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit");
         }
 
-        var accountDto = account.ToAccountDto(null);
+        var accountDto = account.ToAccountDto();
         _logger.LogInformation("Contul curent: {AccountDto}",
             JsonSerializer.Serialize(accountDto, new JsonSerializerOptions { WriteIndented = true }));
         return accountDto;

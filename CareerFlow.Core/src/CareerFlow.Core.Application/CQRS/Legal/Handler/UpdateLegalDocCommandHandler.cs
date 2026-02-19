@@ -1,4 +1,5 @@
-﻿using CareerFlow.Core.Application.CQRS.Legal.Command;
+﻿using System.Text.Json;
+using CareerFlow.Core.Application.CQRS.Legal.Command;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -7,31 +8,32 @@ using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Rabbit.Events.Events;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
-using System.Text.Json;
 using Wolverine;
 
 namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
 public class UpdateLegalDocCommandHandler
 {
+    private readonly ICacheService _cacheService;
     private readonly ILegalDocRepository _legalDocRepository;
     private readonly ILogger<UpdateLegalDocCommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ICacheService _cacheService;
 
-    public UpdateLegalDocCommandHandler(ILegalDocRepository legalDocRepository, ILogger<UpdateLegalDocCommandHandler> logger, IUnitOfWork unitOfWork, ICacheService cacheService)
+    public UpdateLegalDocCommandHandler(ILegalDocRepository legalDocRepository,
+        ILogger<UpdateLegalDocCommandHandler> logger, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
-        ArgumentNullException.ThrowIfNull(legalDocRepository, nameof(legalDocRepository));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
+        ArgumentNullException.ThrowIfNull(legalDocRepository);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(cacheService);
         _legalDocRepository = legalDocRepository;
         _logger = logger;
         _unitOfWork = unitOfWork;
         _cacheService = cacheService;
     }
 
-    public async Task<(LegalDocDto, OutgoingMessages)> Handle(UpdateLegalDocCommand command, CancellationToken cancellationToken)
+    public async Task<(LegalDocDto, OutgoingMessages)> Handle(UpdateLegalDocCommand command,
+        CancellationToken cancellationToken)
     {
         var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(command.Type, cancellationToken);
         if (legalDoc is null)
@@ -46,7 +48,8 @@ public class UpdateLegalDocCommandHandler
 
         var legalDocDto = legalDoc.ToDto();
         await _cacheService.SetCacheValueAsync($"LegalDoc_{command.Type}", legalDocDto);
-        _logger.LogInformation("Documentul cu tipul {Type} modificat cu succes, documentul updatat {legalDocDto}.", command.Type,
+        _logger.LogInformation("Documentul cu tipul {Type} modificat cu succes, documentul updatat {legalDocDto}.",
+            command.Type,
             JsonSerializer.Serialize(legalDoc, new JsonSerializerOptions { WriteIndented = true }));
 
         var messages = new OutgoingMessages

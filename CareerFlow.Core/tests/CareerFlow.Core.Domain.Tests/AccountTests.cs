@@ -44,7 +44,7 @@ public class AccountTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        Account.Create(email, password, username, name));
+            Account.Create(email, password, username, name));
 
         //Assert
         exception.Message.ShouldBe("Email-ul este invalid");
@@ -63,7 +63,7 @@ public class AccountTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        Account.Create(email, password, username, name));
+            Account.Create(email, password, username, name));
 
         //Assert
         exception.Message.ShouldBe("Parola este ivalida");
@@ -82,7 +82,7 @@ public class AccountTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        Account.Create(email, password, username, name));
+            Account.Create(email, password, username, name));
 
         //Assert
         exception.Message.ShouldBe("Username-ul este invalid");
@@ -101,7 +101,7 @@ public class AccountTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        Account.Create(email, password, username, name));
+            Account.Create(email, password, username, name));
 
         //Assert
         exception.Message.ShouldBe("Numele este invalid");
@@ -119,8 +119,7 @@ public class AccountTests
 
         var hashedPassword = "hashedPassword";
         var passwordServiceMock = new Mock<IPasswordService>();
-        passwordServiceMock.
-            Setup(x => x.HashPassword(account.Password))
+        passwordServiceMock.Setup(x => x.HashPassword(account.Password))
             .Returns(hashedPassword);
 
         //Act
@@ -128,8 +127,7 @@ public class AccountTests
 
         //Assert
         account.Password.ShouldBe(hashedPassword);
-        passwordServiceMock.
-            Verify(x => x.HashPassword(It.IsAny<string>()), Times.Once);
+        passwordServiceMock.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -143,8 +141,7 @@ public class AccountTests
         var account = Account.Create(email, password, username, name);
         var hashedPassword = "hashedPassword";
         var passwordServiceMock = new Mock<IPasswordService>();
-        passwordServiceMock.
-            Setup(x => x.HashPassword(It.IsAny<string>()))
+        passwordServiceMock.Setup(x => x.HashPassword(It.IsAny<string>()))
             .Returns(hashedPassword);
 
         //Act
@@ -152,8 +149,7 @@ public class AccountTests
 
         //Assert
         account.Password.ShouldBe(hashedPassword);
-        passwordServiceMock.
-            Verify(x => x.HashPassword(It.IsAny<string>()), Times.Once);
+        passwordServiceMock.Verify(x => x.HashPassword(It.IsAny<string>()), Times.Once);
     }
 
     [Fact]
@@ -228,5 +224,4 @@ public class AccountTests
         account.PrivacyPolicyAccepted.ShouldBeTrue();
         account.TermsAccepted.ShouldBeFalse();
     }
-
 }

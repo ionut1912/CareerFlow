@@ -16,8 +16,8 @@ public class AccountRepository(DbSet<Account> dbSet) : GenericRepository<Account
     {
         await dbSet.ExecuteUpdateAsync(
             setters => setters.SetProperty(a => a.PrivacyPolicyAccepted, false)
-                            .SetProperty(a => a.TermsAccepted, false)
-                            .SetProperty(a => a.UpdatedAt, DateTime.UtcNow)
-                            , cancellationToken);
+                .SetProperty(a => a.TermsAccepted, false)
+                .SetProperty(a => a.UpdatedAt, DateTime.UtcNow)
+            , cancellationToken);
     }
 }

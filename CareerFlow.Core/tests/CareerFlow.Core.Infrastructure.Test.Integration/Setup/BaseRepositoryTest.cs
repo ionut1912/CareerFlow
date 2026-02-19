@@ -7,8 +7,8 @@ namespace CareerFlow.Core.Infrastructure.Test.Integration.Setup;
 [Collection("RepositoryCollection")]
 public abstract class BaseRepositoryTest : IAsyncLifetime
 {
-    protected readonly TestAppDbContext Context;
     private readonly Func<Task> _resetDatabase;
+    protected readonly TestAppDbContext Context;
 
     protected BaseRepositoryTest(IntegrationTestFixture fixture)
     {
@@ -42,6 +42,8 @@ public abstract class BaseRepositoryTest : IAsyncLifetime
     }
 
     // Shared Helper Methods (DRY)
-    protected static Account CreateAccount(string email) =>
-        Account.Create(email, "Password1!", "username", "Full Name");
+    protected static Account CreateAccount(string email)
+    {
+        return Account.Create(email, "Password1!", "username", "Full Name");
+    }
 }

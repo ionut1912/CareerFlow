@@ -40,7 +40,7 @@ public class LoginQueryValidatorTest
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email-ul este necesar");
+            .WithErrorMessage("Email-ul este necesar");
     }
 
     [Theory]
@@ -57,7 +57,7 @@ public class LoginQueryValidatorTest
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
-              .WithErrorMessage("Email-ul are format invalid");
+            .WithErrorMessage("Email-ul are format invalid");
     }
 
     [Theory]
@@ -73,6 +73,6 @@ public class LoginQueryValidatorTest
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Password)
-              .WithErrorMessage("Parola este necesara");
+            .WithErrorMessage("Parola este necesara");
     }
 }

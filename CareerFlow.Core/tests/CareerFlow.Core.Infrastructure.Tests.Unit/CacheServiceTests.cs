@@ -1,9 +1,9 @@
-﻿using CareerFlow.Core.Infrastructure.Services;
+﻿using System.Text;
+using System.Text.Json;
+using CareerFlow.Core.Infrastructure.Services;
 using Microsoft.Extensions.Caching.Distributed;
 using Moq;
 using Shouldly;
-using System.Text;
-using System.Text.Json;
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit;
@@ -100,10 +100,10 @@ public class CacheServiceTests
 
         // Assert
         _cacheMock.Verify(x => x.SetAsync(
-            key,
-            It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == expectedJson),
-            It.IsAny<DistributedCacheEntryOptions>(),
-            It.IsAny<CancellationToken>()),
+                key,
+                It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == expectedJson),
+                It.IsAny<DistributedCacheEntryOptions>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -120,8 +120,8 @@ public class CacheServiceTests
                 It.IsAny<byte[]>(),
                 It.IsAny<DistributedCacheEntryOptions>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>(
-                (k, v, o, t) => capturedOptions = o);
+            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>((k, v, o, t) =>
+                capturedOptions = o);
 
         // Act
         await _sut.SetCacheValueAsync("key", "value");
@@ -145,10 +145,10 @@ public class CacheServiceTests
 
         // Assert
         _cacheMock.Verify(x => x.SetAsync(
-            key,
-            It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == expectedJson),
-            It.IsAny<DistributedCacheEntryOptions>(),
-            It.IsAny<CancellationToken>()),
+                key,
+                It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == expectedJson),
+                It.IsAny<DistributedCacheEntryOptions>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -164,10 +164,10 @@ public class CacheServiceTests
 
         // Assert
         _cacheMock.Verify(x => x.SetAsync(
-            "null-key",
-            It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == expectedJson),
-            It.IsAny<DistributedCacheEntryOptions>(),
-            It.IsAny<CancellationToken>()),
+                "null-key",
+                It.Is<byte[]>(b => Encoding.UTF8.GetString(b) == expectedJson),
+                It.IsAny<DistributedCacheEntryOptions>(),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 

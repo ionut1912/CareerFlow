@@ -1,17 +1,16 @@
-﻿using CareerFlow.Core.Domain.Abstractions.Gateways;
+﻿using System.Net;
+using System.Text;
+using System.Text.Json;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Gateways.Dtos;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
-using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
-using System.Net;
-using System.Text;
-using System.Text.Json;
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit;
@@ -20,10 +19,10 @@ public class AuthServiceTests
 {
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
     private readonly Mock<IGoogleTokenValidator> _googleValidatorMock;
-    private readonly Mock<ILogger<AuthService>> _loggerMock;
-    private readonly IOptions<SocialAuthSettings> _settings;
     private readonly FakeHttpMessageHandler _handler;
     private readonly HttpClient _httpClient;
+    private readonly Mock<ILogger<AuthService>> _loggerMock;
+    private readonly IOptions<SocialAuthSettings> _settings;
     private readonly AuthService _sut;
 
     public AuthServiceTests()
@@ -72,14 +71,16 @@ public class AuthServiceTests
     public void Constructor_NullHttpClient_ThrowsArgumentNullException()
     {
         Should.Throw<ArgumentNullException>(() =>
-            new AuthService(_accountRepositoryMock.Object, _googleValidatorMock.Object, null!, _settings, _loggerMock.Object));
+            new AuthService(_accountRepositoryMock.Object, _googleValidatorMock.Object, null!, _settings,
+                _loggerMock.Object));
     }
 
     [Fact]
     public void Constructor_NullSettings_ThrowsArgumentNullException()
     {
         Should.Throw<ArgumentNullException>(() =>
-            new AuthService(_accountRepositoryMock.Object, _googleValidatorMock.Object, _httpClient, null!, _loggerMock.Object));
+            new AuthService(_accountRepositoryMock.Object, _googleValidatorMock.Object, _httpClient, null!,
+                _loggerMock.Object));
     }
 
     [Fact]
@@ -272,7 +273,10 @@ public class AuthServiceTests
     {
         private readonly Queue<HttpResponseMessage> _responses = new();
 
-        public void Enqueue(HttpResponseMessage response) => _responses.Enqueue(response);
+        public void Enqueue(HttpResponseMessage response)
+        {
+            _responses.Enqueue(response);
+        }
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)

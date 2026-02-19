@@ -46,7 +46,5 @@ public class GetCurrentAccountQueryValidatorTests
     public static IEnumerable<object[]> GetInvalidGuids()
     {
         yield return new object[] { Guid.Empty };
-
     }
-
 }

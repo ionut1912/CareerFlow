@@ -1,12 +1,12 @@
-﻿using CareerFlow.Core.Domain.Abstractions.Services;
+﻿using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
+using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
@@ -60,7 +60,8 @@ public class TokenService : ITokenService
 
     public RefreshToken GenerateRefreshToken(Guid userId, string jwtToken)
     {
-        var refreshToken = RefreshToken.Create(userId, GenerateRandomString(35), jwtToken, DateTime.UtcNow.AddMonths(6));
+        var refreshToken =
+            RefreshToken.Create(userId, GenerateRandomString(35), jwtToken, DateTime.UtcNow.AddMonths(6));
         return refreshToken;
     }
 

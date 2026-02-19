@@ -11,18 +11,19 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class LoginWithGoogleQueryHandler
 {
     private readonly IAuthService _authService;
-    private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly ITokenService _jwtTokenService;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<LoginWithGoogleQueryHandler> _logger;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public LoginWithGoogleQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository, ITokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithGoogleQueryHandler> logger)
+    public LoginWithGoogleQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository,
+        ITokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithGoogleQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(authService, nameof(authService));
-        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
-        ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(authService);
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository);
+        ArgumentNullException.ThrowIfNull(jwtTokenService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(logger);
         _authService = authService;
         _refreshTokenRepository = refreshTokenRepository;
         _jwtTokenService = jwtTokenService;

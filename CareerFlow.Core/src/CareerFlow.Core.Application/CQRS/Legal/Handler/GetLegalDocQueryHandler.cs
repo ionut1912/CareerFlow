@@ -1,25 +1,26 @@
-﻿using CareerFlow.Core.Application.CQRS.Legal.Query;
+﻿using System.Text.Json;
+using CareerFlow.Core.Application.CQRS.Legal.Query;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
 public class GetLegalDocQueryHandler
 {
-    private readonly ILegalDocRepository _legalDocRepository;
     private readonly ICacheService _cacheService;
+    private readonly ILegalDocRepository _legalDocRepository;
     private readonly ILogger<GetLegalDocQueryHandler> _logger;
 
-    public GetLegalDocQueryHandler(ILegalDocRepository legalDocRepository, ICacheService cacheService, ILogger<GetLegalDocQueryHandler> logger)
+    public GetLegalDocQueryHandler(ILegalDocRepository legalDocRepository, ICacheService cacheService,
+        ILogger<GetLegalDocQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(legalDocRepository, nameof(legalDocRepository));
-        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(legalDocRepository);
+        ArgumentNullException.ThrowIfNull(cacheService);
+        ArgumentNullException.ThrowIfNull(logger);
         _legalDocRepository = legalDocRepository;
         _cacheService = cacheService;
         _logger = logger;
@@ -31,8 +32,8 @@ public class GetLegalDocQueryHandler
         var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDocDto>(cacheKey);
         if (cachedLegalDoc != null)
         {
-
-            _logger.LogInformation("Documentul cu tipul {Type} a fost luat din cache ,resultat {cacheLegalDocDto}.", query.Type,
+            _logger.LogInformation("Documentul cu tipul {Type} a fost luat din cache ,resultat {cacheLegalDocDto}.",
+                query.Type,
                 JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented = true }));
             return cachedLegalDoc;
         }
@@ -42,7 +43,6 @@ public class GetLegalDocQueryHandler
         {
             _logger.LogError("Nu exista un document pentru tipul {Type}.", query.Type);
             throw new LegalDocNotFoundException($"Nu exista document pentru tipul {query.Type}");
-
         }
 
         var legalDocDto = legalDoc.ToDto();

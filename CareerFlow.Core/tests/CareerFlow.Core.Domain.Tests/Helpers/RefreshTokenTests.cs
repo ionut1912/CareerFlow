@@ -37,8 +37,8 @@ public class RefreshTokenTests
         var expiryDate = DateTime.UtcNow.AddDays(2);
 
         //Act
-        var exception = Should.Throw<InvalidFieldException>(
-            () => RefreshToken.Create(userId, token, jwtToken, expiryDate));
+        var exception =
+            Should.Throw<InvalidFieldException>(() => RefreshToken.Create(userId, token, jwtToken, expiryDate));
 
         //Assert
         exception.Message.ShouldBe("User id-ul este invalid");
@@ -57,7 +57,7 @@ public class RefreshTokenTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        RefreshToken.Create(userId, token, jwtToken, expiryDate));
+            RefreshToken.Create(userId, token, jwtToken, expiryDate));
 
         //Assert
         exception.Message.ShouldBe("Tokenul este invalid");
@@ -76,7 +76,7 @@ public class RefreshTokenTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        RefreshToken.Create(userId, token, jwtToken, expiryDate));
+            RefreshToken.Create(userId, token, jwtToken, expiryDate));
 
         //Assert
         exception.Message.ShouldBe("Jwt-ul este invalid");
@@ -92,7 +92,7 @@ public class RefreshTokenTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-                RefreshToken.Create(userId, token, jwtToken, default));
+            RefreshToken.Create(userId, token, jwtToken, default));
 
         //Assert
         exception.Message.ShouldBe("Data de expirare este invalida");
@@ -110,11 +110,10 @@ public class RefreshTokenTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-                RefreshToken.Create(userId, token, jwtToken, expiryDate));
+            RefreshToken.Create(userId, token, jwtToken, expiryDate));
 
         //Assert
         exception.Message.ShouldBe("Data de expirare este in trecut");
-
     }
 
     [Fact]
@@ -164,6 +163,5 @@ public class RefreshTokenTests
     public static IEnumerable<object[]> GetInvalidGuids()
     {
         yield return new object[] { Guid.Empty };
-
     }
 }

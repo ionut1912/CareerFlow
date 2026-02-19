@@ -61,8 +61,10 @@ public class AccountRepositoryTests : BaseRepositoryTest
         // Arrange
         var a1 = CreateAccount("reset1@test.com");
         var a2 = CreateAccount("reset2@test.com");
-        a1.AcceptTerms(); a1.AcceptPrivacyPolicy();
-        a2.AcceptTerms(); a2.AcceptPrivacyPolicy();
+        a1.AcceptTerms();
+        a1.AcceptPrivacyPolicy();
+        a2.AcceptTerms();
+        a2.AcceptPrivacyPolicy();
 
         Context.Accounts.AddRange(a1, a2);
         await Context.SaveChangesAsync();

@@ -12,11 +12,11 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class LoginQueryHandler
 {
     private readonly IAccountRepository _accountRepository;
-    private readonly IPasswordService _passwordService;
     private readonly ITokenService _jwtTokenService;
+    private readonly ILogger<LoginQueryHandler> _logger;
+    private readonly IPasswordService _passwordService;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<LoginQueryHandler> _logger;
 
     public LoginQueryHandler(IAccountRepository accountRepository,
         IPasswordService passwordService,
@@ -25,12 +25,12 @@ public class LoginQueryHandler
         IUnitOfWork unitOfWork,
         ILogger<LoginQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
-        ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
-        ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
-        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(passwordService);
+        ArgumentNullException.ThrowIfNull(jwtTokenService);
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(logger);
         _accountRepository = accountRepository;
         _passwordService = passwordService;
         _jwtTokenService = jwtTokenService;
@@ -45,7 +45,8 @@ public class LoginQueryHandler
 
         if (account is null)
         {
-            _logger.LogError("Procesul de logare a esuat,deoarece contul cu Email :{Email} nu a fost gasit", request.Email);
+            _logger.LogError("Procesul de logare a esuat,deoarece contul cu Email :{Email} nu a fost gasit",
+                request.Email);
             throw new AccountNotFoundException($"Contul cu email {request.Email} nu a fost gasit");
         }
 
@@ -55,8 +56,8 @@ public class LoginQueryHandler
         {
             _logger.LogError("Nu ne putem loga,deoarece parola introdusa si cea existenta nu corespund");
             throw new PasswordNotMatchException("Parola existenta si cea introdusa nu corespund");
-
         }
+
         var jwtToken = _jwtTokenService.GenerateToken(account);
         var refreshToken = _jwtTokenService.GenerateRefreshToken(account.Id, jwtToken.Token);
         await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);

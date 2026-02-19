@@ -24,6 +24,7 @@ public class LegalDocType : ValueObject
             _ => throw new InvalidFieldException($"Tipul este invalid:{value}")
         };
     }
+
     protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Value;

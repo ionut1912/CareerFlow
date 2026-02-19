@@ -36,7 +36,7 @@ public class LegalDocTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        LegalDoc.Create(content, type));
+            LegalDoc.Create(content, type));
 
         //Assert
         exception.Message.ShouldBe("Continutul este invalid");
@@ -53,7 +53,7 @@ public class LegalDocTests
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        LegalDoc.Create(content, type));
+            LegalDoc.Create(content, type));
 
         //Assert
         exception.Message.ShouldBe("Tipul este invalid");
@@ -63,12 +63,13 @@ public class LegalDocTests
     [InlineData("termsAndCond")]
     [InlineData("Privacypol")]
     public void LegalDoc_InvalidType_ThrowsException(string type)
-    {   //Arrange
+    {
+        //Arrange
         var content = "test";
 
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        LegalDoc.Create(content, type));
+            LegalDoc.Create(content, type));
 
         //Assert
         exception.Message.ShouldBe($"Tipul este invalid:{type}");
@@ -104,10 +105,9 @@ public class LegalDocTests
         var legalDoc = LegalDoc.Create(content, type);
         //Act
         var exception = Should.Throw<InvalidFieldException>(() =>
-        legalDoc.Update(newContent, newType));
+            legalDoc.Update(newContent, newType));
 
         //Assert
         exception.Message.ShouldBe($"Tipul este invalid:{newType}");
     }
-
 }

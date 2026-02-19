@@ -9,8 +9,8 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
 public class EmailServiceTests
 {
-    private readonly Mock<IMailClient> _mailClientMock;
     private readonly Mock<ILogger<EmailService>> _loggerMock;
+    private readonly Mock<IMailClient> _mailClientMock;
     private readonly EmailService _sut;
 
     public EmailServiceTests()
@@ -52,10 +52,10 @@ public class EmailServiceTests
 
         // Verify that the method was never called
         _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(
-            It.IsAny<string>(),
-            It.IsAny<int>(),
-            It.IsAny<Dictionary<string, string>>(),
-            It.IsAny<CancellationToken>()),
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -75,10 +75,10 @@ public class EmailServiceTests
         result.ShouldBeFalse();
 
         _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(
-            It.IsAny<string>(),
-            It.IsAny<int>(),
-            It.IsAny<Dictionary<string, string>>(),
-            It.IsAny<CancellationToken>()),
+                It.IsAny<string>(),
+                It.IsAny<int>(),
+                It.IsAny<Dictionary<string, string>>(),
+                It.IsAny<CancellationToken>()),
             Times.Never);
     }
 
@@ -157,6 +157,7 @@ public class EmailServiceTests
         await _sut.SendEmailWithTemplateAsync(to, templateId, model, CancellationToken.None);
 
         // Assert
-        _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(to, templateId, model, CancellationToken.None), Times.Once);
+        _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(to, templateId, model, CancellationToken.None),
+            Times.Once);
     }
 }

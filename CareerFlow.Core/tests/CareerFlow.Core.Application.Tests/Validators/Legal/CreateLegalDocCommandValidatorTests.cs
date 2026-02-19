@@ -73,6 +73,7 @@ public class CreateLegalDocCommandValidatorTests
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.Type)
-             .WithErrorMessage($"Tipul trebuie sa fie una din urmatoarele: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
+            .WithErrorMessage(
+                $"Tipul trebuie sa fie una din urmatoarele: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
     }
 }

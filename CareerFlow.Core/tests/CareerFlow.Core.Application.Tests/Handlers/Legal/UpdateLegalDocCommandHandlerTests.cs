@@ -13,9 +13,9 @@ namespace CareerFlow.Core.Application.Tests.Handlers.Legal;
 
 public class UpdateLegalDocCommandHandlerTests : BaseHandlerTest<UpdateLegalDocCommandHandler>
 {
-    private readonly Mock<ILegalDocRepository> _legalDocRepositoryMock;
     private readonly Mock<ICacheService> _cacheServiceMock;
     private readonly UpdateLegalDocCommandHandler _handler;
+    private readonly Mock<ILegalDocRepository> _legalDocRepositoryMock;
 
     public UpdateLegalDocCommandHandlerTests()
     {

@@ -20,7 +20,10 @@ public class GenericRepositoryTests : IDisposable
         _sut = new GenericRepository<TestEntity>(_context.Entities);
     }
 
-    public void Dispose() => _context.Dispose();
+    public void Dispose()
+    {
+        _context.Dispose();
+    }
 
     [Fact]
     public void Constructor_NullDbSet_ThrowsArgumentNullException()

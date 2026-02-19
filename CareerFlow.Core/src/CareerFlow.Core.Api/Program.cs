@@ -28,8 +28,6 @@ var env = builder.Environment.IsProduction() ? "prod" : "dev";
 if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
     !string.IsNullOrWhiteSpace(infisicalProjectId) &&
     !string.IsNullOrWhiteSpace(infisicalClientSecret))
-{
-
     builder.Configuration.AddInfisical(new InfisicalConfigBuilder()
         .SetProjectId(infisicalProjectId)
         .SetEnvironment(env)
@@ -37,14 +35,12 @@ if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
             .SetUniversalAuth(infisicalClientId, infisicalClientSecret)
             .Build())
         .Build());
-}
 
 
 builder.AddWolverineMessaging(
     typeof(EmailNotificationMessageHandler).Assembly,
     (appBuilder, opt) =>
     {
-
         var emailQueueName = "email-notifications-queue";
         var legalDocsQueueName = "legal-docs-queue";
 
@@ -52,7 +48,7 @@ builder.AddWolverineMessaging(
         opt.PublishMessage<UpdateLegalDocsMessage>().ToRabbitQueue(legalDocsQueueName);
 
         opt.ListenToRabbitQueue(emailQueueName)
-                .UseDurableInbox();
+            .UseDurableInbox();
         opt.ListenToRabbitQueue(legalDocsQueueName)
             .UseDurableInbox();
     });
@@ -60,7 +56,7 @@ builder.AddWolverineMessaging(
 builder.Services.AddStackExchangeRedisCache(options =>
 {
     options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "CarrerFlow_";
+    options.InstanceName = "CareerFlow_";
 });
 
 builder.Services.Configure<SocialAuthSettings>(
@@ -82,17 +78,16 @@ builder.Services
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
     .AddRepositoriesConfig<ICacheService, CacheService>()
     .AddRepositoriesConfig<IEmailService, EmailService>()
-    .AddRepositoriesConfig<IGoogleTokenValidator,GoogleTokenValidator>()
-    .AddRepositoriesConfig<IMailClient,PostmarkMailClient>()
+    .AddRepositoriesConfig<IGoogleTokenValidator, GoogleTokenValidator>()
+    .AddRepositoriesConfig<IMailClient, PostmarkMailClient>()
     .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 
 var app = builder.Build();
 
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    app.MigrateDatabaseConfig<ApplicationDbContext>();
-}
+
+app.MigrateDatabaseConfig<ApplicationDbContext>();
+
 
 app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()
@@ -105,3 +100,7 @@ app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
 app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
 
 app.Run();
+
+public partial class Program
+{
+}
