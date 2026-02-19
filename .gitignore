@@ -1,6 +1,5 @@
 ﻿CareerFlow.Core/.idea/*
 .env
-CareerFlow.Core/nuget.config
 CareerFlow.Core/src/CareerFlow.Core.Api/bin/*
 CareerFlow.Core/src/CareerFlow.Core.Api/obj/*
 CareerFlow.Core/src/CareerFlow.Core.Application/bin/*
