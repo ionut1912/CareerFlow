@@ -32,7 +32,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run unit tests
-        run: dotnet test ./tests/MyApp.UnitTests --no-build --configuration Release --verbosity normal
+        run: dotnet test ./tests --no-build --configuration Release --filter "Category!=Integration"
 
   integration-tests:
     name: Run Integration Tests
@@ -95,7 +95,7 @@ jobs:
         run: dotnet build --no-restore --configuration Release
 
       - name: Run integration tests
-        run: dotnet test ./tests/CareerFlow.Core.Api.IntegrationTests --no-build --configuration Release --verbosity normal
+        run: dotnet test ./tests --no-build --configuration Release --filter "Category=Integration"
         env:
           ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=testdb;Username=postgres;Password=postgres
           ConnectionStrings__Redis: localhost:6379

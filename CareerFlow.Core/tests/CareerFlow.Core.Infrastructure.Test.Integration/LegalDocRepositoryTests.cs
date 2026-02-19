@@ -7,6 +7,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Test.Integration;
 
+[Trait("Category", "Integration")]
 public class LegalDocRepositoryTests : BaseRepositoryTest
 {
     private readonly LegalDocRepository _sut;

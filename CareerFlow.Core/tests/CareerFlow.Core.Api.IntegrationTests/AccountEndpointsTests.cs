@@ -8,6 +8,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Api.IntegrationTests;
 
+[Trait("Category", "Integration")]
 public class AccountEndpointsTests : IntegrationTestBase
 {
     public AccountEndpointsTests(TestWebApplicationFactory factory) : base(factory) { }

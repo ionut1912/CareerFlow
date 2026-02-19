@@ -8,6 +8,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Test.Integration;
 
+[Trait("Category", "Integration")]
 public class CacheServiceIntegrationTests : IAsyncLifetime
 {
     private readonly RedisContainer _redis = new RedisBuilder("redis:7-alpine")

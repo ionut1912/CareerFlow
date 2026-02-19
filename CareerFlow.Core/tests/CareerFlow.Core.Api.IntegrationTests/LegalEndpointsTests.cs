@@ -9,6 +9,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Api.IntegrationTests;
 
+[Trait("Category", "Integration")]
 public class LegalEndpointsTests : IntegrationTestBase
 {
     public LegalEndpointsTests(TestWebApplicationFactory factory) : base(factory) { }
