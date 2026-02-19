@@ -18,19 +18,16 @@ namespace CareerFlow.Core.Api.IntegrationTests.Setup;
 
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine")
-        .Build();
+    private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine").Build();
 
     private readonly RabbitMqContainer _rabbitContainer = new RabbitMqBuilder("rabbitmq:3-management-alpine")
         .WithPortBinding(15672, true)
-        .WithWaitStrategy(Wait.ForUnixContainer()
-            .UntilMessageIsLogged(".*Server startup complete.*"))
+        .WithWaitStrategy(Wait.ForUnixContainer().UntilMessageIsLogged(".*Server startup complete.*"))
         .Build();
 
-    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:alpine")
-        .Build();
+    private readonly RedisContainer _redisContainer = new RedisBuilder("redis:alpine").Build();
 
-    public string DbConnectionString { get; private set; } = string.Empty;
+    public string DbConnectionString => _dbContainer.GetConnectionString();
 
     public async Task InitializeAsync()
     {
@@ -39,10 +36,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             _redisContainer.StartAsync(),
             _rabbitContainer.StartAsync()
         );
-
-        await Task.Delay(TimeSpan.FromSeconds(3));
-
-        DbConnectionString = _dbContainer.GetConnectionString();
 
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", DbConnectionString);
         Environment.SetEnvironmentVariable("ConnectionStrings__Redis", _redisContainer.GetConnectionString());
@@ -56,6 +49,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+
         await dbContext.Database.MigrateAsync();
     }
 
@@ -77,30 +71,13 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             _redisContainer.StopAsync(),
             _rabbitContainer.StopAsync()
         );
+
+
     }
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-
-        builder.UseSetting("ConnectionStrings:DefaultConnection",
-            Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")!);
-        builder.UseSetting("ConnectionStrings:Redis",
-            Environment.GetEnvironmentVariable("ConnectionStrings__Redis")!);
-        builder.UseSetting("RabbitMQ:Host",
-            Environment.GetEnvironmentVariable("RabbitMQ__Host")!);
-        builder.UseSetting("RabbitMQ:Port",
-            Environment.GetEnvironmentVariable("RabbitMQ__Port")!);
-        builder.UseSetting("RabbitMQ:Username",
-            Environment.GetEnvironmentVariable("RabbitMQ__Username")!);
-        builder.UseSetting("RabbitMQ:Password",
-            Environment.GetEnvironmentVariable("RabbitMQ__Password")!);
-        builder.UseSetting("JwtSettings:Key",
-            Environment.GetEnvironmentVariable("JwtSettings__Key")!);
-        builder.UseSetting("JwtSettings:Issuer",
-            Environment.GetEnvironmentVariable("JwtSettings__Issuer")!);
-        builder.UseSetting("JwtSettings:Audience",
-            Environment.GetEnvironmentVariable("JwtSettings__Audience")!);
 
         builder.ConfigureTestServices(services =>
         {
@@ -129,12 +106,18 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         await using var conn = new NpgsqlConnection(DbConnectionString);
         await conn.OpenAsync();
 
-        var respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+        try
         {
-            DbAdapter = DbAdapter.Postgres,
-            SchemasToInclude = ["public"]
-        });
+            var respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+            {
+                DbAdapter = DbAdapter.Postgres,
+                SchemasToInclude = ["public"]
+            });
 
-        await respawner.ResetAsync(conn);
+            await respawner.ResetAsync(conn);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("No tables found"))
+        {
+        }
     }
 }

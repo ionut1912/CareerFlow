@@ -8,36 +8,16 @@ using Xunit;
 
 namespace CareerFlow.Core.Api.IntegrationTests;
 
-public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
+public class AccountEndpointsTests : IntegrationTestBase
 {
-    private readonly TestWebApplicationFactory _factory;
-
-    public AccountEndpointsTests(TestWebApplicationFactory factory)
-    {
-        _factory = factory;
-    }
-
-    public async Task InitializeAsync()
-    {
-        await _factory.ResetDatabaseAsync();
-
-        var client = _factory.CreateClient();
-        await client.PostAsJsonAsync("/account/register",
-            new CreateAccountRequest("testEmail@email.com", "testPassword", "testUsername", "testName"));
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
-    }
+    public AccountEndpointsTests(TestWebApplicationFactory factory) : base(factory) { }
 
     [Fact]
     public async Task Register_ShouldReturnSuccess_WhenDataIsValid()
     {
-        var client = _factory.CreateClient();
         var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "newUsername", "testName");
 
-        var response = await client.PostAsJsonAsync("/account/register", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         var result = await response.Content.ReadFromJsonAsync<Guid>();
         response.EnsureSuccessStatusCode();
@@ -48,10 +28,9 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Register_ShouldReturnBadRequest_WhenDataIsInvalid()
     {
-        var client = _factory.CreateClient();
         var request = new CreateAccountRequest("testEmail", "", "testUsername", "testName");
 
-        var response = await client.PostAsJsonAsync("/account/register", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -59,10 +38,9 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Register_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        var client = _factory.CreateClient();
         var request = new CreateAccountRequest("testEmail", "testPassword", "testUsername", "testName");
 
-        var response = await client.PostAsJsonAsync("/invalid-ur;", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/invalid-ur;", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -70,10 +48,10 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Register_ShouldReturnBadRequest_WhenAccountExists()
     {
-        var client = _factory.CreateClient();
         var request = new CreateAccountRequest("testEmail@email.com", "testPassword", "testUsername", "testName");
+        await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
-        var response = await client.PostAsJsonAsync("/account/register", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -81,10 +59,9 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Login_ShouldReturnBadRequest_WhenEmailIsInvalid()
     {
-        var client = _factory.CreateClient();
         var request = new LoginRequest("testEmail", "testPassword");
 
-        var response = await client.PostAsJsonAsync("/account/login", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -92,17 +69,16 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Login_Return200_WhenDataIsValid()
     {
-        var client = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
+        var (_, _, credentials) = await CreateAndAuthenticateUserAsync();
 
-        var response = await client.PostAsJsonAsync("/account/login", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
 
         response.EnsureSuccessStatusCode();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<AccountDto>();
         result.ShouldNotBeNull();
         result.Id.ShouldNotBe(Guid.Empty);
-        result.Email.ShouldBe(request.Email);
+        result.Email.ShouldBe(credentials.Email);
         result.Username.ShouldNotBe(null);
         result.RefreshToken.ShouldNotBe(null);
         result.IsFounder.ShouldBeFalse();
@@ -113,10 +89,9 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Login_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        var client = _factory.CreateClient();
         var request = new LoginRequest("testEmail", "testPassword");
 
-        var response = await client.PostAsJsonAsync("/invalid-uri", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/invalid-uri", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -124,10 +99,10 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Login_ShouldReturnBadRequest_WhenPasswordIsInvalid()
     {
-        var client = _factory.CreateClient();
+        await CreateAndAuthenticateUserAsync("testEmail@email.com", "testPassword");
         var request = new LoginRequest("testEmail@email.com", "testPassword2");
 
-        var response = await client.PostAsJsonAsync("/account/login", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -135,10 +110,9 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task Login_ShouldReturnNotFound_WhenEmailDoesNotExist()
     {
-        var client = _factory.CreateClient();
         var request = new LoginRequest("testEmail2@email.com", "testPassword2");
 
-        var response = await client.PostAsJsonAsync("/account/login", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
@@ -146,10 +120,9 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task RefreshToken_ShouldReturnUnauthorized_WhenIsNotAuthenticated()
     {
-        var client = _factory.CreateClient();
         var request = new RefreshTokenRequest("testRefresh", "testRefreshToken");
 
-        var response = await client.PostAsJsonAsync("/account/refresh-token", request);
+        var response = await AnonymousClient.PostAsJsonAsync("/account/refresh-token", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -157,14 +130,8 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task RefreshToken_ShouldReturnOk_WhenDataIsValid()
     {
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
-        var refreshTokenRequest = new RefreshTokenRequest(loginResult.Token, loginResult.RefreshToken);
+        var (authClient, account, _) = await CreateAndAuthenticateUserAsync();
+        var refreshTokenRequest = new RefreshTokenRequest(account.Token, account.RefreshToken);
 
         var response = await authClient.PostAsJsonAsync("/account/refresh-token", refreshTokenRequest);
 
@@ -179,28 +146,20 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task RefreshToken_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
-        var refreshTokenRequest = new RefreshTokenRequest(loginResult.Token, loginResult.RefreshToken);
+        var (authClient, account, _) = await CreateAndAuthenticateUserAsync();
+        var refreshTokenRequest = new RefreshTokenRequest(account.Token, account.RefreshToken);
 
         var response = await authClient.PostAsJsonAsync("/invalidurl", refreshTokenRequest);
 
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task ResetPassword_ShouldReturnUnauthorized_WhenIsNotAuthenticated()
     {
-        var client = _factory.CreateClient();
         var request = new ResetPasswordRequest("newPassword");
 
-        var response = await client.PutAsJsonAsync("/account/reset-password", request);
+        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", request);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -208,41 +167,30 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task ResetPassword_ShouldReturnBadRequest_WhenLoginWithOldPassword()
     {
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
         var resetPasswordRequest = new ResetPasswordRequest("newPassword");
 
         var response = await authClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
+        var reloginRequest = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        var reloginRequest = await anonClient.PostAsJsonAsync("/account/login", request);
         reloginRequest.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task ResetPassword_ShouldReturnSuccess_WhenLoginWithNewPassword()
     {
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
         var resetPasswordRequest = new ResetPasswordRequest("newPassword");
 
         var response = await authClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
+        var newLoginRequest = new LoginRequest(credentials.Email, resetPasswordRequest.NewPassword);
+        var reloginRequest = await AnonymousClient.PostAsJsonAsync("/account/login", newLoginRequest);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        var newLoginRequest = new LoginRequest(request.Email, resetPasswordRequest.NewPassword);
-        var reloginRequest = await anonClient.PostAsJsonAsync("/account/login", newLoginRequest);
         reloginRequest.EnsureSuccessStatusCode();
         reloginRequest.StatusCode.ShouldBe(HttpStatusCode.OK);
+        
         var reloginResult = await reloginRequest.Content.ReadFromJsonAsync<AccountDto>();
         reloginResult.ShouldNotBeNull();
         reloginResult.Id.ShouldNotBe(Guid.Empty);
@@ -258,13 +206,7 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task ResetPassword_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
         var resetPasswordRequest = new ResetPasswordRequest("newPassword");
 
         var response = await authClient.PutAsJsonAsync("/invalid url", resetPasswordRequest);
@@ -275,32 +217,18 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task GetCurrentAccount_ShouldReturnUnauthorized_WhenNotAuthenticated()
     {
-        //Arrange
-        var client = _factory.CreateClient();
+        var response = await AnonymousClient.GetAsync("/account/current");
 
-        //Act
-        var response = await client.GetAsync("/account/current");
-
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task GetCurrentAccount_ShouldReturnLoggedInUser_WhenAuthenticated()
     {
-        //Arrange
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
-        //Act
         var response = await authClient.GetAsync("/account/current");
 
-        //Assert
         response.EnsureSuccessStatusCode();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var currentAccount = await response.Content.ReadFromJsonAsync<AccountDto>();
@@ -318,91 +246,50 @@ public class AccountEndpointsTests : IClassFixture<TestWebApplicationFactory>, I
     [Fact]
     public async Task GetCurrentAccount_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        //Arrange
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
-        //Act
         var response = await authClient.GetAsync("/invalid url");
 
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task DeleteAccount_ShouldReturnUnauthorized_WhenNotAuthenticated()
     {
-        //Arrange
-        var client = _factory.CreateClient();
+        var response = await AnonymousClient.DeleteAsync("/account");
 
-        //Act
-        var response = await client.DeleteAsync("/account");
-
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
 
     [Fact]
     public async Task DeleteAccount_ShouldReturnNoContent_WhenAuthenticated()
     {
-        //Arrange
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
-        //Act
         var response = await authClient.DeleteAsync("/account");
 
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
     }
 
     [Fact]
     public async Task DeleteAccount_ShouldReturnNotFound_WhenRelogin()
     {
-        //Arrange
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
 
-        //Act
         var response = await authClient.DeleteAsync("/account");
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        var reloginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
+        var reloginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
 
-        //Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         reloginResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task DeleteAccount_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        //Arrange
-        var anonClient = _factory.CreateClient();
-        var request = new LoginRequest("testEmail@email.com", "testPassword");
-        var loginResponse = await anonClient.PostAsJsonAsync("/account/login", request);
-        loginResponse.EnsureSuccessStatusCode();
-        var loginResult = await loginResponse.Content.ReadFromJsonAsync<AccountDto>();
-        loginResult.ShouldNotBeNull();
-        var authClient = _factory.CreateAuthenticatedClient(loginResult.Id);
+        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
-        //Act
         var response = await authClient.DeleteAsync("/invalid url");
 
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 }

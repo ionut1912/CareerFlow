@@ -9,39 +9,23 @@ using Xunit;
 
 namespace CareerFlow.Core.Api.IntegrationTests;
 
-public class LegalEndpointsTests: IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
+public class LegalEndpointsTests : IntegrationTestBase
 {
-    private readonly TestWebApplicationFactory _factory;
+    public LegalEndpointsTests(TestWebApplicationFactory factory) : base(factory) { }
 
-    public LegalEndpointsTests(TestWebApplicationFactory factory)
+    private async Task SeedLegalDocAsync(string content, string type)
     {
-        _factory = factory;
-    }
-    public async Task InitializeAsync()
-    {
-        await _factory.ResetDatabaseAsync();
-
-        var client = _factory.CreateClient();
-        await client.PostAsJsonAsync("/legal",
-            new CreateLegalDocCommand("testContent","PrivacyPolicy"));
-    }
-
-    public Task DisposeAsync()
-    {
-        return Task.CompletedTask;
+        var command = new CreateLegalDocCommand(content, type);
+        await AnonymousClient.PostAsJsonAsync("/legal", command);
     }
 
     [Fact]
     public async Task CreateLegalDoc_ShouldReturnOk_WhenValidRequest()
     {
-        //Arrange
-        var client=_factory.CreateClient();
-        var request=new LegalRequest("testContent","PrivacyPolicy");
+        var request = new LegalRequest("testContent", "PrivacyPolicy");
         
-        //Act
-        var response=await client.PostAsJsonAsync("/legal",request);
+        var response = await AnonymousClient.PostAsJsonAsync("/legal", request);
         
-        //Assert
         response.EnsureSuccessStatusCode();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<Guid>();
@@ -51,41 +35,31 @@ public class LegalEndpointsTests: IClassFixture<TestWebApplicationFactory>, IAsy
     [Fact]
     public async Task CreateLegalDoc_ShouldReturnBadRequest_WhenInvalidRequest()
     {
-        //Arrange
-        var client=_factory.CreateClient();
         var request = new LegalRequest(string.Empty, string.Empty);
         
-        //Act
-        var response=await client.PostAsJsonAsync("/legal",request);
+        var response = await AnonymousClient.PostAsJsonAsync("/legal", request);
         
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task CreateLegalDocAsync_ShouldReturnNotFound_WhenInvalidUri()
     {
-        //Arrange
-        var client = _factory.CreateClient();
-        var request=new LegalRequest("testContent","PrivacyPolicy");
+        var request = new LegalRequest("testContent", "PrivacyPolicy");
         
-        //Act
-        var response=await client.PostAsJsonAsync("/invalidurl",request);
+        var response = await AnonymousClient.PostAsJsonAsync("/invalidurl", request);
         
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task GetLegalDoc_ShouldReturnOk_WhenLegalDocExists()
     {
-        //Arrange
-        var client = _factory.CreateClient();
-        var type="PrivacyPolicy";
-        //Act
-        var response=await client.GetAsync($"/legal?type={type}");
+        await SeedLegalDocAsync("testContent", "PrivacyPolicy");
+        var type = "PrivacyPolicy";
+
+        var response = await AnonymousClient.GetAsync($"/legal?type={type}");
         
-        //Assert
         response.EnsureSuccessStatusCode();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
@@ -93,56 +67,39 @@ public class LegalEndpointsTests: IClassFixture<TestWebApplicationFactory>, IAsy
     [Fact]
     public async Task GetLegalDoc_ShouldReturnNotFound_WhenLegalDocDoesNotExist()
     {
-        //Arrange
-        var client = _factory.CreateClient();
-        var type="TermsAndConditions";
+        var type = "TermsAndConditions";
         
-        //Act
-        var response=await client.GetAsync($"/legal?type={type}");
+        var response = await AnonymousClient.GetAsync($"/legal?type={type}");
         
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task GetLegalDoc_ShouldReturnBadRequest_WhenInvalidType()
     {
+        var type = "Testtype";
         
-            //Arrange
-            var client = _factory.CreateClient();
-            var type="Testtype";
+        var response = await AnonymousClient.GetAsync($"/legal?type={type}");
         
-            //Act
-            var response=await client.GetAsync($"/legal?type={type}");
-        
-            //Assert
-            response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task GetLegaDocsAsync_ShouldReturnNotFound_WhenInvalidUrl()
     {
-        //Arrange
-        var client = _factory.CreateClient();
-        var type="PrivacyPolicy";
-        //Act
-        var response=await client.GetAsync("invalidurl");
+        var response = await AnonymousClient.GetAsync("invalidurl");
         
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 
     [Fact]
     public async Task UpdateLegalDocDto_ShouldReturnUpdatedDoc_WhenValidRequest()
     {
-        //Arrange
-        var client=_factory.CreateClient();
-        var request=new LegalRequest("testContent","PrivacyPolicy");
+        await SeedLegalDocAsync("initialContent", "PrivacyPolicy");
+        var request = new LegalRequest("testContent", "PrivacyPolicy");
         
-        //Act
-        var  response=await client.PutAsJsonAsync("/legal",request);
+        var response = await AnonymousClient.PutAsJsonAsync("/legal", request);
         
-        //Assert
         response.EnsureSuccessStatusCode();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         var result = await response.Content.ReadFromJsonAsync<LegalDocDto>();
@@ -154,28 +111,20 @@ public class LegalEndpointsTests: IClassFixture<TestWebApplicationFactory>, IAsy
     [Fact]
     public async Task UpdateLegalDocDto_ShouldReturnBadRequest_WhenInvalidRequest()
     {
-        //Arrange
-        var client=_factory.CreateClient();
-        var request=new LegalRequest(string.Empty,string.Empty);
+        var request = new LegalRequest(string.Empty, string.Empty);
         
-        //Act
-        var  response=await client.PutAsJsonAsync("/legal",request);
+        var response = await AnonymousClient.PutAsJsonAsync("/legal", request);
         
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
 
     [Fact]
     public async Task UpdateLegalDocDtoAsync_ShouldReturnNotFound_WhenInvalidUri()
     {
-        //Arrange
-        var client=_factory.CreateClient();
-        var request=new LegalRequest("testContent","TermsAndConditions");
+        var request = new LegalRequest("testContent", "TermsAndConditions");
         
-        //Act
-        var  response=await client.PutAsJsonAsync("/invalid-url",request);
+        var response = await AnonymousClient.PutAsJsonAsync("/invalid-url", request);
         
-        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }
 }
