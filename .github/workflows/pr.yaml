@@ -110,7 +110,7 @@ jobs:
     needs: integration-tests
     defaults:
       run:
-        working-directory: CareerFlow.Core
+        working-directory: CareerFlow.Core/src/CareerFlow.Core.Api
 
     steps:
       - name: Checkout code
