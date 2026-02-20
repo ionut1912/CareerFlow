@@ -19,11 +19,11 @@ RUN dotnet restore "src/CareerFlow.Core.Api/CareerFlow.Core.Api.csproj"
 ENV PACKAGE_TOKEN=
 COPY . .
 WORKDIR "/src/src/CareerFlow.Core.Api"
-RUN dotnet build "./CareerFlow.Core.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./CareerFlow.Core.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build --no-restore
 
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./CareerFlow.Core.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./CareerFlow.Core.Api.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false --no-restore
 
 FROM base AS final
 WORKDIR /app
