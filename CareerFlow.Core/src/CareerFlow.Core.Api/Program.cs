@@ -6,17 +6,21 @@ using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Gateways;
 using CareerFlow.Core.Infrastructure.Persistance;
 using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Core.Rabbit.Events.Events;
+using FluentValidation;
 using InfisicalConfiguration;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+using Shared.Domain.Exceptions;
 using Shared.Domain.Interfaces;
 using Shared.Infra.Services;
+using Wolverine.ErrorHandling;
 using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -47,10 +51,19 @@ builder.AddWolverineMessaging(
         opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
         opt.PublishMessage<UpdateLegalDocsMessage>().ToRabbitQueue(legalDocsQueueName);
 
-        opt.ListenToRabbitQueue(emailQueueName)
-            .UseDurableInbox();
-        opt.ListenToRabbitQueue(legalDocsQueueName)
-            .UseDurableInbox();
+        opt.ListenToRabbitQueue(emailQueueName).UseDurableInbox();
+        opt.ListenToRabbitQueue(legalDocsQueueName).UseDurableInbox();
+
+        opt.Policies.OnException<ValidationException>().RetryTimes(0);
+        opt.Policies.OnException<AccountNotFoundException>().RetryTimes(0);
+        opt.Policies.OnException<InvalidFieldException>().RetryTimes(0);
+        opt.Policies.OnException<PasswordNotMatchException>().RetryTimes(0);
+        opt.Policies.OnException<UserAlreadyExistsException>().RetryTimes(0);
+        opt.Policies.OnException<LegalDocNotFoundException>().RetryTimes(0);
+        opt.Policies.OnException<InvalidRefreshTokenException>().RetryTimes(0);
+        opt.Policies.OnException<TokenAlreadyUsedExcception>().RetryTimes(0);
+        opt.Policies.OnException<TokenRevokedException>().RetryTimes(0);
+        opt.Policies.OnException<CustomValidationException>().RetryTimes(0);
     });
 
 builder.Services.AddStackExchangeRedisCache(options =>
