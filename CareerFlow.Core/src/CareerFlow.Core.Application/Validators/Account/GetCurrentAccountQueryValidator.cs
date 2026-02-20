@@ -7,6 +7,6 @@ public class GetCurrentAccountQueryValidator : AbstractValidator<GetCurrentAccou
 {
     public GetCurrentAccountQueryValidator()
     {
-        RuleFor(x => x.AccountId).NotEmpty().WithMessage("Username is required");
+        RuleFor(x => x.AccountId).NotEmpty().WithMessage("Id-ul contului este necesar");
     }
 }

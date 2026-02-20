@@ -11,17 +11,17 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class CreateAccountCommandHandler
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly ILogger<CreateAccountCommandHandler> _logger;
     private readonly IPasswordService _passwordService;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ILogger<CreateAccountCommandHandler> _logger;
 
     public CreateAccountCommandHandler(IAccountRepository accountRepository,
         IPasswordService passwordService, IUnitOfWork unitOfWork, ILogger<CreateAccountCommandHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
-        ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(passwordService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(logger);
         _accountRepository = accountRepository;
         _passwordService = passwordService;
         _unitOfWork = unitOfWork;
@@ -33,26 +33,17 @@ public class CreateAccountCommandHandler
         var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
         if (account is not null)
         {
-            _logger.LogError("Accont with username :{Username} can not be created because already exists", request.Username);
-            throw new UserAlreadyExistsException($"Account with username {request.Username} already exists");
+            _logger.LogError("Contul cu email :{Email} nu poate fi creat,deoarece exista", request.Email);
+            throw new UserAlreadyExistsException($"Contul cu email {request.Email} deja exista");
         }
 
-        var accountToCreate = Account.Create(request.Email, request.Password, request.Username,request.Name);
-
-        if (request.AcceptedPrivacyPolicy)
-        {
-            accountToCreate.AcceptPrivacyPolicy();
-        }
-
-        if (request.AcceptedTermsAndConditions)
-        {
-            accountToCreate.AcceptTerms();
-        }
-
+        var accountToCreate = Account.Create(request.Email, request.Password, request.Username, request.Name);
+        accountToCreate.AcceptPrivacyPolicy();
+        accountToCreate.AcceptTerms();
         accountToCreate.HashPassword(_passwordService);
         await _accountRepository.AddAsync(accountToCreate, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Account with id {Id} was created", accountToCreate.Id);
+        _logger.LogInformation("Contul cu  id-ul {Id} a fost creat cu succes", accountToCreate.Id);
         return accountToCreate.Id;
     }
 }

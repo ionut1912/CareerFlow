@@ -1,4 +1,5 @@
 ﻿using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -8,13 +9,13 @@ public class LegalDocConfiguration : IEntityTypeConfiguration<LegalDoc>
 {
     public void Configure(EntityTypeBuilder<LegalDoc> builder)
     {
-        builder.OwnsOne(p => p.Type, type =>
-        {
-            type.Property(c => c.Value)
-                .HasColumnName("Type")
-                .HasMaxLength(20)
-                .IsRequired();
-        });
-
+        builder.Property(l => l.Type)
+            .HasColumnName("Type")
+            .HasMaxLength(20)
+            .IsRequired()
+            .HasConversion(
+                v => v.Value,
+                v => LegalDocType.FromString(v)
+            );
     }
 }

@@ -11,18 +11,19 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class LoginWithLinkedinQueryHandler
 {
     private readonly IAuthService _authService;
-    private readonly IRefreshTokenRepository _refreshTokenRepository;
-    private readonly IJwtTokenService _jwtTokenService;
-    private readonly IUnitOfWork _unitOfWork;
+    private readonly ITokenService _jwtTokenService;
     private readonly ILogger<LoginWithLinkedinQueryHandler> _logger;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
 
-    public LoginWithLinkedinQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository, IJwtTokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithLinkedinQueryHandler> logger)
+    public LoginWithLinkedinQueryHandler(IAuthService authService, IRefreshTokenRepository refreshTokenRepository,
+        ITokenService jwtTokenService, IUnitOfWork unitOfWork, ILogger<LoginWithLinkedinQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(authService, nameof(authService));
-        ArgumentNullException.ThrowIfNull(refreshTokenRepository, nameof(refreshTokenRepository));
-        ArgumentNullException.ThrowIfNull(jwtTokenService, nameof(jwtTokenService));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
+        ArgumentNullException.ThrowIfNull(authService);
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository);
+        ArgumentNullException.ThrowIfNull(jwtTokenService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(logger);
         _authService = authService;
         _refreshTokenRepository = refreshTokenRepository;
         _jwtTokenService = jwtTokenService;
@@ -34,10 +35,10 @@ public class LoginWithLinkedinQueryHandler
     {
         var linkedinUser = await _authService.LoginWithLinkedInAsync(request.AuthorizationCode, cancellationToken);
         var jwtToken = _jwtTokenService.GenerateToken(linkedinUser);
-        var refreshToken = _jwtTokenService.GenerateRefreshToken(linkedinUser.Id, jwtToken.Jti);
+        var refreshToken = _jwtTokenService.GenerateRefreshToken(linkedinUser.Id, jwtToken.Token);
         await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("User {Email} logged in with LinkedIn", linkedinUser.Email);
+        _logger.LogInformation("User-ul cu email {Email} logat cu linkedin cu success", linkedinUser.Email);
         return linkedinUser.ToAccountDto(jwtToken.Token, refreshToken.Token);
     }
 }

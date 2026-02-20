@@ -7,10 +7,10 @@ public class CreateAccountCommandValidator : AbstractValidator<CreateAccountComm
 {
     public CreateAccountCommandValidator()
     {
-        RuleFor(a => a.Password).NotEmpty().WithMessage("Password is required");
-        RuleFor(a => a.Username).NotEmpty().WithMessage("Username is required");
-        RuleFor(a => a.Email).NotEmpty().WithMessage("Email is required")
-            .EmailAddress().WithMessage("Email has invalid format");
-        RuleFor(x=>x.Name).NotEmpty().WithMessage("Name must not be empty");
+        RuleFor(a => a.Password).NotEmpty().WithMessage("Parola este necesara");
+        RuleFor(a => a.Username).NotEmpty().WithMessage("Numele de utilizator este necesar");
+        RuleFor(a => a.Email).NotEmpty().WithMessage("Email-ul este necesar")
+            .EmailAddress().WithMessage("Email-ul are format invalid");
+        RuleFor(x => x.Name).NotEmpty().WithMessage("Numele este necesar");
     }
 }

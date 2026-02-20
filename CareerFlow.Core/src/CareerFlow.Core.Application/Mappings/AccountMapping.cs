@@ -10,14 +10,13 @@ public static class AccountMapping
 {
     public static AccountDto ToAccountDto(this Account account, string? token = null, string? refreshToken = null)
     {
-        return new AccountDto(account.Id, account.Email, account.Username, token, refreshToken, account.IsFounder, account.PrivacyPolicyAccepted, account.TermsAccepted);
+        return new AccountDto(account.Id, account.Email, account.Username, token, refreshToken, account.IsFounder,
+            account.PrivacyPolicyAccepted, account.TermsAccepted);
     }
-
-    public static List<AccountDto> ToAccountsDto(this IEnumerable<Account> accounts) => [.. accounts.Select(a => new AccountDto(a.Id, a.Email, a.Username, null, null, a.IsFounder, a.PrivacyPolicyAccepted, a.TermsAccepted))];
 
     public static CreateAccountCommand ToCreateCommand(this CreateAccountRequest request)
     {
-        return new CreateAccountCommand(request.Email, request.Password, request.Username,request.Name, request.AcceptedPrivacyPolicy, request.AcceptedTermsAndConditions);
+        return new CreateAccountCommand(request.Email, request.Password, request.Username, request.Name);
     }
 
     public static LoginQuery ToLoginQuery(this LoginRequest request)

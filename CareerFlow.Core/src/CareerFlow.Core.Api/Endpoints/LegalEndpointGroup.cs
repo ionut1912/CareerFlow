@@ -1,10 +1,10 @@
-﻿using CareerFlow.Core.Application.CQRS.Legal.Query;
+﻿using System.Net;
+using CareerFlow.Core.Application.CQRS.Legal.Query;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
-using System.Net;
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Endpoints;
@@ -19,14 +19,16 @@ public class LegalEndpointGroup : EndpointGroup
         group.MapGet(GetLegalDoc);
     }
 
-    private static async Task<IResult> CreateLegalDoc(IMessageBus bus, LegalRequest request, CancellationToken cancellationToken)
+    private static async Task<IResult> CreateLegalDoc(IMessageBus bus, LegalRequest request,
+        CancellationToken cancellationToken)
     {
         var createLegalDocCommand = request.ToCreateLegalDocCommand();
         var result = await bus.InvokeAsync<Guid>(createLegalDocCommand, cancellationToken);
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> UpdateLegalDoc(IMessageBus bus, LegalRequest request, CancellationToken cancellationToken)
+    private static async Task<IResult> UpdateLegalDoc(IMessageBus bus, LegalRequest request,
+        CancellationToken cancellationToken)
     {
         var updateLegalDocCommand = request.ToUpdateLegalDocCommand();
         var result = await bus.InvokeAsync<LegalDocDto>(updateLegalDocCommand, cancellationToken);
@@ -37,11 +39,6 @@ public class LegalEndpointGroup : EndpointGroup
     {
         var getLegalDocQuery = new GetLegalDocQuery(type);
         var result = await bus.InvokeAsync<LegalDocDto>(getLegalDocQuery, cancellationToken);
-        if (result == null)
-        {
-            return Results.NotFound("Politica nu a fost gasita.");
-        }
-
 
         var htmlContent = $@"
     <!DOCTYPE html>
@@ -75,5 +72,4 @@ public class LegalEndpointGroup : EndpointGroup
         // 2. Returnăm HTML cu Content-Type corect
         return Results.Content(htmlContent, "text/html");
     }
-
 }

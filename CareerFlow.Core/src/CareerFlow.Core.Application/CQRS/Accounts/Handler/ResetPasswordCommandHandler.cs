@@ -11,17 +11,18 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
 public class ResetPasswordCommandHandler
 {
-    private readonly ILogger<ResetPasswordCommandHandler> _logger;
     private readonly IAccountRepository _accountRepository;
+    private readonly ILogger<ResetPasswordCommandHandler> _logger;
     private readonly IPasswordService _passwordService;
     private readonly IUnitOfWork _unitOfWork;
 
-    public ResetPasswordCommandHandler(ILogger<ResetPasswordCommandHandler> logger, IAccountRepository accountRepository, IPasswordService passwordService, IUnitOfWork unitOfWork)
+    public ResetPasswordCommandHandler(ILogger<ResetPasswordCommandHandler> logger,
+        IAccountRepository accountRepository, IPasswordService passwordService, IUnitOfWork unitOfWork)
     {
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-        ArgumentNullException.ThrowIfNull(accountRepository, nameof(accountRepository));
-        ArgumentNullException.ThrowIfNull(passwordService, nameof(passwordService));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(passwordService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
         _logger = logger;
         _accountRepository = accountRepository;
         _passwordService = passwordService;
@@ -33,8 +34,8 @@ public class ResetPasswordCommandHandler
         var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("Account with Id {AccountId} was not found", request.AccountId);
-            throw new AccountNotFoundException($"Account with Id'{request.AccountId}' was not found.");
+            _logger.LogError("User-ul cu Id-ul {AccountId} nu a fost gasit", request.AccountId);
+            throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit.");
         }
 
         account.ResetPassword(request.NewPassword, _passwordService);
@@ -42,11 +43,10 @@ public class ResetPasswordCommandHandler
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var messages = new OutgoingMessages
         {
-            new ResetPasswordNotificationMessage(account.Username,account.Email,"test")
+            new ResetPasswordNotificationMessage(account.Username, account.Email, "test")
         };
 
-        _logger.LogInformation("Password for account with AccountId {AccountId} has been reset", request.AccountId);
+        _logger.LogInformation("Parola pentru contul cu id-ul {AccountId} a fost resetata", request.AccountId);
         return messages;
-
     }
 }

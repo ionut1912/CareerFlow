@@ -8,8 +8,10 @@ public class GetLegalDocQueryValidator : AbstractValidator<GetLegalDocQuery>
     public GetLegalDocQueryValidator()
     {
         RuleFor(x => x.Type)
-        .NotEmpty()
-        .Must(type => type.IsValidLegalDocType())
-        .WithMessage($"Type must be one of: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
+            .NotEmpty()
+            .WithMessage("Tipul este necesar")
+            .Must(type => type.IsValidLegalDocType())
+            .WithMessage(
+                $"Tipul trebuie sa fie una din urmatoarele: {string.Join(", ", LegalDocValidationExtensions.AllowedTypes)}");
     }
 }

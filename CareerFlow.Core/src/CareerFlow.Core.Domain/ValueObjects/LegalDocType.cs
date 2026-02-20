@@ -5,7 +5,7 @@ namespace CareerFlow.Core.Domain.ValueObjects;
 
 public class LegalDocType : ValueObject
 {
-    public static readonly LegalDocType TermsOfService = new("TermsOfService");
+    public static readonly LegalDocType TermsAndConditions = new("TermsAndConditions");
     public static readonly LegalDocType PrivacyPolicy = new("PrivacyPolicy");
 
     private LegalDocType(string value)
@@ -19,11 +19,12 @@ public class LegalDocType : ValueObject
     {
         return value.ToLower() switch
         {
-            "termsofservice" => TermsOfService,
+            "termsandconditions" => TermsAndConditions,
             "privacypolicy" => PrivacyPolicy,
-            _ => throw new InvalidLegalDocTypeException($"Invalid legal document type: {value}")
+            _ => throw new InvalidFieldException($"Tipul este invalid:{value}")
         };
     }
+
     protected override IEnumerable<object?> GetEqualityComponents()
     {
         yield return Value;

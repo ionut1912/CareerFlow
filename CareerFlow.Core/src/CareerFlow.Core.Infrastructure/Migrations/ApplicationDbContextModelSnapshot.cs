@@ -18,8 +18,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "10.0.3")
-                .HasAnnotation("Relational:MaxIdentifierLength", 63)
-                .HasAnnotation("WolverineEnabled", "true");
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
@@ -86,6 +85,12 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)")
+                        .HasColumnName("Type");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -112,7 +117,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Property<bool>("IsUsed")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("JwtId")
+                    b.Property<string>("JwtToken")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -129,123 +134,6 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("RefreshTokens");
-                });
-
-            modelBuilder.Entity("Wolverine.EntityFrameworkCore.Internals.IncomingMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<int>("Attempts")
-                        .HasColumnType("integer")
-                        .HasColumnName("attempts");
-
-                    b.Property<byte[]>("Body")
-                        .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("body");
-
-                    b.Property<DateTimeOffset?>("ExecutionTime")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("execution_time");
-
-                    b.Property<DateTimeOffset?>("KeepUntil")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("keep_until");
-
-                    b.Property<string>("MessageType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message_type");
-
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("owner_id");
-
-                    b.Property<string>("ReceivedAt")
-                        .HasColumnType("text")
-                        .HasColumnName("received_at");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("status");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("wolverine_incoming_envelopes", "public", t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
-                });
-
-            modelBuilder.Entity("Wolverine.EntityFrameworkCore.Internals.OutgoingMessage", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<int>("Attempts")
-                        .HasColumnType("integer")
-                        .HasColumnName("attempts");
-
-                    b.Property<byte[]>("Body")
-                        .IsRequired()
-                        .HasColumnType("bytea")
-                        .HasColumnName("body");
-
-                    b.Property<DateTimeOffset?>("DeliverBy")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("deliver_by");
-
-                    b.Property<string>("Destination")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("destination");
-
-                    b.Property<string>("MessageType")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("message_type");
-
-                    b.Property<int>("OwnerId")
-                        .HasColumnType("integer")
-                        .HasColumnName("owner_id");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("wolverine_outgoing_envelopes", "public", t =>
-                        {
-                            t.ExcludeFromMigrations();
-                        });
-                });
-
-            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.LegalDoc", b =>
-                {
-                    b.OwnsOne("CareerFlow.Core.Domain.ValueObjects.LegalDocType", "Type", b1 =>
-                        {
-                            b1.Property<Guid>("LegalDocId")
-                                .HasColumnType("uuid");
-
-                            b1.Property<string>("Value")
-                                .IsRequired()
-                                .HasMaxLength(20)
-                                .HasColumnType("character varying(20)")
-                                .HasColumnName("Type");
-
-                            b1.HasKey("LegalDocId");
-
-                            b1.ToTable("LegalDocs");
-
-                            b1.WithOwner()
-                                .HasForeignKey("LegalDocId");
-                        });
-
-                    b.Navigation("Type")
-                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

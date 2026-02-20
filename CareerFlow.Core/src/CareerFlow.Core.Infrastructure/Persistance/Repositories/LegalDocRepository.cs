@@ -10,6 +10,8 @@ public class LegalDocRepository(DbSet<LegalDoc> dbSet) : GenericRepository<Legal
 {
     public async Task<LegalDoc?> GetLegalDocByTypeAsync(string type, CancellationToken cancellationToken)
     {
-        return await dbSet.FirstOrDefaultAsync(ld => ld.Type == LegalDocType.FromString(type), cancellationToken);
+        var docType = LegalDocType.FromString(type);
+    
+        return await dbSet.FirstOrDefaultAsync(l => l.Type == docType, cancellationToken);
     }
 }

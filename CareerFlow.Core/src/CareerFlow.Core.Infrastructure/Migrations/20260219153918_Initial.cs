@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -18,6 +19,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     Email = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
                     Password = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     Username = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    Name = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
                     IsFounder = table.Column<bool>(type: "boolean", nullable: false, defaultValue: false),
                     TermsAccepted = table.Column<bool>(type: "boolean", nullable: false),
                     PrivacyPolicyAccepted = table.Column<bool>(type: "boolean", nullable: false),
@@ -51,7 +53,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Token = table.Column<string>(type: "text", nullable: false),
-                    JwtId = table.Column<string>(type: "text", nullable: false),
+                    JwtToken = table.Column<string>(type: "text", nullable: false),
                     IsUsed = table.Column<bool>(type: "boolean", nullable: false),
                     IsRevoked = table.Column<bool>(type: "boolean", nullable: false),
                     ExpiryDate = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),

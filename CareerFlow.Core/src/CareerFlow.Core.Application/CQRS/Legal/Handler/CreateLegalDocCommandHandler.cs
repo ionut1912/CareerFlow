@@ -10,17 +10,18 @@ namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
 public class CreateLegalDocCommandHandler
 {
+    private readonly ICacheService _cacheService;
     private readonly ILegalDocRepository _legalDocRepository;
     private readonly ILogger<CreateLegalDocCommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly ICacheService _cacheService;
 
-    public CreateLegalDocCommandHandler(ILegalDocRepository legalDocRepository, ILogger<CreateLegalDocCommandHandler> logger, IUnitOfWork unitOfWork, ICacheService cacheService)
+    public CreateLegalDocCommandHandler(ILegalDocRepository legalDocRepository,
+        ILogger<CreateLegalDocCommandHandler> logger, IUnitOfWork unitOfWork, ICacheService cacheService)
     {
-        ArgumentNullException.ThrowIfNull(legalDocRepository, nameof(legalDocRepository));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-        ArgumentNullException.ThrowIfNull(unitOfWork, nameof(unitOfWork));
-        ArgumentNullException.ThrowIfNull(cacheService, nameof(cacheService));
+        ArgumentNullException.ThrowIfNull(legalDocRepository);
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        ArgumentNullException.ThrowIfNull(cacheService);
         _legalDocRepository = legalDocRepository;
         _logger = logger;
         _unitOfWork = unitOfWork;
@@ -32,7 +33,7 @@ public class CreateLegalDocCommandHandler
         var legalDoc = LegalDoc.Create(command.Content, command.Type);
         await _legalDocRepository.AddAsync(legalDoc, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        _logger.LogInformation("Legal document created with ID: {LegalDocId}", legalDoc.Id);
+        _logger.LogInformation("Documentul cu tipul {Type} a fost creat", legalDoc.Type);
         await _cacheService.SetCacheValueAsync($"LegalDoc_{legalDoc.Type.Value}", legalDoc.ToDto());
         return legalDoc.Id;
     }

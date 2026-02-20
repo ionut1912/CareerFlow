@@ -1,6 +1,6 @@
-﻿using CareerFlow.Core.Domain.Abstractions.Services;
+﻿using System.Text.Json;
+using CareerFlow.Core.Domain.Abstractions.Services;
 using Microsoft.Extensions.Caching.Distributed;
-using System.Text.Json;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
@@ -8,11 +8,8 @@ public class CacheService(IDistributedCache cache) : ICacheService
 {
     public async Task<T?> GetCacheValueAsync<T>(string key)
     {
-        string? jsonValue = await cache.GetStringAsync(key);
-        if (jsonValue == null)
-        {
-            return default;
-        }
+        var jsonValue = await cache.GetStringAsync(key);
+        if (jsonValue == null) return default;
 
         return JsonSerializer.Deserialize<T>(jsonValue);
     }

@@ -58,7 +58,9 @@ public class AccountEndpointGroup : EndpointGroup
         return Results.Ok(result);
     }
 
-    private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest, CancellationToken cancellationToken)
+    [Authorize]
+    private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest,
+        CancellationToken cancellationToken)
     {
         var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();
         var result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, cancellationToken);
@@ -66,7 +68,8 @@ public class AccountEndpointGroup : EndpointGroup
     }
 
     [Authorize]
-    private static async Task<IResult> GetCurrentAccount(IMessageBus bus, HttpContext httpContext, CancellationToken cancellationToken)
+    private static async Task<IResult> GetCurrentAccount(IMessageBus bus, HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return Results.Unauthorized();
@@ -77,7 +80,8 @@ public class AccountEndpointGroup : EndpointGroup
     }
 
     [Authorize]
-    private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext, ResetPasswordRequest resetPasswordRequest, CancellationToken cancellationToken)
+    private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext,
+        ResetPasswordRequest resetPasswordRequest, CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return Results.Unauthorized();
@@ -87,7 +91,8 @@ public class AccountEndpointGroup : EndpointGroup
     }
 
     [Authorize]
-    private static async Task<IResult> DeleteUserAccount(IMessageBus bus, HttpContext httpContext, CancellationToken cancellationToken)
+    private static async Task<IResult> DeleteUserAccount(IMessageBus bus, HttpContext httpContext,
+        CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return Results.Unauthorized();
