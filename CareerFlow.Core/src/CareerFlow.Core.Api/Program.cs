@@ -54,16 +54,16 @@ builder.AddWolverineMessaging(
         opt.ListenToRabbitQueue(emailQueueName).UseDurableInbox();
         opt.ListenToRabbitQueue(legalDocsQueueName).UseDurableInbox();
 
-        opt.Policies.OnException<ValidationException>().RetryTimes(0);
-        opt.Policies.OnException<AccountNotFoundException>().RetryTimes(0);
-        opt.Policies.OnException<InvalidFieldException>().RetryTimes(0);
-        opt.Policies.OnException<PasswordNotMatchException>().RetryTimes(0);
-        opt.Policies.OnException<UserAlreadyExistsException>().RetryTimes(0);
-        opt.Policies.OnException<LegalDocNotFoundException>().RetryTimes(0);
-        opt.Policies.OnException<InvalidRefreshTokenException>().RetryTimes(0);
-        opt.Policies.OnException<TokenAlreadyUsedExcception>().RetryTimes(0);
-        opt.Policies.OnException<TokenRevokedException>().RetryTimes(0);
-        opt.Policies.OnException<CustomValidationException>().RetryTimes(0);
+        opt.Policies.OnException<ValidationException>().MoveToErrorQueue();
+        opt.Policies.OnException<AccountNotFoundException>().MoveToErrorQueue();
+        opt.Policies.OnException<InvalidFieldException>().MoveToErrorQueue();
+        opt.Policies.OnException<PasswordNotMatchException>().MoveToErrorQueue();
+        opt.Policies.OnException<UserAlreadyExistsException>().MoveToErrorQueue();
+        opt.Policies.OnException<LegalDocNotFoundException>().MoveToErrorQueue();
+        opt.Policies.OnException<InvalidRefreshTokenException>().MoveToErrorQueue();
+        opt.Policies.OnException<TokenAlreadyUsedExcception>().MoveToErrorQueue();
+        opt.Policies.OnException<TokenRevokedException>().MoveToErrorQueue();
+        opt.Policies.OnException<CustomValidationException>().MoveToErrorQueue();
     });
 
 builder.Services.AddStackExchangeRedisCache(options =>
