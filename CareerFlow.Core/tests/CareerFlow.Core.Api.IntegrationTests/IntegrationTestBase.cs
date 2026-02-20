@@ -29,19 +29,21 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         CreateAndAuthenticateUserAsync(
             string email = "test@email.com", string password = "testPassword")
     {
+        var targetEmail = email ?? $"test_{Guid.NewGuid():N}@email.com";
+        var targetUsername = $"user_{Guid.NewGuid():N}";
+
         var registerResponse = await AnonymousClient.PostAsJsonAsync("/account/register",
-            new CreateAccountRequest(email, password, "testUser", "Test Name"));
-        
-        // 👇 ADD THIS TO SEE THE REAL ERROR
+            new CreateAccountRequest(targetEmail, password, targetUsername, "Test Name"));
+
         if (!registerResponse.IsSuccessStatusCode)
         {
             var errorBody = await registerResponse.Content.ReadAsStringAsync();
             throw new Exception($"Register failed with {registerResponse.StatusCode}. Body: {errorBody}");
         }
 
-        var credentials = new LoginRequest(email, password);
+        var credentials = new LoginRequest(targetEmail, password);
         var loginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
-            
+
         if (!loginResponse.IsSuccessStatusCode)
         {
             var errorBody = await loginResponse.Content.ReadAsStringAsync();
