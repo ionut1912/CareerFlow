@@ -42,41 +42,6 @@ jobs:
       run:
         working-directory: CareerFlow.Core
 
-    services:
-      postgres:
-        image: postgres:16
-        env:
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      rabbitmq:
-        image: rabbitmq:3-management
-        ports:
-          - 5672:5672
-        options: >-
-          --health-cmd "rabbitmq-diagnostics ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -96,13 +61,6 @@ jobs:
 
       - name: Run integration tests
         run: dotnet test --no-build --configuration Release --filter "Category=Integration"
-        env:
-          ConnectionStrings__Postgres: Host=localhost;Port=5432;Database=testdb;Username=postgres;Password=postgres
-          ConnectionStrings__Redis: localhost:6379
-          RABBIT_HOST: localhost
-          RABBIT_USER: guest
-          RABBIT_PASS: guest
-          RABBIT_PORT: 5672
 
   docker-build:
     name: Docker Build
@@ -119,7 +77,7 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: CareerFlow.Core
+          context: CareerFlow
           file: CareerFlow.Core/src/CareerFlow.Core.Api/Dockerfile
           push: false
           tags: careerflow:pr-${{ github.event.pull_request.number }}
