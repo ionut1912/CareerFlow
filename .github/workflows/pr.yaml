@@ -119,7 +119,8 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: CareerFlow.Core/src/CareerFlow.Core.Api
+          context: CareerFlow.Core
+          file: CareerFlow.Core/src/CareerFlow.Core.Api/Dockerfile
           push: false
           tags: careerflow:pr-${{ github.event.pull_request.number }}
           cache-from: type=gha
