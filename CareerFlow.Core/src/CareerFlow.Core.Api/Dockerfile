@@ -16,7 +16,6 @@ COPY ["src/CareerFlow.Core.Application/CareerFlow.Core.Application.csproj", "src
 COPY ["src/CareerFlow.Core.Rabbit.Events/CareerFlow.Core.Rabbit.Events.csproj", "src/CareerFlow.Core.Rabbit.Events/"]
 COPY ["src/CareerFlow.Core.Infrastructure/CareerFlow.Core.Infrastructure.csproj", "src/CareerFlow.Core.Infrastructure/"]
 RUN dotnet restore "src/CareerFlow.Core.Api/CareerFlow.Core.Api.csproj"
-ENV PACKAGE_TOKEN=
 COPY . .
 WORKDIR "/src/src/CareerFlow.Core.Api"
 RUN dotnet build "./CareerFlow.Core.Api.csproj" -c $BUILD_CONFIGURATION -o /app/build --no-restore
