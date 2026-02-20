@@ -46,20 +46,16 @@ builder.AddWolverineMessaging(
     (appBuilder, opt) =>
     {
         var emailQueueName = "email-notifications-queue";
-        var legalDocsQueueName = "legal-docs-queue";
 
         opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
-        opt.PublishMessage<UpdateLegalDocsMessage>().ToRabbitQueue(legalDocsQueueName);
 
         opt.ListenToRabbitQueue(emailQueueName).UseDurableInbox();
-        opt.ListenToRabbitQueue(legalDocsQueueName).UseDurableInbox();
 
         opt.Policies.OnException<ValidationException>().Discard();
         opt.Policies.OnException<AccountNotFoundException>().Discard();
         opt.Policies.OnException<InvalidFieldException>().Discard();
         opt.Policies.OnException<PasswordNotMatchException>().Discard();
         opt.Policies.OnException<UserAlreadyExistsException>().Discard();
-        opt.Policies.OnException<LegalDocNotFoundException>().Discard();
         opt.Policies.OnException<InvalidRefreshTokenException>().Discard();
         opt.Policies.OnException<TokenAlreadyUsedExcception>().Discard();
         opt.Policies.OnException<TokenRevokedException>().Discard();
@@ -83,7 +79,6 @@ builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
-    .AddRepository<LegalDoc, LegalDocRepository, ILegalDocRepository, ApplicationDbContext>()
     .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
     .AddRepositoriesConfig<ITokenService, TokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()

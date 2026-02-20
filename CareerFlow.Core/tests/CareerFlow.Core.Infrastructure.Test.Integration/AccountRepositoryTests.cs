@@ -57,31 +57,6 @@ public class AccountRepositoryTests : BaseRepositoryTest
     }
 
     [Fact]
-    public async Task ResetLegalAgreementsAsync_MultipleAccounts_SetsAllAgreementsToFalse()
-    {
-        // Arrange
-        var a1 = CreateAccount("reset1@test.com");
-        var a2 = CreateAccount("reset2@test.com");
-        a1.AcceptTerms();
-        a1.AcceptPrivacyPolicy();
-        a2.AcceptTerms();
-        a2.AcceptPrivacyPolicy();
-
-        Context.Accounts.AddRange(a1, a2);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        // Act
-        await _sut.ResetLegalAgreementsAsync(CancellationToken.None);
-        Context.ChangeTracker.Clear();
-
-        // Assert
-        var updated = await Context.Accounts.ToListAsync();
-        updated.ShouldAllBe(a => !a.PrivacyPolicyAccepted);
-        updated.ShouldAllBe(a => !a.TermsAccepted);
-    }
-
-    [Fact]
     public async Task AddAsync_EntityAppearsInGetAllAsync()
     {
         // Arrange

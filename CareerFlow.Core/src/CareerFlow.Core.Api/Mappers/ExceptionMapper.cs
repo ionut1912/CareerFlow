@@ -26,7 +26,6 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             InvalidFieldException ex => Create(400, "Invalid Field", ex.Message),
             PasswordNotMatchException ex => Create(400, "Password Not Match", ex.Message),
             UserAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
-            LegalDocNotFoundException ex => Create(404, "Legal Doc Not Found", ex.Message),
             InvalidRefreshTokenException ex => Create(401, "Invalid Refresh Token", ex.Message),
             TokenAlreadyUsedExcception ex => Create(400, "Token Already Used", ex.Message),
             TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
