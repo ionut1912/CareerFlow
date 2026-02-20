@@ -5,6 +5,8 @@ using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests;
 using Xunit;
 
+
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace CareerFlow.Core.Api.IntegrationTests;
 
 public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
@@ -27,7 +29,7 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
 
     protected async Task<(HttpClient Client, AccountDto Account, LoginRequest Credentials)>
         CreateAndAuthenticateUserAsync(
-            string email = "test@email.com", string password = "testPassword")
+            string? email = null, string password = "testPassword")
     {
         var targetEmail = email ?? $"test_{Guid.NewGuid():N}@email.com";
         var targetUsername = $"user_{Guid.NewGuid():N}";
