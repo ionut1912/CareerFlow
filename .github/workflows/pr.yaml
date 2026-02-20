@@ -83,3 +83,5 @@ jobs:
           tags: careerflow:pr-${{ github.event.pull_request.number }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            PACKAGE_TOKEN=${{ secrets.PACKAGE_TOKEN }}
