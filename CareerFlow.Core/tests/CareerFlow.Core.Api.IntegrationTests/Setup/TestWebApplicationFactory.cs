@@ -1,12 +1,9 @@
 using System.Net.Http.Headers;
 using CareerFlow.Core.Infrastructure.Persistance;
 using DotNet.Testcontainers.Builders;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
-using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Respawn;
@@ -38,6 +35,16 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             _rabbitContainer.StartAsync()
         );
 
+        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", DbConnectionString);
+        Environment.SetEnvironmentVariable("ConnectionStrings__Redis", _redisContainer.GetConnectionString());
+        Environment.SetEnvironmentVariable("RabbitMQ__Host", _rabbitContainer.Hostname);
+        Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString());
+        Environment.SetEnvironmentVariable("RabbitMQ__Username", "rabbitmq");
+        Environment.SetEnvironmentVariable("RabbitMQ__Password", "rabbitmq");
+        Environment.SetEnvironmentVariable("JwtSettings__Key", "testjwtsuperlongkeyforauthentication");
+        Environment.SetEnvironmentVariable("JwtSettings__Issuer", "testjwtissuer");
+        Environment.SetEnvironmentVariable("JwtSettings__Audience", "testaudience");
+
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
@@ -46,6 +53,16 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     public new async Task DisposeAsync()
     {
         await base.DisposeAsync();
+
+        Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
+        Environment.SetEnvironmentVariable("ConnectionStrings__Redis", null);
+        Environment.SetEnvironmentVariable("RabbitMQ__Host", null);
+        Environment.SetEnvironmentVariable("RabbitMQ__Port", null);
+        Environment.SetEnvironmentVariable("RabbitMQ__Username", null);
+        Environment.SetEnvironmentVariable("RabbitMQ__Password", null);
+        Environment.SetEnvironmentVariable("JwtSettings__Key", null);
+        Environment.SetEnvironmentVariable("JwtSettings__Issuer", null);
+        Environment.SetEnvironmentVariable("JwtSettings__Audience", null);
 
         await Task.WhenAll(
             _dbContainer.StopAsync(),
@@ -57,43 +74,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");
-
-        builder.ConfigureAppConfiguration((_, config) =>
-        {
-            config.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionStrings__DefaultConnection"] = DbConnectionString,
-                ["ConnectionStrings__Redis"] = _redisContainer.GetConnectionString(),
-                ["RabbitMQ__Host"] = _rabbitContainer.Hostname,
-                ["RabbitMQ__Port"] = _rabbitContainer.GetMappedPublicPort(5672).ToString(),
-                ["RabbitMQ__Username"] = "rabbitmq",
-                ["RabbitMQ__Password"] = "rabbitmq",
-                ["JwtSettings__Key"] = "testjwtsuperlongkeyforauthentication",
-                ["JwtSettings__Issuer"] = "testjwtissuer",
-                ["JwtSettings__Audience"] = "testaudience"
-            });
-        });
-
-        builder.ConfigureTestServices(services =>
-        {
-            services.AddAuthentication()
-                .AddScheme<AuthenticationSchemeOptions, TestAuthHandler>("TestScheme", _ => { });
-
-            services.PostConfigure<AuthenticationOptions>(options =>
-            {
-                options.DefaultAuthenticateScheme = "TestScheme";
-                options.DefaultChallengeScheme = "TestScheme";
-                options.DefaultForbidScheme = "TestScheme";
-            });
-        });
-    }
-
-    public HttpClient CreateAuthenticatedClient(Guid accountId)
-    {
-        var client = CreateClient();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("TestScheme");
-        client.DefaultRequestHeaders.Add("X-Test-AccountId", accountId.ToString());
-        return client;
     }
 
     public async Task ResetDatabaseAsync()
