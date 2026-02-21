@@ -1,6 +1,3 @@
 #!/bin/sh
-echo "HOOK RULAT" >> /tmp/husky-debug.log
-/usr/bin/npx lint-staged >> /tmp/husky-debug.log 2>&1
-EXIT_CODE=$?
-echo "EXIT CODE: $EXIT_CODE" >> /tmp/husky-debug.log
-exit $EXIT_CODE
+cd CareerFlow.UI
+npx lint-staged

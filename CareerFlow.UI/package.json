@@ -11,12 +11,12 @@
     "lint": "expo lint",
     "prepare": "husky"
   },
-  "lint-staged": {
-    "*.{js,jsx,ts,tsx}": [
-      "prettier --write",
-      "eslint --fix"
-    ]
-  },
+"lint-staged": {
+  "*.{js,jsx,ts,tsx}": [
+    "npx prettier --check",
+    "./node_modules/.bin/eslint"
+  ]
+},
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
     "@react-native-google-signin/google-signin": "^16.1.1",

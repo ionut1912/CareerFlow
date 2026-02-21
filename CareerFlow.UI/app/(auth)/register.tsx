@@ -1,13 +1,13 @@
-import { AppInput } from '@/components/auth/AppInput';
-import { AuthLayout } from '@/components/auth/AuthLayout';
-import { GradientButton } from '@/components/auth/GradientButton';
-import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import {AppInput} from '@/components/auth/AppInput';
+import {AuthLayout} from '@/components/auth/AuthLayout';
+import {GradientButton} from '@/components/auth/GradientButton';
+import {useRouter} from 'expo-router';
+import React, {useState} from 'react';
 import Toast from 'react-native-toast-message';
-import { handleAcceptLegal, handleRejectLegal } from './utils';
-import { ErrorFields, RegisterForm, TouchedFields } from '@/models/ui.models';
-import { register } from '@/services/authService';
-import { isAxiosError } from 'axios';
+import {handleAcceptLegal, handleRejectLegal} from './utils';
+import {ErrorFields, RegisterForm, TouchedFields} from '@/models/ui.models';
+import {register} from '@/services/authService';
+import {isAxiosError} from 'axios';
 
 interface ApiErrorResponse {
   message: string;
@@ -28,7 +28,7 @@ const RegisterScreen = () => {
     password: '',
     confirmPassword: '',
   });
-const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf aici1sdasdaa";
+
   const [touched, setTouched] = useState<TouchedFields>({
     name: false,
     email: false,
@@ -63,13 +63,13 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
         : null,
   };
 
-  const isFormValid = 
-    !errors.name && 
-    !errors.email && 
-    !errors.password && 
-    !errors.username && 
+  const isFormValid =
+    !errors.name &&
+    !errors.email &&
+    !errors.password &&
+    !errors.username &&
     !errors.confirmPassword &&
-    legalAccepted.terms && 
+    legalAccepted.terms &&
     legalAccepted.privacy;
 
   const handleRegister = async () => {
@@ -92,7 +92,7 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
     } catch (error: unknown) {
       let errorMessage = 'Ceva nu a functionat corect. Incearca din nou.';
 
-      if (isAxiosError<ApiErrorResponse>(error))  {
+      if (isAxiosError<ApiErrorResponse>(error)) {
         errorMessage = error.response?.data?.message || errorMessage;
       }
 
@@ -115,20 +115,19 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
       onFooterAction={() => router.replace('/(auth)/login')}
       onAccept={(type: string) => {
         handleAcceptLegal(type);
-        setLegalAccepted(prev => ({ ...prev, [type]: true }));
+        setLegalAccepted(prev => ({...prev, [type]: true}));
       }}
       onReject={(type: string) => {
         handleRejectLegal(type);
-        setLegalAccepted(prev => ({ ...prev, [type]: false }));
-      }}
-    >
+        setLegalAccepted(prev => ({...prev, [type]: false}));
+      }}>
       <AppInput
         label="Nume"
         icon="person-outline"
         placeholder="John Doe"
         value={form.name}
-        onChangeText={(text: string) => setForm({ ...form, name: text })}
-        onBlur={() => setTouched({ ...touched, name: true })}
+        onChangeText={(text: string) => setForm({...form, name: text})}
+        onBlur={() => setTouched({...touched, name: true})}
         error={errors.name}
         touched={touched.name}
       />
@@ -137,8 +136,8 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
         icon="person-outline"
         placeholder="jdoe"
         value={form.username}
-        onChangeText={(text: string) => setForm({ ...form, username: text })}
-        onBlur={() => setTouched({ ...touched, username: true })}
+        onChangeText={(text: string) => setForm({...form, username: text})}
+        onBlur={() => setTouched({...touched, username: true})}
         error={errors.username}
         touched={touched.username}
       />
@@ -148,8 +147,8 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={(text: string) => setForm({ ...form, email: text })}
-        onBlur={() => setTouched({ ...touched, email: true })}
+        onChangeText={(text: string) => setForm({...form, email: text})}
+        onBlur={() => setTouched({...touched, email: true})}
         error={errors.email}
         touched={touched.email}
       />
@@ -159,8 +158,8 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
         placeholder="Parola"
         isPassword
         value={form.password}
-        onChangeText={(text: string) => setForm({ ...form, password: text })}
-        onBlur={() => setTouched({ ...touched, password: true })}
+        onChangeText={(text: string) => setForm({...form, password: text})}
+        onBlur={() => setTouched({...touched, password: true})}
         error={errors.password}
         touched={touched.password}
       />
@@ -170,9 +169,16 @@ const eroareIntentionata = "husky trebuddsffsdsfie sa maadsadsdsds blochezesdf a
         placeholder="Confirma parola"
         isPassword
         value={form.confirmPassword}
-        onChangeText={(text: string) => setForm({ ...form, confirmPassword: text })}
-        onBlur={() => setTouched({ ...touched, confirmPassword: true })}
-        error={errors.confirmPassword || (form.confirmPassword !== form.password ? 'Parolele nu se potrivesc' : null)}
+        onChangeText={(text: string) =>
+          setForm({...form, confirmPassword: text})
+        }
+        onBlur={() => setTouched({...touched, confirmPassword: true})}
+        error={
+          errors.confirmPassword ||
+          (form.confirmPassword !== form.password
+            ? 'Parolele nu se potrivesc'
+            : null)
+        }
         touched={touched.confirmPassword}
       />
 
