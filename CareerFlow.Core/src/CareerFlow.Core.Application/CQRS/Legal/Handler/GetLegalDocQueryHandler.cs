@@ -21,10 +21,11 @@ public class GetLegalDocQueryHandler
 
     public async Task<LegalDocumentResponse> Handle(GetLegalDocQuery request, CancellationToken cancellationToken)
     {
-        if (request.Type.ToLower() != "privacy" && request.Type.ToLower() != "terms")
+        if (!request.Type.Equals("privacy", StringComparison.OrdinalIgnoreCase) && 
+            !request.Type.Equals("terms", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogError("Tipul precizat nu exista {type}", request.Type.ToLower());
-            throw new LegalDocInvalidType("Tipul precizat nu exista");
+            throw new LegalDocInvalidTypeException("Tipul precizat nu exista");
         }
 
         var document = await _legalService.GetDocumentAsync(request.Type, cancellationToken);
@@ -32,7 +33,7 @@ public class GetLegalDocQueryHandler
         if (document == null)
         {
             _logger.LogError("Documentul nu a fost gasit");
-            throw new LegalDocNotFound("Documentul nu a fost gasit");
+            throw new LegalDocNotFoundException("Documentul nu a fost gasit");
         }
 
         return document;

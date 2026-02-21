@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
-public class LegalServiceTests
+public class LegalServiceTests:IDisposable
 {
     private readonly Mock<HttpMessageHandler> _handlerMock;
     private readonly HttpClient _httpClient;
@@ -129,4 +129,10 @@ public class LegalServiceTests
                 Content = new StringContent(content)
             });
     }
+    
+    public void Dispose()
+    {
+        _httpClient.Dispose();
+    }
+    
 }

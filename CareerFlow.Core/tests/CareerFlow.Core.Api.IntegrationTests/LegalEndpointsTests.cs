@@ -15,7 +15,7 @@ public class LegalEndpointsTests:IntegrationTestBase
     [Fact]
     public async Task GetLegalDoc_ShouldReturnOK_WhenValidType()
     {
-        //Arramge
+        //Arrange
         var client = Factory.CreateClient();
         var type = "privacy";
         

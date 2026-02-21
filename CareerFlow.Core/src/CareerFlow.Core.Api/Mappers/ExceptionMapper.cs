@@ -29,8 +29,8 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             InvalidRefreshTokenException ex => Create(401, "Invalid Refresh Token", ex.Message),
             TokenAlreadyUsedExcception ex => Create(400, "Token Already Used", ex.Message),
             TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
-            LegalDocInvalidType ex => Create(400, "Legal Doc Invalid Type", ex.Message),
-            LegalDocNotFound ex => Create(404, "Legal Doc Not Found", ex.Message),
+            LegalDocInvalidTypeException ex => Create(400, "Legal Doc Invalid Type", ex.Message),
+            LegalDocNotFoundException ex => Create(404, "Legal Doc Not Found", ex.Message),
             CustomValidationException ex => CreateValidation(ex),
 
             _ => Create(500, "Internal Server Error", "An unexpected error occurred")

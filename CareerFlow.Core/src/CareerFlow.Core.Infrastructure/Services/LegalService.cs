@@ -20,8 +20,7 @@ public class LegalService : ILegalService
 
     public async Task<LegalDocumentResponse?> GetDocumentAsync(string type, CancellationToken cancellationToken)
     {
-        var baseUrl = _legalDocSettings.GitHubPagesBaseUrl
-            ;
+        var baseUrl = _legalDocSettings.GitHubPagesBaseUrl;
         var fileName = type.ToLower() == "privacy" ? "privacy.md" : "terms.md";
         var url = $"{baseUrl.TrimEnd('/')}/{fileName}";
 
@@ -30,6 +29,6 @@ public class LegalService : ILegalService
 
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
-        return new LegalDocumentResponse(content, "Github Pages", DateTime.UtcNow);
+        return new LegalDocumentResponse(content, "GitHub Pages", DateTime.UtcNow);
     }
 }
