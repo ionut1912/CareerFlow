@@ -11,7 +11,9 @@ namespace CareerFlow.Core.Api.IntegrationTests;
 [Trait("Category", "Integration")]
 public class AccountEndpointsTests : IntegrationTestBase
 {
-    public AccountEndpointsTests(TestWebApplicationFactory factory) : base(factory) { }
+    public AccountEndpointsTests(TestWebApplicationFactory factory) : base(factory)
+    {
+    }
 
     [Fact]
     public async Task Register_ShouldReturnSuccess_WhenDataIsValid()
@@ -100,7 +102,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     [Fact]
     public async Task Login_ShouldReturnBadRequest_WhenPasswordIsInvalid()
     {
-        await CreateAndAuthenticateUserAsync("testEmail@email.com", "testPassword");
+        await CreateAndAuthenticateUserAsync("testEmail@email.com");
         var request = new LoginRequest("testEmail@email.com", "testPassword2");
 
         var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
@@ -191,7 +193,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
         reloginRequest.EnsureSuccessStatusCode();
         reloginRequest.StatusCode.ShouldBe(HttpStatusCode.OK);
-        
+
         var reloginResult = await reloginRequest.Content.ReadFromJsonAsync<AccountDto>();
         reloginResult.ShouldNotBeNull();
         reloginResult.Id.ShouldNotBe(Guid.Empty);

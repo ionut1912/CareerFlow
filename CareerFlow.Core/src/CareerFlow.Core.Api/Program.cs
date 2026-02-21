@@ -6,29 +6,27 @@ using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Gateways;
 using CareerFlow.Core.Infrastructure.Persistance;
 using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Core.Rabbit.Events.Events;
-using FluentValidation;
 using InfisicalConfiguration;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
-using Shared.Domain.Exceptions;
 using Shared.Domain.Interfaces;
 using Shared.Infra.Services;
-using Wolverine.ErrorHandling;
 using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+
 var infisicalClientId = configuration["Infisical:ClientId"];
 var infisicalClientSecret = configuration["Infisical:ClientSecret"];
 var infisicalProjectId = configuration["Infisical:ProjectId"];
 var env = builder.Environment.IsProduction() ? "prod" : "dev";
+
 if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
     !string.IsNullOrWhiteSpace(infisicalProjectId) &&
     !string.IsNullOrWhiteSpace(infisicalClientSecret))
@@ -40,41 +38,21 @@ if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
             .Build())
         .Build());
 
-
 builder.AddWolverineMessaging(
     typeof(EmailNotificationMessageHandler).Assembly,
     (appBuilder, opt) =>
     {
         var emailQueueName = "email-notifications-queue";
-
         opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
-
         opt.ListenToRabbitQueue(emailQueueName).UseDurableInbox();
-
-        opt.Policies.OnException<ValidationException>().Discard();
-        opt.Policies.OnException<AccountNotFoundException>().Discard();
-        opt.Policies.OnException<InvalidFieldException>().Discard();
-        opt.Policies.OnException<PasswordNotMatchException>().Discard();
-        opt.Policies.OnException<UserAlreadyExistsException>().Discard();
-        opt.Policies.OnException<InvalidRefreshTokenException>().Discard();
-        opt.Policies.OnException<TokenAlreadyUsedExcception>().Discard();
-        opt.Policies.OnException<TokenRevokedException>().Discard();
-        opt.Policies.OnException<CustomValidationException>().Discard();
     });
 
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "CareerFlow_";
-});
-
-builder.Services.Configure<SocialAuthSettings>(
-    builder.Configuration.GetSection(SocialAuthSettings.SectionName));
-
-builder.Services.Configure<PostmarkSettings>(
-    builder.Configuration.GetSection(PostmarkSettings.SectionName));
+builder.Services.Configure<SocialAuthSettings>(builder.Configuration.GetSection(SocialAuthSettings.SectionName));
+builder.Services.Configure<PostmarkSettings>(builder.Configuration.GetSection(PostmarkSettings.SectionName));
+builder.Services.Configure<LegalDocSettings>(builder.Configuration.GetSection(LegalDocSettings.SectionName));
 
 builder.Services.AddHttpClient<IAuthService, AuthService>();
+builder.Services.AddHttpClient<ILegalService, LegalService>();
 
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
@@ -84,7 +62,6 @@ builder.Services
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IAuthService, AuthService>()
     .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
-    .AddRepositoriesConfig<ICacheService, CacheService>()
     .AddRepositoriesConfig<IEmailService, EmailService>()
     .AddRepositoriesConfig<IGoogleTokenValidator, GoogleTokenValidator>()
     .AddRepositoriesConfig<IMailClient, PostmarkMailClient>()
@@ -93,9 +70,7 @@ builder.Services
 
 var app = builder.Build();
 
-
 app.MigrateDatabaseConfig<ApplicationDbContext>();
-
 
 app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()

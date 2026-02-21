@@ -1,6 +1,5 @@
 ﻿using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Test.Integration.Setup;
-using Microsoft.EntityFrameworkCore;
 using Shouldly;
 using Xunit;
 
