@@ -31,7 +31,7 @@
 
     <ItemGroup>
         <Content Include="..\..\.dockerignore">
-          <Link>.dockerignore</Link>
+            <Link>.dockerignore</Link>
         </Content>
         <Content Include="EmailTemplates\**">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

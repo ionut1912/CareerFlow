@@ -1,54 +1,41 @@
-﻿using System.Text.Json;
 using CareerFlow.Core.Application.CQRS.Legal.Query;
-using CareerFlow.Core.Application.Dtos;
-using CareerFlow.Core.Application.Mappings;
-using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Domain.Models;
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
 
 public class GetLegalDocQueryHandler
 {
-    private readonly ICacheService _cacheService;
-    private readonly ILegalDocRepository _legalDocRepository;
+    private readonly ILegalService _legalService;
     private readonly ILogger<GetLegalDocQueryHandler> _logger;
 
-    public GetLegalDocQueryHandler(ILegalDocRepository legalDocRepository, ICacheService cacheService,
-        ILogger<GetLegalDocQueryHandler> logger)
+    public GetLegalDocQueryHandler(ILegalService legalService, ILogger<GetLegalDocQueryHandler> logger)
     {
-        ArgumentNullException.ThrowIfNull(legalDocRepository);
-        ArgumentNullException.ThrowIfNull(cacheService);
+        ArgumentNullException.ThrowIfNull(legalService);
         ArgumentNullException.ThrowIfNull(logger);
-        _legalDocRepository = legalDocRepository;
-        _cacheService = cacheService;
+        _legalService = legalService;
         _logger = logger;
     }
 
-    public async Task<LegalDocDto> Handle(GetLegalDocQuery query, CancellationToken cancellationToken)
+    public async Task<LegalDocumentResponse> Handle(GetLegalDocQuery request, CancellationToken cancellationToken)
     {
-        var cacheKey = $"LegalDoc_{query.Type}";
-        var cachedLegalDoc = await _cacheService.GetCacheValueAsync<LegalDocDto>(cacheKey);
-        if (cachedLegalDoc != null)
+        if (!request.Type.Equals("privacy", StringComparison.OrdinalIgnoreCase) && 
+            !request.Type.Equals("terms", StringComparison.OrdinalIgnoreCase))
         {
-            _logger.LogInformation("Documentul cu tipul {Type} a fost luat din cache ,resultat {cacheLegalDocDto}.",
-                query.Type,
-                JsonSerializer.Serialize(cachedLegalDoc, new JsonSerializerOptions { WriteIndented = true }));
-            return cachedLegalDoc;
+            _logger.LogError("Tipul precizat nu exista {type}", request.Type.ToLower());
+            throw new LegalDocInvalidTypeException("Tipul precizat nu exista");
         }
 
-        var legalDoc = await _legalDocRepository.GetLegalDocByTypeAsync(query.Type, cancellationToken);
-        if (legalDoc == null)
+        var document = await _legalService.GetDocumentAsync(request.Type, cancellationToken);
+
+        if (document == null)
         {
-            _logger.LogError("Nu exista un document pentru tipul {Type}.", query.Type);
-            throw new LegalDocNotFoundException($"Nu exista document pentru tipul {query.Type}");
+            _logger.LogError("Documentul nu a fost gasit");
+            throw new LegalDocNotFoundException("Documentul nu a fost gasit");
         }
 
-        var legalDocDto = legalDoc.ToDto();
-        await _cacheService.SetCacheValueAsync(cacheKey, legalDocDto);
-        _logger.LogInformation("Documentul cu tipul {Type} preluat din baza de data,rezultat {legalDocDto}", query.Type,
-            JsonSerializer.Serialize(legalDocDto, new JsonSerializerOptions { WriteIndented = true }));
-        return legalDocDto;
+        return document;
     }
 }

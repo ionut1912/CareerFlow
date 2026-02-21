@@ -10,7 +10,6 @@ public class ApplicationDbContext : DbContext
     }
 
     public DbSet<Account> Accounts { get; set; }
-    public DbSet<LegalDoc> LegalDocs { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)

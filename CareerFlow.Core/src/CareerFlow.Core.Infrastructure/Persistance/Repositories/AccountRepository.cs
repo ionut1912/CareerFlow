@@ -11,13 +11,4 @@ public class AccountRepository(DbSet<Account> dbSet) : GenericRepository<Account
     {
         return await dbSet.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
-
-    public async Task ResetLegalAgreementsAsync(CancellationToken cancellationToken)
-    {
-        await dbSet.ExecuteUpdateAsync(
-            setters => setters.SetProperty(a => a.PrivacyPolicyAccepted, false)
-                .SetProperty(a => a.TermsAccepted, false)
-                .SetProperty(a => a.UpdatedAt, DateTime.UtcNow)
-            , cancellationToken);
-    }
 }

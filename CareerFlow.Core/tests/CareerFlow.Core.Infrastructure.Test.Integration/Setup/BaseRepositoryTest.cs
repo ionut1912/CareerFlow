@@ -24,7 +24,6 @@ public abstract class BaseRepositoryTest : IAsyncLifetime
         {
             Context.RefreshTokens.RemoveRange(Context.RefreshTokens);
             Context.Accounts.RemoveRange(Context.Accounts);
-            Context.LegalDocs.RemoveRange(Context.LegalDocs);
             await Context.SaveChangesAsync();
             Context.ChangeTracker.Clear();
         };
