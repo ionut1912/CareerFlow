@@ -1,10 +1,5 @@
-#!/bin/sh
-. "$(dirname "$0")/_/husky.sh"
+# Initializează Husky corect (leagă Git-ul de folderele Husky)
+npm run prepare
 
-set -e
-
-# 1. Format and Lint staged files
-npx lint-staged
-
-# 2. Run tests (See note below)
-npm test
+# Dă permisiuni de execuție fișierului pre-commit (necesar pe macOS/Linux)
+chmod +x .husky/pre-commit
