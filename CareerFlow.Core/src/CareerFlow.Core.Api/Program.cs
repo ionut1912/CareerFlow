@@ -13,6 +13,7 @@ using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Core.Rabbit.Events.Events;
 using InfisicalConfiguration;
+using Microsoft.AspNetCore.HttpOverrides;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Shared.Domain.Interfaces;
@@ -76,6 +77,11 @@ app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()
     .UseStandardMiddleware()
     .MapStandardEndpoints();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+});
 
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
