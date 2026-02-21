@@ -1,18 +1,21 @@
-import SocialLoginButtons from '@/components/SocialLoginButtons';
-import {COLORS, STYLES} from '@/constants/theme';
-import {MaterialIcons} from '@expo/vector-icons';
-import {usePathname, useRouter} from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
+  View,
+  Text,
   SafeAreaView,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
-  Text,
   TouchableOpacity,
-  View,
+  Alert,
 } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useRouter, usePathname } from 'expo-router';
+import { COLORS, STYLES } from '@/constants/theme';
+import SocialLoginButtons from '@/components/SocialLoginButtons';
+import { TabButton } from '../TabButton';
+import { LegalModal } from '../LegalModal';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -35,48 +38,67 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   const pathname = usePathname();
   const isLogin = pathname.includes('login');
 
+  const [modal, setModal] = useState({
+    visible: false,
+    loading: false,
+    title: '',
+    content: '',
+    type: '',
+  });
+
+  const fetchLegal = async (type: 'privacy' | 'terms') => {
+    setModal((prev) => ({ ...prev, visible: true, loading: true, type }));
+    try {
+      const res = await fetch(`http://www.carerflow-api.ro:5000/legal?type=${type}`);
+      const data = await res.json();
+      setModal((prev) => ({
+        ...prev,
+        loading: false,
+        title: type === 'privacy' ? 'Politica de Confidențialitate' : 'Termeni și Condiții',
+        content: data.content,
+      }));
+    } catch {
+      setModal((prev) => ({
+        ...prev,
+        loading: false,
+        title: 'Eroare',
+        content: 'Eroare la încărcarea datelor din backend.',
+      }));
+    }
+  };
+
+  const handleAccept = () => {
+    setModal((prev) => ({ ...prev, visible: false }));
+  };
+
+  const handleReject = () => {
+    setModal((prev) => ({ ...prev, visible: false }));
+    Alert.alert('Notă', 'Acceptarea este necesară pentru accesul complet.');
+  };
+
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          STYLES.glow,
-          {top: -50, left: -50, backgroundColor: COLORS.primary},
-        ]}
-      />
-      <View
-        style={[
-          STYLES.glow,
-          {bottom: -50, right: -50, backgroundColor: '#3b82f6'},
-        ]}
-      />
+      <View style={[STYLES.glow, { top: -50, left: -50, backgroundColor: COLORS.primary }]} />
+      <View style={[STYLES.glow, { bottom: -50, right: -50, backgroundColor: '#3b82f6' }]} />
 
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={{ flex: 1 }}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{flex: 1}}>
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}>
+          style={{ flex: 1 }}>
+          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
               <View style={styles.logoContainer}>
                 <View style={styles.logoGlow} />
                 <View style={styles.logoBox}>
-                  <MaterialIcons
-                    name="psychology"
-                    size={40}
-                    color={COLORS.primary}
-                    importantForAccessibility="no"
-                  />
+                  <MaterialIcons name="psychology" size={40} color={COLORS.primary} />
                 </View>
               </View>
-              <Text style={styles.title} accessibilityRole="header">
-                {title}
-              </Text>
+              <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
 
             <View style={styles.card}>
-              <View style={styles.tabBar} accessibilityRole="tablist">
+              <View style={styles.tabBar}>
                 <TabButton
                   title="Inregistrare"
                   active={!isLogin}
@@ -88,9 +110,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                   onPress={() => router.replace('/(auth)/login')}
                 />
               </View>
-
               {children}
-
               <View style={styles.dividerRow}>
                 <View style={styles.divider} />
                 <Text style={styles.dividerText}>SAU CONTINUA CU</Text>
@@ -102,56 +122,42 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             <View style={styles.footer}>
               <Text style={styles.footerMainText}>
                 {footerText}{' '}
-                <Text
-                  style={styles.linkText}
-                  onPress={onFooterAction}
-                  accessibilityRole="button"
-                  accessibilityLabel={footerActionText}>
+                <Text style={styles.linkText} onPress={onFooterAction}>
                   {footerActionText}
                 </Text>
               </Text>
-              <View style={styles.legalRow}>
-                <Text style={styles.legalText}>
-                  Politica de confidentialitate • Termeni si conditii
-                </Text>
+              <View style={styles.legalLinks}>
+                <TouchableOpacity onPress={() => fetchLegal('privacy')}>
+                  <Text style={styles.legalItem}>Politica de confidențialitate</Text>
+                </TouchableOpacity>
+                <Text style={styles.sep}> • </Text>
+                <TouchableOpacity onPress={() => fetchLegal('terms')}>
+                  <Text style={styles.legalItem}>Termeni și condiții</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <LegalModal
+        visible={modal.visible}
+        loading={modal.loading}
+        title={modal.title}
+        content={modal.content}
+        onClose={() => setModal((prev) => ({ ...prev, visible: false }))}
+        onAccept={handleAccept}
+        onReject={handleReject}
+      />
     </View>
   );
 };
 
-interface TabButtonProps {
-  title: string;
-  active: boolean;
-  onPress: () => void;
-}
-
-const TabButton: React.FC<TabButtonProps> = ({title, active, onPress}) => (
-  <TouchableOpacity
-    style={[styles.tab, active && styles.activeTab]}
-    onPress={onPress}
-    accessibilityRole="tab"
-    accessibilityState={{selected: active}}
-    accessibilityLabel={title}>
-    <Text style={[styles.tabText, active && styles.activeTabText]}>
-      {title}
-    </Text>
-  </TouchableOpacity>
-);
-
 const styles = StyleSheet.create({
-  container: {flex: 1, backgroundColor: COLORS.background},
-  scrollContent: {paddingHorizontal: 24, paddingBottom: 40},
-  header: {alignItems: 'center', marginTop: 60, marginBottom: 32},
-  logoContainer: {
-    width: 80,
-    height: 80,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
+  header: { alignItems: 'center', marginTop: 60, marginBottom: 32 },
+  logoContainer: { width: 80, height: 80, justifyContent: 'center', alignItems: 'center' },
   logoBox: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
@@ -171,12 +177,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     opacity: 0.4,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 16,
-  },
+  title: { fontSize: 28, fontWeight: '700', color: COLORS.text, marginTop: 16 },
   subtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
@@ -198,34 +199,18 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 24,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {backgroundColor: COLORS.primary},
-  tabText: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activeTabText: {color: COLORS.text},
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
-  divider: {flex: 1, height: 1, backgroundColor: COLORS.border},
+  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
+  divider: { flex: 1, height: 1, backgroundColor: COLORS.border },
   dividerText: {
     color: COLORS.textMuted,
     fontSize: 10,
     marginHorizontal: 10,
     fontWeight: '600',
   },
-  footer: {marginTop: 32, alignItems: 'center'},
-  footerMainText: {color: COLORS.textMuted, fontSize: 12},
-  linkText: {color: COLORS.primary, fontWeight: '600'},
-  legalRow: {flexDirection: 'row', marginTop: 16},
-  legalText: {color: '#4b5563', fontSize: 10},
+  footer: { marginTop: 32, alignItems: 'center' },
+  footerMainText: { color: COLORS.textMuted, fontSize: 12 },
+  linkText: { color: COLORS.primary, fontWeight: '600' },
+  legalLinks: { flexDirection: 'row', marginTop: 16, alignItems: 'center' },
+  legalItem: { color: COLORS.textSecondary, fontSize: 11, textDecorationLine: 'underline' },
+  sep: { color: COLORS.textMuted, fontSize: 11 },
 });
