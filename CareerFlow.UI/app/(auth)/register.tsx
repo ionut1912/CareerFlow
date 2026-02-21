@@ -1,18 +1,30 @@
-import {AppInput} from '@/components/auth/AppInput';
-import {AuthLayout} from '@/components/auth/AuthLayout';
-import {GradientButton} from '@/components/auth/GradientButton';
-import {useRouter} from 'expo-router';
-import React, {useState} from 'react';
+import { AppInput } from '@/components/auth/AppInput';
+import { AuthLayout } from '@/components/auth/AuthLayout';
+import { GradientButton } from '@/components/auth/GradientButton';
+import { useRouter } from 'expo-router';
+import React, { useState } from 'react';
+import Toast from 'react-native-toast-message';
+import axios from 'axios';
+import { ErrorFields, RegisterForm, TouchedFields } from '@/models/ui.models';
+
+
+
+interface ApiErrorResponse {
+  message: string;
+}
 
 const RegisterScreen = () => {
   const router = useRouter();
-  const [form, setForm] = useState({
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
     username: '',
     password: '',
   });
-  const [touched, setTouched] = useState({
+
+  const [touched, setTouched] = useState<TouchedFields>({
     name: false,
     email: false,
     password: false,
@@ -21,7 +33,7 @@ const RegisterScreen = () => {
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  const errors = {
+  const errors: ErrorFields = {
     name: !form.name
       ? 'Numele este necesar'
       : form.name.trim().length < 2
@@ -40,12 +52,39 @@ const RegisterScreen = () => {
     username: !form.username ? 'Numele de utilizator este necesar' : null,
   };
 
-  const isFormValid =
-    !errors.name && !errors.email && !errors.password && !errors.username;
+  const isFormValid = !errors.name && !errors.email && !errors.password && !errors.username;
 
-  const handleRegister = () => {
-    if (isFormValid) {
-      console.log('Register Success:', form);
+  const handleRegister = async () => {
+    if (!isFormValid || isLoading) return;
+
+    setIsLoading(true);
+
+    try {
+      await axios.post('http://www.carerflow-api.ro:5000/account/register', form);
+
+      Toast.show({
+        type: 'success',
+        text1: 'Cont creat cu succes!',
+        text2: 'Te rugam sa te autentifici.',
+      });
+
+      setTimeout(() => {
+        router.replace('/(auth)/login');
+      }, 1500);
+    } catch (error: unknown) {
+      let errorMessage = 'Ceva nu a functionat corect. Incearca din nou.';
+
+      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+        errorMessage = error.response?.data?.message || errorMessage;
+      }
+
+      Toast.show({
+        type: 'error',
+        text1: 'Eroare la inregistrare',
+        text2: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -61,8 +100,8 @@ const RegisterScreen = () => {
         icon="person-outline"
         placeholder="John Doe"
         value={form.name}
-        onChangeText={text => setForm({...form, name: text})}
-        onBlur={() => setTouched({...touched, name: true})}
+        onChangeText={(text: string) => setForm({ ...form, name: text })}
+        onBlur={() => setTouched({ ...touched, name: true })}
         error={errors.name}
         touched={touched.name}
       />
@@ -71,8 +110,8 @@ const RegisterScreen = () => {
         icon="person-outline"
         placeholder="jdoe"
         value={form.username}
-        onChangeText={text => setForm({...form, username: text})}
-        onBlur={() => setTouched({...touched, username: true})}
+        onChangeText={(text: string) => setForm({ ...form, username: text })}
+        onBlur={() => setTouched({ ...touched, username: true })}
         error={errors.username}
         touched={touched.username}
       />
@@ -82,8 +121,8 @@ const RegisterScreen = () => {
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={text => setForm({...form, email: text})}
-        onBlur={() => setTouched({...touched, email: true})}
+        onChangeText={(text: string) => setForm({ ...form, email: text })}
+        onBlur={() => setTouched({ ...touched, email: true })}
         error={errors.email}
         touched={touched.email}
       />
@@ -93,17 +132,17 @@ const RegisterScreen = () => {
         placeholder="Min 6 characters"
         isPassword
         value={form.password}
-        onChangeText={text => setForm({...form, password: text})}
-        onBlur={() => setTouched({...touched, password: true})}
+        onChangeText={(text: string) => setForm({ ...form, password: text })}
+        onBlur={() => setTouched({ ...touched, password: true })}
         error={errors.password}
         touched={touched.password}
       />
 
       <GradientButton
-        text="Creare cont"
-        icon="person-add"
+        text={isLoading ? 'Se incarca...' : 'Creare cont'}
+        icon={isLoading ? null : 'person-add'}
         onPress={handleRegister}
-        disabled={!isFormValid}
+        disabled={!isFormValid || isLoading}
       />
     </AuthLayout>
   );

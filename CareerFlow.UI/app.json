@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CareerFlow.UI",
-    "slug": "CareerFlow.UI",
+    "slug": "CareerFlow-UI",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
