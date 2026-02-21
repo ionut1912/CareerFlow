@@ -5,14 +5,14 @@ using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests;
 using Xunit;
 
-
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
+
 namespace CareerFlow.Core.Api.IntegrationTests;
 
 public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
 {
-    protected readonly TestWebApplicationFactory Factory;
     protected readonly HttpClient AnonymousClient;
+    protected readonly TestWebApplicationFactory Factory;
 
     protected IntegrationTestBase(TestWebApplicationFactory factory)
     {
@@ -25,7 +25,10 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         await Factory.ResetDatabaseAsync();
     }
 
-    public virtual Task DisposeAsync() => Task.CompletedTask;
+    public virtual Task DisposeAsync()
+    {
+        return Task.CompletedTask;
+    }
 
     protected async Task<(HttpClient Client, AccountDto Account, LoginRequest Credentials)>
         CreateAndAuthenticateUserAsync(
