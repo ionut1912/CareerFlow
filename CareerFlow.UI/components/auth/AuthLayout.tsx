@@ -8,7 +8,6 @@ import {
   Platform,
   StyleSheet,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useRouter, usePathname } from 'expo-router';
@@ -16,6 +15,7 @@ import { COLORS, STYLES } from '@/constants/theme';
 import SocialLoginButtons from '@/components/SocialLoginButtons';
 import { TabButton } from '../TabButton';
 import { LegalModal } from '../LegalModal';
+import axios from 'axios';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -24,6 +24,8 @@ interface AuthLayoutProps {
   footerText: string;
   footerActionText: string;
   onFooterAction: () => void;
+  onReject: (type: string) => void;
+  onAccept: (type: string) => void;
 }
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
@@ -33,6 +35,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   footerText,
   footerActionText,
   onFooterAction,
+  onReject,
+  onAccept,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -49,8 +53,8 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   const fetchLegal = async (type: 'privacy' | 'terms') => {
     setModal((prev) => ({ ...prev, visible: true, loading: true, type }));
     try {
-      const res = await fetch(`http://www.carerflow-api.ro:5000/legal?type=${type}`);
-      const data = await res.json();
+      const res = await axios.get(`https://www.carerflow-api.ro/legal?type=${type}`);
+      const data = res.data;
       setModal((prev) => ({
         ...prev,
         loading: false,
@@ -68,12 +72,13 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   };
 
   const handleAccept = () => {
+    onAccept(modal.type);
     setModal((prev) => ({ ...prev, visible: false }));
   };
 
   const handleReject = () => {
+    onReject(modal.type);
     setModal((prev) => ({ ...prev, visible: false }));
-    Alert.alert('Notă', 'Acceptarea este necesară pentru accesul complet.');
   };
 
   return (

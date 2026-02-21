@@ -5,9 +5,8 @@ import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import Toast from 'react-native-toast-message';
 import axios from 'axios';
+import { handleAcceptLegal, handleRejectLegal } from './utils';
 import { ErrorFields, RegisterForm, TouchedFields } from '@/models/ui.models';
-
-
 
 interface ApiErrorResponse {
   message: string;
@@ -60,7 +59,7 @@ const RegisterScreen = () => {
     setIsLoading(true);
 
     try {
-      await axios.post('http://www.carerflow-api.ro:5000/account/register', form);
+      await axios.post('https://www.carerflow-api.ro/account/register', form);
 
       Toast.show({
         type: 'success',
@@ -88,13 +87,17 @@ const RegisterScreen = () => {
     }
   };
 
+
+
   return (
     <AuthLayout
       title="Acceseaza Career Flow"
       subtitle="Incepe aventura"
       footerText="Ai deja cont?"
       footerActionText="Autentificare"
-      onFooterAction={() => router.replace('/(auth)/login')}>
+      onFooterAction={() => router.replace('/(auth)/login')}
+      onAccept={handleAcceptLegal}
+      onReject={handleRejectLegal}>
       <AppInput
         label="Nume"
         icon="person-outline"

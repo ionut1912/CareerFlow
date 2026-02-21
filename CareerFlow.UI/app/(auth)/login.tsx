@@ -5,6 +5,7 @@ import {COLORS} from '@/constants/theme';
 import {useRouter} from 'expo-router';
 import React, {useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
+import { handleAcceptLegal, handleRejectLegal } from './utils';
 
 const LoginScreen = () => {
   const router = useRouter();
@@ -34,7 +35,11 @@ const LoginScreen = () => {
       subtitle="Pregateste mintea pentru cunoastere"
       footerText="Nu ai cont?"
       footerActionText="Inregistreaza-te"
-      onFooterAction={() => router.replace('/(auth)/register')}>
+      onFooterAction={() => router.replace('/(auth)/register')}
+      
+            onAccept={handleAcceptLegal}
+            onReject={handleRejectLegal}>
+      
       <AppInput
         label="Adresa de email"
         icon="mail-outline"
