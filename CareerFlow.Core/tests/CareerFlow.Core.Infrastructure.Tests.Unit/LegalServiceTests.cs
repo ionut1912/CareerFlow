@@ -9,7 +9,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
-public class LegalServiceTests:IDisposable
+public class LegalServiceTests : IDisposable
 {
     private readonly Mock<HttpMessageHandler> _handlerMock;
     private readonly HttpClient _httpClient;
@@ -41,7 +41,7 @@ public class LegalServiceTests:IDisposable
 
         result.ShouldNotBeNull();
         result.Content.ShouldBe(expectedContent);
-        result.Source.ShouldBe("Github Pages");
+        result.Source.ShouldBe("GitHub Pages");
 
         _handlerMock.Protected().Verify(
             "SendAsync",
@@ -102,11 +102,10 @@ public class LegalServiceTests:IDisposable
                 ItExpr.IsAny<HttpRequestMessage>(),
                 ItExpr.IsAny<CancellationToken>()
             )
-            .Returns(async (HttpRequestMessage request, CancellationToken token) =>
+            .Returns<HttpRequestMessage, CancellationToken>(async (request, token) =>
             {
-                cts.Cancel();
-                await Task.Delay(1);
-                throw new OperationCanceledException(token);
+                await cts.CancelAsync();
+                throw new OperationCanceledException(cts.Token);
             });
 
         var service = new LegalService(_httpClient, _optionsMock.Object);
@@ -129,10 +128,10 @@ public class LegalServiceTests:IDisposable
                 Content = new StringContent(content)
             });
     }
-    
+
     public void Dispose()
     {
         _httpClient.Dispose();
+        GC.SuppressFinalize(this);
     }
-    
 }
