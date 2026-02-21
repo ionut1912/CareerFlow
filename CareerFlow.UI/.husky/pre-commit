@@ -1,3 +1,2 @@
 #!/bin/sh
-export PATH="/usr/local/bin:/usr/bin:$HOME/.nvm/versions/node/$(node -v)/bin:$PATH"
-npx lint-staged
+/usr/bin/npx lint-staged
