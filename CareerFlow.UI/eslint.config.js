@@ -2,50 +2,45 @@ const expoConfig = require('eslint-config-expo/flat');
 const prettierPlugin = require('eslint-plugin-prettier');
 const prettierConfig = require('eslint-config-prettier');
 const reactNativePlugin = require('eslint-plugin-react-native');
+const tsPlugin = require('@typescript-eslint/eslint-plugin');
+const tsParser = require('@typescript-eslint/parser');
 
 module.exports = [
-  // 1. Base Expo Configuration
   ...expoConfig,
-
-  // 2. Prettier & React Native Configuration
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     plugins: {
       prettier: prettierPlugin,
       'react-native': reactNativePlugin,
+      '@typescript-eslint': tsPlugin,
     },
-    // Apply Prettier's config to disable conflicting ESLint formatting rules
-    rules: {
-      ...prettierConfig.rules,
-
-      // --- Prettier Integration ---
-      'prettier/prettier': 'error',
-
-      // --- React Native Best Practices ---
-      // Warns if you write styles directly in the JSX (performance & maintainability)
-      'react-native/no-inline-styles': 'error',
-
-      // Errors if you define a style in StyleSheet but never use it
-      'react-native/no-unused-styles': 'error',
-
-      // (Optional) Encourages using theme colors/constants instead of raw hex codes
-      'react-native/no-color-literals': 'off',
-
-      // (Optional) Ensures styling arrays are flattened (optimization)
-      'react-native/no-single-element-style-arrays': 'warn',
-    },
-    // Settings required for eslint-plugin-react-native to detect components
     languageOptions: {
+      parser: tsParser,
       parserOptions: {
-        ecmaFeatures: {
-          jsx: true,
-        },
+        ecmaFeatures: { jsx: true },
       },
     },
+    rules: {
+      ...prettierConfig.rules,
+      'prettier/prettier': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/no-empty-object-type': 'error',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'error',
+      'react/jsx-no-useless-fragment': 'error',
+      'react/jsx-key': 'error',
+      'react-native/no-inline-styles': 'error',
+      'react-native/no-unused-styles': 'error',
+      'react-native/no-color-literals': 'error',
+      'react-native/split-platform-components': 'error',
+      'no-console': ['error', { allow: ['warn', 'error'] }],
+      'eqeqeq': 'error',
+      'prefer-const': 'error',
+      'no-var': 'error',
+    },
   },
-
-  // 3. Global Ignores
   {
-    ignores: ['dist/*', '.expo/*', 'web-build/*', 'node_modules/*'],
+    ignores: ['dist/*', '.expo/*', 'web-build/*', 'node_modules/*', 'babel.config.js', 'metro.config.js'],
   },
 ];
