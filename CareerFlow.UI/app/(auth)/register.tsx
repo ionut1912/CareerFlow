@@ -28,7 +28,7 @@ const RegisterScreen = () => {
     password: '',
     confirmPassword: '',
   });
-const eroareIntentionata = "husky trebuie sa ma blochezesdf aici1sdasdaa";
+const eroareIntentionata = "husky trebuie sa madsds blochezesdf aici1sdasdaa";
   const [touched, setTouched] = useState<TouchedFields>({
     name: false,
     email: false,
