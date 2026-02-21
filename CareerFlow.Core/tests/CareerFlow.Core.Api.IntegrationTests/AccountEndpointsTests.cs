@@ -18,7 +18,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     [Fact]
     public async Task Register_ShouldReturnSuccess_WhenDataIsValid()
     {
-        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "newUsername", "testName");
+        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "testPassword","newUsername", "testName");
 
         var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
@@ -27,11 +27,25 @@ public class AccountEndpointsTests : IntegrationTestBase
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         result.ShouldNotBe(Guid.Empty);
     }
+    
+    [Fact]
+    public async Task Register_ShouldReturnBadRequest_WhenPasswordsMisMATCH()
+    {
+        //Arrange
+        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "testPassword2","newUsername", "testName");
+
+        //Act
+        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
+
+        //Assert
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        
+    }
 
     [Fact]
     public async Task Register_ShouldReturnBadRequest_WhenDataIsInvalid()
     {
-        var request = new CreateAccountRequest("testEmail", "", "testUsername", "testName");
+        var request = new CreateAccountRequest("testEmail", "", "","testUsername", "testName");
 
         var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
@@ -41,7 +55,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     [Fact]
     public async Task Register_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        var request = new CreateAccountRequest("testEmail", "testPassword", "testUsername", "testName");
+        var request = new CreateAccountRequest("testEmail", "testPassword", "testPassword","testUsername", "testName");
 
         var response = await AnonymousClient.PostAsJsonAsync("/invalid-ur;", request);
 
@@ -51,7 +65,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     [Fact]
     public async Task Register_ShouldReturnBadRequest_WhenAccountExists()
     {
-        var request = new CreateAccountRequest("testEmail@email.com", "testPassword", "testUsername", "testName");
+        var request = new CreateAccountRequest("testEmail@email.com", "testPassword", "testPassword","testUsername", "testName");
         await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);

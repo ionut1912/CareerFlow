@@ -1,5 +1,5 @@
 # Initializează Husky corect (leagă Git-ul de folderele Husky)
 npm run prepare
-
+npx lint-staged
 # Dă permisiuni de execuție fișierului pre-commit (necesar pe macOS/Linux)
 chmod +x .husky/pre-commit

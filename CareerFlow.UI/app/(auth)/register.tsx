@@ -4,9 +4,10 @@ import { GradientButton } from '@/components/auth/GradientButton';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import Toast from 'react-native-toast-message';
-import axios from 'axios';
 import { handleAcceptLegal, handleRejectLegal } from './utils';
 import { ErrorFields, RegisterForm, TouchedFields } from '@/models/ui.models';
+import { register } from '@/services/authService';
+import { isAxiosError } from 'axios';
 
 interface ApiErrorResponse {
   message: string;
@@ -15,12 +16,17 @@ interface ApiErrorResponse {
 const RegisterScreen = () => {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [legalAccepted, setLegalAccepted] = useState({
+    terms: false,
+    privacy: false,
+  });
 
   const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
     username: '',
     password: '',
+    confirmPassword: '',
   });
 
   const [touched, setTouched] = useState<TouchedFields>({
@@ -28,6 +34,7 @@ const RegisterScreen = () => {
     email: false,
     password: false,
     username: false,
+    confirmPassword: false,
   });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -49,9 +56,21 @@ const RegisterScreen = () => {
         ? 'Parola trebuie sa aiba minim 6 caractere'
         : null,
     username: !form.username ? 'Numele de utilizator este necesar' : null,
+    confirmPassword: !form.confirmPassword
+      ? 'Confirmarea parolei este necesara'
+      : form.confirmPassword !== form.password
+        ? 'Parolele nu se potrivesc'
+        : null,
   };
 
-  const isFormValid = !errors.name && !errors.email && !errors.password && !errors.username;
+  const isFormValid = 
+    !errors.name && 
+    !errors.email && 
+    !errors.password && 
+    !errors.username && 
+    !errors.confirmPassword &&
+    legalAccepted.terms && 
+    legalAccepted.privacy;
 
   const handleRegister = async () => {
     if (!isFormValid || isLoading) return;
@@ -59,7 +78,7 @@ const RegisterScreen = () => {
     setIsLoading(true);
 
     try {
-      await axios.post('https://www.carerflow-api.ro/account/register', form);
+      await register(form);
 
       Toast.show({
         type: 'success',
@@ -73,7 +92,7 @@ const RegisterScreen = () => {
     } catch (error: unknown) {
       let errorMessage = 'Ceva nu a functionat corect. Incearca din nou.';
 
-      if (axios.isAxiosError<ApiErrorResponse>(error)) {
+      if (isAxiosError<ApiErrorResponse>(error))  {
         errorMessage = error.response?.data?.message || errorMessage;
       }
 
@@ -87,8 +106,6 @@ const RegisterScreen = () => {
     }
   };
 
-
-
   return (
     <AuthLayout
       title="Acceseaza Career Flow"
@@ -96,8 +113,15 @@ const RegisterScreen = () => {
       footerText="Ai deja cont?"
       footerActionText="Autentificare"
       onFooterAction={() => router.replace('/(auth)/login')}
-      onAccept={handleAcceptLegal}
-      onReject={handleRejectLegal}>
+      onAccept={(type: string) => {
+        handleAcceptLegal(type);
+        setLegalAccepted(prev => ({ ...prev, [type]: true }));
+      }}
+      onReject={(type: string) => {
+        handleRejectLegal(type);
+        setLegalAccepted(prev => ({ ...prev, [type]: false }));
+      }}
+    >
       <AppInput
         label="Nume"
         icon="person-outline"
@@ -132,13 +156,24 @@ const RegisterScreen = () => {
       <AppInput
         label="Parola"
         icon="lock-outline"
-        placeholder="Min 6 characters"
+        placeholder="Parola"
         isPassword
         value={form.password}
         onChangeText={(text: string) => setForm({ ...form, password: text })}
         onBlur={() => setTouched({ ...touched, password: true })}
         error={errors.password}
         touched={touched.password}
+      />
+      <AppInput
+        label="Confirma parola"
+        icon="lock-outline"
+        placeholder="Confirma parola"
+        isPassword
+        value={form.confirmPassword}
+        onChangeText={(text: string) => setForm({ ...form, confirmPassword: text })}
+        onBlur={() => setTouched({ ...touched, confirmPassword: true })}
+        error={errors.confirmPassword || (form.confirmPassword !== form.password ? 'Parolele nu se potrivesc' : null)}
+        touched={touched.confirmPassword}
       />
 
       <GradientButton

@@ -4,6 +4,7 @@ public record AccountDto(
     Guid Id,
     string Email,
     string Username,
+    string Name,
     string? Token,
     string? RefreshToken,
     bool IsFounder,

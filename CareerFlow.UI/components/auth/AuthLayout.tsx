@@ -15,7 +15,7 @@ import { COLORS, STYLES } from '@/constants/theme';
 import SocialLoginButtons from '@/components/SocialLoginButtons';
 import { TabButton } from '../TabButton';
 import { LegalModal } from '../LegalModal';
-import axios from 'axios';
+import { getLegal } from '@/services/legalService';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -53,7 +53,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   const fetchLegal = async (type: 'privacy' | 'terms') => {
     setModal((prev) => ({ ...prev, visible: true, loading: true, type }));
     try {
-      const res = await axios.get(`https://www.carerflow-api.ro/legal?type=${type}`);
+      const res = await getLegal(type);
       const data = res.data;
       setModal((prev) => ({
         ...prev,

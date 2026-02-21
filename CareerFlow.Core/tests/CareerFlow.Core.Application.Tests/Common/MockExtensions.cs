@@ -13,8 +13,8 @@ public static class MockExtensions
                 LogLevel.Error,
                 It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, t) => v.ToString()!.Contains(expectedMessagePart)),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception, string>>()!),
+                It.IsAny<Exception?>(), // Allow null exception
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()), // Allow null exception in the formatter
             times);
     }
 

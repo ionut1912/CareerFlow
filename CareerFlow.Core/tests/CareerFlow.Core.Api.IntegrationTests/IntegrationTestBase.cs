@@ -38,7 +38,7 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         var targetUsername = $"user_{Guid.NewGuid():N}";
 
         var registerResponse = await AnonymousClient.PostAsJsonAsync("/account/register",
-            new CreateAccountRequest(targetEmail, password, targetUsername, "Test Name"));
+            new CreateAccountRequest(targetEmail, password, password,targetUsername, "Test Name"));
 
         if (!registerResponse.IsSuccessStatusCode)
         {
