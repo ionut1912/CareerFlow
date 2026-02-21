@@ -1,4 +1,1 @@
-cat <<EOF > .husky/pre-commit
-#!/bin/sh
 npx lint-staged
-EOF
