@@ -1,8 +1,10 @@
+using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Infrastructure.Configurations;
 using Microsoft.Extensions.Options;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
+using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Api.Endpoints;
 
@@ -37,13 +39,19 @@ public class SocialEndpointGroup : EndpointGroup
         string code,
         IAuthService authService,
         ITokenService tokenService,
+        IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork,
         CancellationToken cancellationToken)
     {
         var idToken = await authService.ExchangeGoogleCodeAsync(code, cancellationToken);
         var account = await authService.LoginWithGoogleAsync(idToken, cancellationToken);
         var jwt = tokenService.GenerateToken(account);
+        var refreshToken = tokenService.GenerateRefreshToken(account.Id, jwt.Token);
+        await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Results.Redirect($"careerflowui://auth/callback?token={jwt.Token}");
+        return Results.Redirect(
+            $"careerflowui://auth/callback?token={jwt.Token}&refreshToken={refreshToken.Token}");
     }
 
     private static IResult LinkedInMobileLogin(IOptions<SocialAuthSettings> settings)
@@ -65,11 +73,17 @@ public class SocialEndpointGroup : EndpointGroup
         string code,
         IAuthService authService,
         ITokenService tokenService,
+        IRefreshTokenRepository refreshTokenRepository,
+        IUnitOfWork unitOfWork,
         CancellationToken cancellationToken)
     {
         var account = await authService.LoginWithLinkedInAsync(code, cancellationToken);
         var jwt = tokenService.GenerateToken(account);
+        var refreshToken = tokenService.GenerateRefreshToken(account.Id, jwt.Token);
+        await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return Results.Redirect($"careerflowui://auth/callback?token={jwt.Token}");
+        return Results.Redirect(
+            $"careerflowui://auth/callback?token={jwt.Token}&refreshToken={refreshToken.Token}");
     }
 }
