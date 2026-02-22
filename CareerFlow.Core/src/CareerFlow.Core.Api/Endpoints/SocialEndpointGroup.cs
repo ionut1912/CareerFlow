@@ -22,7 +22,7 @@ public class SocialEndpointGroup : EndpointGroup
     private static IResult GoogleMobileLogin(IOptions<SocialAuthSettings> settings)
     {
         var s = settings.Value;
-        var redirectUri = Uri.EscapeDataString($"{s.BaseUrl}/auth/google/mobile/callback");
+        var redirectUri = Uri.EscapeDataString($"{s.BaseUrl}/social/auth/google/mobile/callback");
         var scope = Uri.EscapeDataString("openid email profile");
 
         var url = $"https://accounts.google.com/o/oauth2/v2/auth" +
@@ -57,7 +57,7 @@ public class SocialEndpointGroup : EndpointGroup
     private static IResult LinkedInMobileLogin(IOptions<SocialAuthSettings> settings)
     {
         var s = settings.Value;
-        var redirectUri = Uri.EscapeDataString($"{s.BaseUrl}/auth/linkedin/mobile/callback");
+        var redirectUri = Uri.EscapeDataString($"{s.BaseUrl}/social/auth/linkedin/mobile/callback");
         var scope = Uri.EscapeDataString("openid profile email");
 
         var url = $"https://www.linkedin.com/oauth/v2/authorization" +
