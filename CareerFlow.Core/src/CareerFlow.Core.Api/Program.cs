@@ -66,6 +66,7 @@ builder.Services
     .AddRepositoriesConfig<IEmailService, EmailService>()
     .AddRepositoriesConfig<IGoogleTokenValidator, GoogleTokenValidator>()
     .AddRepositoriesConfig<IMailClient, PostmarkMailClient>()
+    .AddRepositoriesConfig<ISocialService, SocialService>()
     .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 

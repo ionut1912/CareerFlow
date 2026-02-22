@@ -3,9 +3,10 @@ import {AuthState} from './models';
 import {AccountDto} from '@/models/auth.models';
 import {
   loginThunk,
-  loginWithGoogleThunk,
-  loginWithLinkedinThunk,
+  loginWithSocialThunk,
+  logoutThunk,
   registerThunk,
+  restoreSessionThunk,
 } from './thunks';
 
 const initialState: AuthState = {
@@ -46,35 +47,38 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(loginWithGoogleThunk.pending, state => {
+      .addCase(loginWithSocialThunk.pending, state => {
         state.loading = true;
         state.error = null;
       })
       .addCase(
-        loginWithGoogleThunk.fulfilled,
+        loginWithSocialThunk.fulfilled,
         (state, action: PayloadAction<AccountDto>) => {
           state.loading = false;
           state.account = action.payload;
         },
       )
-      .addCase(loginWithGoogleThunk.rejected, (state, action) => {
+      .addCase(loginWithSocialThunk.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })
-      .addCase(loginWithLinkedinThunk.pending, state => {
+      .addCase(restoreSessionThunk.pending, state => {
         state.loading = true;
         state.error = null;
       })
       .addCase(
-        loginWithLinkedinThunk.fulfilled,
+        restoreSessionThunk.fulfilled,
         (state, action: PayloadAction<AccountDto>) => {
           state.loading = false;
           state.account = action.payload;
         },
       )
-      .addCase(loginWithLinkedinThunk.rejected, (state, action) => {
+      .addCase(restoreSessionThunk.rejected, state => {
         state.loading = false;
-        state.error = action.payload as string;
+        state.account = null;
+      })
+      .addCase(logoutThunk.fulfilled, state => {
+        state.account = null;
       });
   },
 });

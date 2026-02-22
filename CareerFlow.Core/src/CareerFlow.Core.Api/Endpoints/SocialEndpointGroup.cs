@@ -19,71 +19,36 @@ public class SocialEndpointGroup : EndpointGroup
         group.MapGet(LinkedInMobileCallback, "/auth/linkedin/mobile/callback");
     }
 
-    private static IResult GoogleMobileLogin(IOptions<SocialAuthSettings> settings)
+    private static IResult GoogleMobileLogin(ISocialService service)
     {
-        var s = settings.Value;
-        var redirectUri = Uri.EscapeDataString($"{s.BaseUrl}/social/auth/google/mobile/callback");
-        var scope = Uri.EscapeDataString("openid email profile");
-
-        var url = $"https://accounts.google.com/o/oauth2/v2/auth" +
-                  $"?client_id={s.Google.ClientId}" +
-                  $"&redirect_uri={redirectUri}" +
-                  $"&response_type=code" +
-                  $"&scope={scope}" +
-                  $"&access_type=offline";
+        var url=service.GoogleMobileLogin();
 
         return Results.Redirect(url);
     }
 
     private static async Task<IResult> GoogleMobileCallback(
         string code,
-        IAuthService authService,
-        ITokenService tokenService,
-        IRefreshTokenRepository refreshTokenRepository,
-        IUnitOfWork unitOfWork,
+        ISocialService service,
         CancellationToken cancellationToken)
     {
-        var idToken = await authService.ExchangeGoogleCodeAsync(code, cancellationToken);
-        var account = await authService.LoginWithGoogleAsync(idToken, cancellationToken);
-        var jwt = tokenService.GenerateToken(account);
-        var refreshToken = tokenService.GenerateRefreshToken(account.Id, jwt.Token);
-        await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
+        var url = await service.GoogleMobileCallBack(code, cancellationToken);
 
-        return Results.Redirect(
-            $"careerflowui://auth/callback?token={jwt.Token}&refreshToken={refreshToken.Token}");
+        return Results.Redirect(url);
     }
 
-    private static IResult LinkedInMobileLogin(IOptions<SocialAuthSettings> settings)
+    private static IResult LinkedInMobileLogin(ISocialService service)
     {
-        var s = settings.Value;
-        var redirectUri = Uri.EscapeDataString($"{s.BaseUrl}/social/auth/linkedin/mobile/callback");
-        var scope = Uri.EscapeDataString("openid profile email");
-
-        var url = $"https://www.linkedin.com/oauth/v2/authorization" +
-                  $"?client_id={s.LinkedIn.ClientId}" +
-                  $"&redirect_uri={redirectUri}" +
-                  $"&response_type=code" +
-                  $"&scope={scope}";
+        var url = service.LinkedInMobileLogin();
 
         return Results.Redirect(url);
     }
 
     private static async Task<IResult> LinkedInMobileCallback(
         string code,
-        IAuthService authService,
-        ITokenService tokenService,
-        IRefreshTokenRepository refreshTokenRepository,
-        IUnitOfWork unitOfWork,
+        ISocialService service,
         CancellationToken cancellationToken)
     {
-        var account = await authService.LoginWithLinkedInAsync(code, cancellationToken);
-        var jwt = tokenService.GenerateToken(account);
-        var refreshToken = tokenService.GenerateRefreshToken(account.Id, jwt.Token);
-        await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
-        await unitOfWork.SaveChangesAsync(cancellationToken);
-
-        return Results.Redirect(
-            $"careerflowui://auth/callback?token={jwt.Token}&refreshToken={refreshToken.Token}");
+        var url = await service.LinkedInCallBack(code, cancellationToken);
+        return Results.Redirect(url);
     }
 }
