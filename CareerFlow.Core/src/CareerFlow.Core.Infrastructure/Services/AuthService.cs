@@ -1,5 +1,6 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
@@ -75,6 +76,24 @@ public class AuthService : IAuthService
         if (account == null) return await SaveUserAsync(userData.email, userData.name, cancellationToken);
 
         return account;
+    }
+    
+    public async Task<string> ExchangeGoogleCodeAsync(string code, CancellationToken cancellationToken = default)
+    {
+        var tokenReq = new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            { "code", code },
+            { "client_id", _settings.Google.ClientId },
+            { "client_secret", _settings.Google.ClientSecret },
+            { "redirect_uri", $"{_settings.BaseUrl}/auth/google/mobile/callback" },
+            { "grant_type", "authorization_code" }
+        });
+
+        var response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", tokenReq, cancellationToken);
+        response.EnsureSuccessStatusCode();
+
+        var data = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        return data.GetProperty("id_token").GetString()!;
     }
 
     private async Task<Account> SaveUserAsync(string email, string name, CancellationToken cancellationToken)

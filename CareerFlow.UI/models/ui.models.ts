@@ -26,4 +26,4 @@ interface ErrorFields {
   username: string | null;
 }
 
-export type { ApiErrorResponse, RegisterForm, TouchedFields, ErrorFields };
+export type {ApiErrorResponse, RegisterForm, TouchedFields, ErrorFields};

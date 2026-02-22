@@ -38,26 +38,10 @@ services:
       retries: 10
       start_period: 40s
 
-  redis:
-    image: redis:alpine
-    # Enables data persistence (AOF)
-    command: redis-server --appendonly yes
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - careerflow-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
 
 volumes:
   postgres_data:
   rabbitmq_data:
-  redis_data:
 
 networks:
   careerflow-network:

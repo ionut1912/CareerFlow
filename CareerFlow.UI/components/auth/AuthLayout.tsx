@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useState} from 'react';
 import {
   View,
   Text,
@@ -9,13 +9,13 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { useRouter, usePathname } from 'expo-router';
-import { COLORS, STYLES } from '@/constants/theme';
+import {MaterialIcons} from '@expo/vector-icons';
+import {useRouter, usePathname} from 'expo-router';
+import {COLORS, STYLES} from '@/constants/theme';
 import SocialLoginButtons from '@/components/SocialLoginButtons';
-import { TabButton } from '../TabButton';
-import { LegalModal } from '../LegalModal';
-import { getLegal } from '@/services/legalService';
+import {TabButton} from '../TabButton';
+import {LegalModal} from '../LegalModal';
+import {getLegal} from '@/services/legalService';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -26,7 +26,17 @@ interface AuthLayoutProps {
   onFooterAction: () => void;
   onReject: (type: string) => void;
   onAccept: (type: string) => void;
+  legalAccepted?: {
+    terms: boolean;
+    privacy: boolean;
+  };
 }
+
+const LAYOUT_COLORS = {
+  glowBlue: '#3b82f6',
+  logoBorder: 'rgba(175, 37, 244, 0.3)',
+  cardBg: 'rgba(255, 255, 255, 0.05)',
+};
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
@@ -37,6 +47,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   onFooterAction,
   onReject,
   onAccept,
+  legalAccepted,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -51,51 +62,60 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   });
 
   const fetchLegal = async (type: 'privacy' | 'terms') => {
-    setModal((prev) => ({ ...prev, visible: true, loading: true, type }));
+    setModal(prev => ({...prev, visible: true, loading: true, type}));
     try {
       const res = await getLegal(type);
       const data = res.data;
-      setModal((prev) => ({
+      setModal(prev => ({
         ...prev,
         loading: false,
-        title: type === 'privacy' ? 'Politica de Confidențialitate' : 'Termeni și Condiții',
+        title:
+          type === 'privacy'
+            ? 'Politica de Confidențialitate'
+            : 'Termeni și Condiții',
         content: data.content,
       }));
     } catch {
-      setModal((prev) => ({
+      setModal(prev => ({
         ...prev,
         loading: false,
         title: 'Eroare',
-        content: 'Eroare la încărcarea datelor din backend.',
+        content: 'Eroare la încărcarea datelor.',
       }));
     }
   };
 
   const handleAccept = () => {
     onAccept(modal.type);
-    setModal((prev) => ({ ...prev, visible: false }));
+    setModal(prev => ({...prev, visible: false}));
   };
 
   const handleReject = () => {
     onReject(modal.type);
-    setModal((prev) => ({ ...prev, visible: false }));
+    setModal(prev => ({...prev, visible: false}));
   };
 
   return (
     <View style={styles.container}>
-      <View style={[STYLES.glow, { top: -50, left: -50, backgroundColor: COLORS.primary }]} />
-      <View style={[STYLES.glow, { bottom: -50, right: -50, backgroundColor: '#3b82f6' }]} />
+      <View style={[STYLES.glow, styles.glowTopLeft]} />
+      <View style={[STYLES.glow, styles.glowBottomRight]} />
 
-      <SafeAreaView style={{ flex: 1 }}>
+      <SafeAreaView style={styles.flex}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1 }}>
-          <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+          style={styles.flex}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
               <View style={styles.logoContainer}>
                 <View style={styles.logoGlow} />
                 <View style={styles.logoBox}>
-                  <MaterialIcons name="psychology" size={40} color={COLORS.primary} />
+                  <MaterialIcons
+                    name="psychology"
+                    size={40}
+                    color={COLORS.primary}
+                  />
                 </View>
               </View>
               <Text style={styles.title}>{title}</Text>
@@ -121,7 +141,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                 <Text style={styles.dividerText}>SAU CONTINUA CU</Text>
                 <View style={styles.divider} />
               </View>
-              <SocialLoginButtons />
+              <SocialLoginButtons legalAccepted={legalAccepted} />
             </View>
 
             <View style={styles.footer}>
@@ -133,7 +153,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
               </Text>
               <View style={styles.legalLinks}>
                 <TouchableOpacity onPress={() => fetchLegal('privacy')}>
-                  <Text style={styles.legalItem}>Politica de confidențialitate</Text>
+                  <Text style={styles.legalItem}>
+                    Politica de confidențialitate
+                  </Text>
                 </TouchableOpacity>
                 <Text style={styles.sep}> • </Text>
                 <TouchableOpacity onPress={() => fetchLegal('terms')}>
@@ -150,7 +172,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         loading={modal.loading}
         title={modal.title}
         content={modal.content}
-        onClose={() => setModal((prev) => ({ ...prev, visible: false }))}
+        onClose={() => setModal(prev => ({...prev, visible: false}))}
         onAccept={handleAccept}
         onReject={handleReject}
       />
@@ -159,14 +181,26 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.background },
-  scrollContent: { paddingHorizontal: 24, paddingBottom: 40 },
-  header: { alignItems: 'center', marginTop: 60, marginBottom: 32 },
-  logoContainer: { width: 80, height: 80, justifyContent: 'center', alignItems: 'center' },
+  flex: {flex: 1},
+  container: {flex: 1, backgroundColor: COLORS.background},
+  glowTopLeft: {top: -50, left: -50, backgroundColor: COLORS.primary},
+  glowBottomRight: {
+    bottom: -50,
+    right: -50,
+    backgroundColor: LAYOUT_COLORS.glowBlue,
+  },
+  scrollContent: {paddingHorizontal: 24, paddingBottom: 40},
+  header: {alignItems: 'center', marginTop: 60, marginBottom: 32},
+  logoContainer: {
+    width: 80,
+    height: 80,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   logoBox: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
-    borderColor: 'rgba(175, 37, 244, 0.3)',
+    borderColor: LAYOUT_COLORS.logoBorder,
     borderRadius: 16,
     width: '100%',
     height: '100%',
@@ -182,7 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     opacity: 0.4,
   },
-  title: { fontSize: 28, fontWeight: '700', color: COLORS.text, marginTop: 16 },
+  title: {fontSize: 28, fontWeight: '700', color: COLORS.text, marginTop: 16},
   subtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
@@ -191,7 +225,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: LAYOUT_COLORS.cardBg,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
@@ -204,18 +238,22 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 24,
   },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: 24 },
-  divider: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  dividerRow: {flexDirection: 'row', alignItems: 'center', marginVertical: 24},
+  divider: {flex: 1, height: 1, backgroundColor: COLORS.border},
   dividerText: {
     color: COLORS.textMuted,
     fontSize: 10,
     marginHorizontal: 10,
     fontWeight: '600',
   },
-  footer: { marginTop: 32, alignItems: 'center' },
-  footerMainText: { color: COLORS.textMuted, fontSize: 12 },
-  linkText: { color: COLORS.primary, fontWeight: '600' },
-  legalLinks: { flexDirection: 'row', marginTop: 16, alignItems: 'center' },
-  legalItem: { color: COLORS.textSecondary, fontSize: 11, textDecorationLine: 'underline' },
-  sep: { color: COLORS.textMuted, fontSize: 11 },
+  footer: {marginTop: 32, alignItems: 'center'},
+  footerMainText: {color: COLORS.textMuted, fontSize: 12},
+  linkText: {color: COLORS.primary, fontWeight: '600'},
+  legalLinks: {flexDirection: 'row', marginTop: 16, alignItems: 'center'},
+  legalItem: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    textDecorationLine: 'underline',
+  },
+  sep: {color: COLORS.textMuted, fontSize: 11},
 });

@@ -17,13 +17,13 @@ module.exports = [
     languageOptions: {
       parser: tsParser,
       parserOptions: {
-        ecmaFeatures: { jsx: true },
+        ecmaFeatures: {jsx: true},
       },
     },
     rules: {
       ...prettierConfig.rules,
       'prettier/prettier': 'error',
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': ['error', {argsIgnorePattern: '^_'}],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-empty-object-type': 'error',
       'react-hooks/rules-of-hooks': 'error',
@@ -34,13 +34,20 @@ module.exports = [
       'react-native/no-unused-styles': 'error',
       'react-native/no-color-literals': 'error',
       'react-native/split-platform-components': 'error',
-      'no-console': ['error', { allow: ['warn', 'error'] }],
-      'eqeqeq': 'error',
+      'no-console': ['error', {allow: ['warn', 'error']}],
+      eqeqeq: 'error',
       'prefer-const': 'error',
       'no-var': 'error',
     },
   },
   {
-    ignores: ['dist/*', '.expo/*', 'web-build/*', 'node_modules/*', 'babel.config.js', 'metro.config.js'],
+    ignores: [
+      'dist/*',
+      '.expo/*',
+      'web-build/*',
+      'node_modules/*',
+      'babel.config.js',
+      'metro.config.js',
+    ],
   },
 ];

@@ -6,21 +6,17 @@ import React, {useState} from 'react';
 import Toast from 'react-native-toast-message';
 import {handleAcceptLegal, handleRejectLegal} from './utils';
 import {ErrorFields, RegisterForm, TouchedFields} from '@/models/ui.models';
-import {register} from '@/services/authService';
-import {isAxiosError} from 'axios';
-
-interface ApiErrorResponse {
-  message: string;
-}
+import {registerThunk} from '@/store/auth/thunks';
+import {useAppDispatch, useAppSelector} from '@/store/hook';
 
 const RegisterScreen = () => {
+  const dispatch = useAppDispatch();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const {loading: isLoading} = useAppSelector(state => state.auth);
   const [legalAccepted, setLegalAccepted] = useState({
     terms: false,
     privacy: false,
   });
-
   const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
@@ -28,7 +24,6 @@ const RegisterScreen = () => {
     password: '',
     confirmPassword: '',
   });
-
   const [touched, setTouched] = useState<TouchedFields>({
     name: false,
     email: false,
@@ -38,7 +33,6 @@ const RegisterScreen = () => {
   });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
   const errors: ErrorFields = {
     name: !form.name
       ? 'Numele este necesar'
@@ -63,46 +57,32 @@ const RegisterScreen = () => {
         : null,
   };
 
-  const isFormValid =
-    !errors.name &&
-    !errors.email &&
-    !errors.password &&
-    !errors.username &&
-    !errors.confirmPassword &&
-    legalAccepted.terms &&
-    legalAccepted.privacy;
+  const hasFieldErrors =
+    !!errors.name ||
+    !!errors.email ||
+    !!errors.password ||
+    !!errors.username ||
+    !!errors.confirmPassword;
+  const legalComplete = legalAccepted.terms && legalAccepted.privacy;
+  const isFormValid = !hasFieldErrors && legalComplete;
 
   const handleRegister = async () => {
     if (!isFormValid || isLoading) return;
-
-    setIsLoading(true);
-
     try {
-      await register(form);
-
+      await dispatch(registerThunk(form)).unwrap();
       Toast.show({
         type: 'success',
         text1: 'Cont creat cu succes!',
         text2: 'Te rugam sa te autentifici.',
       });
-
-      setTimeout(() => {
-        router.replace('/(auth)/login');
-      }, 1500);
+      setTimeout(() => router.replace('/(auth)/login'), 1500);
     } catch (error: unknown) {
-      let errorMessage = 'Ceva nu a functionat corect. Incearca din nou.';
-
-      if (isAxiosError<ApiErrorResponse>(error)) {
-        errorMessage = error.response?.data?.message || errorMessage;
-      }
-
       Toast.show({
         type: 'error',
         text1: 'Eroare la inregistrare',
-        text2: errorMessage,
+        text2:
+          typeof error === 'string' ? error : 'Ceva nu a functionat corect.',
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -113,6 +93,7 @@ const RegisterScreen = () => {
       footerText="Ai deja cont?"
       footerActionText="Autentificare"
       onFooterAction={() => router.replace('/(auth)/login')}
+      legalAccepted={legalAccepted}
       onAccept={(type: string) => {
         handleAcceptLegal(type);
         setLegalAccepted(prev => ({...prev, [type]: true}));
@@ -126,7 +107,7 @@ const RegisterScreen = () => {
         icon="person-outline"
         placeholder="John Doe"
         value={form.name}
-        onChangeText={(text: string) => setForm({...form, name: text})}
+        onChangeText={text => setForm({...form, name: text})}
         onBlur={() => setTouched({...touched, name: true})}
         error={errors.name}
         touched={touched.name}
@@ -136,7 +117,7 @@ const RegisterScreen = () => {
         icon="person-outline"
         placeholder="jdoe"
         value={form.username}
-        onChangeText={(text: string) => setForm({...form, username: text})}
+        onChangeText={text => setForm({...form, username: text})}
         onBlur={() => setTouched({...touched, username: true})}
         error={errors.username}
         touched={touched.username}
@@ -147,7 +128,7 @@ const RegisterScreen = () => {
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={(text: string) => setForm({...form, email: text})}
+        onChangeText={text => setForm({...form, email: text})}
         onBlur={() => setTouched({...touched, email: true})}
         error={errors.email}
         touched={touched.email}
@@ -158,7 +139,7 @@ const RegisterScreen = () => {
         placeholder="Parola"
         isPassword
         value={form.password}
-        onChangeText={(text: string) => setForm({...form, password: text})}
+        onChangeText={text => setForm({...form, password: text})}
         onBlur={() => setTouched({...touched, password: true})}
         error={errors.password}
         touched={touched.password}
@@ -169,19 +150,11 @@ const RegisterScreen = () => {
         placeholder="Confirma parola"
         isPassword
         value={form.confirmPassword}
-        onChangeText={(text: string) =>
-          setForm({...form, confirmPassword: text})
-        }
+        onChangeText={text => setForm({...form, confirmPassword: text})}
         onBlur={() => setTouched({...touched, confirmPassword: true})}
-        error={
-          errors.confirmPassword ||
-          (form.confirmPassword !== form.password
-            ? 'Parolele nu se potrivesc'
-            : null)
-        }
+        error={errors.confirmPassword}
         touched={touched.confirmPassword}
       />
-
       <GradientButton
         text={isLoading ? 'Se incarca...' : 'Creare cont'}
         icon={isLoading ? null : 'person-add'}

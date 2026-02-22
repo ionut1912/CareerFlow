@@ -1,7 +1,7 @@
-interface LegalDocumentResponse{
-    content:string;
-    source:string;
-    lastChecked:Date;
+interface LegalDocumentResponse {
+  content: string;
+  source: string;
+  lastChecked: Date;
 }
 
-export type { LegalDocumentResponse };
+export type {LegalDocumentResponse};

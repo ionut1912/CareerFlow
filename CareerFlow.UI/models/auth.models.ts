@@ -1,26 +1,25 @@
 interface CreateAccountRequest {
-    email: string;
-    password: string;
-    confirmPassword: string;
-    name: string;
-    username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  name: string;
+  username: string;
 }
 
 interface LoginRequest {
-    email: string;
-    password: string;
+  email: string;
+  password: string;
 }
-
 interface AccountDto {
-    id: string;
-    email: string;
-    username: string;
-    name: string;
-    token?: string;
-    refreshToken?: string;
-    isFounder: boolean;
-    privacyPolicyAccepted: boolean;
-    termsAccepted: boolean;
+  id: string;
+  email: string;
+  username: string;
+  name: string;
+  token?: string | null | undefined;
+  refreshToken?: string | null | undefined;
+  isFounder: boolean;
+  privacyPolicyAccepted: boolean;
+  termsAccepted: boolean;
 }
 
-export type { CreateAccountRequest, LoginRequest, AccountDto };
+export type {CreateAccountRequest, LoginRequest, AccountDto};
