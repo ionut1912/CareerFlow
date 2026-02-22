@@ -85,7 +85,7 @@ public class AuthService : IAuthService
             { "code", code },
             { "client_id", _settings.Google.ClientId },
             { "client_secret", _settings.Google.ClientSecret },
-            { "redirect_uri", $"{_settings.BaseUrl}/auth/google/mobile/callback" },
+            { "redirect_uri", $"{_settings.BaseUrl}/social/auth/google/mobile/callback" },
             { "grant_type", "authorization_code" }
         });
 
