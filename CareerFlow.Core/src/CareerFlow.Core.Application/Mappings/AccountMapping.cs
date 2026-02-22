@@ -10,13 +10,13 @@ public static class AccountMapping
 {
     public static AccountDto ToAccountDto(this Account account, string? token = null, string? refreshToken = null)
     {
-        return new AccountDto(account.Id, account.Email, account.Username, token, refreshToken, account.IsFounder,
+        return new AccountDto(account.Id, account.Email, account.Username,account.Name, token, refreshToken, account.IsFounder,
             account.PrivacyPolicyAccepted, account.TermsAccepted);
     }
 
     public static CreateAccountCommand ToCreateCommand(this CreateAccountRequest request)
     {
-        return new CreateAccountCommand(request.Email, request.Password, request.Username, request.Name);
+        return new CreateAccountCommand(request.Email, request.Password, request.ConfirmPassword,request.Username, request.Name);
     }
 
     public static LoginQuery ToLoginQuery(this LoginRequest request)

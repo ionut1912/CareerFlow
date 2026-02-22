@@ -18,8 +18,6 @@ public class AccountEndpointGroup : EndpointGroup
         var group = endpoints.MapGroup(this);
         group.MapPost(Register, "/register");
         group.MapPost(Login, "/login");
-        group.MapPost(LoginWithGoogle, "/google");
-        group.MapPost(LoginWithLinkedin, "/linkedin");
         group.MapPost(RefreshToken, "/refresh-token");
         group.MapPut(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
@@ -39,22 +37,6 @@ public class AccountEndpointGroup : EndpointGroup
     {
         var loginQuery = loginRequest.ToLoginQuery();
         var result = await bus.InvokeAsync<AccountDto>(loginQuery, cancellationToken);
-        return Results.Ok(result);
-    }
-
-    private static async Task<IResult> LoginWithGoogle(IMessageBus bus, GoogleLoginRequest googleLoginRequest,
-        CancellationToken cancellationToken)
-    {
-        var googleLoginQuery = googleLoginRequest.ToLoginWithGoogleQuery();
-        var result = await bus.InvokeAsync<AccountDto>(googleLoginQuery, cancellationToken);
-        return Results.Ok(result);
-    }
-
-    private static async Task<IResult> LoginWithLinkedin(IMessageBus bus, LinkedInLoginRequest linkedinLoginRequest,
-        CancellationToken cancellationToken)
-    {
-        var linkedinLoginQuery = linkedinLoginRequest.ToLoginWithLinkedinQuery();
-        var result = await bus.InvokeAsync<AccountDto>(linkedinLoginQuery, cancellationToken);
         return Results.Ok(result);
     }
 

@@ -3,25 +3,37 @@ import {AuthLayout} from '@/components/auth/AuthLayout';
 import {GradientButton} from '@/components/auth/GradientButton';
 import {useRouter} from 'expo-router';
 import React, {useState} from 'react';
+import Toast from 'react-native-toast-message';
+import {handleAcceptLegal, handleRejectLegal} from './utils';
+import {ErrorFields, RegisterForm, TouchedFields} from '@/models/ui.models';
+import {registerThunk} from '@/store/auth/thunks';
+import {useAppDispatch, useAppSelector} from '@/store/hook';
 
 const RegisterScreen = () => {
+  const dispatch = useAppDispatch();
   const router = useRouter();
-  const [form, setForm] = useState({
+  const {loading: isLoading} = useAppSelector(state => state.auth);
+  const [legalAccepted, setLegalAccepted] = useState({
+    terms: false,
+    privacy: false,
+  });
+  const [form, setForm] = useState<RegisterForm>({
     name: '',
     email: '',
     username: '',
     password: '',
+    confirmPassword: '',
   });
-  const [touched, setTouched] = useState({
+  const [touched, setTouched] = useState<TouchedFields>({
     name: false,
     email: false,
     password: false,
     username: false,
+    confirmPassword: false,
   });
 
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  const errors = {
+  const errors: ErrorFields = {
     name: !form.name
       ? 'Numele este necesar'
       : form.name.trim().length < 2
@@ -38,14 +50,39 @@ const RegisterScreen = () => {
         ? 'Parola trebuie sa aiba minim 6 caractere'
         : null,
     username: !form.username ? 'Numele de utilizator este necesar' : null,
+    confirmPassword: !form.confirmPassword
+      ? 'Confirmarea parolei este necesara'
+      : form.confirmPassword !== form.password
+        ? 'Parolele nu se potrivesc'
+        : null,
   };
 
-  const isFormValid =
-    !errors.name && !errors.email && !errors.password && !errors.username;
+  const hasFieldErrors =
+    !!errors.name ||
+    !!errors.email ||
+    !!errors.password ||
+    !!errors.username ||
+    !!errors.confirmPassword;
+  const legalComplete = legalAccepted.terms && legalAccepted.privacy;
+  const isFormValid = !hasFieldErrors && legalComplete;
 
-  const handleRegister = () => {
-    if (isFormValid) {
-      console.log('Register Success:', form);
+  const handleRegister = async () => {
+    if (!isFormValid || isLoading) return;
+    try {
+      await dispatch(registerThunk(form)).unwrap();
+      Toast.show({
+        type: 'success',
+        text1: 'Cont creat cu succes!',
+        text2: 'Te rugam sa te autentifici.',
+      });
+      setTimeout(() => router.replace('/(auth)/login'), 1500);
+    } catch (error: unknown) {
+      Toast.show({
+        type: 'error',
+        text1: 'Eroare la inregistrare',
+        text2:
+          typeof error === 'string' ? error : 'Ceva nu a functionat corect.',
+      });
     }
   };
 
@@ -55,7 +92,16 @@ const RegisterScreen = () => {
       subtitle="Incepe aventura"
       footerText="Ai deja cont?"
       footerActionText="Autentificare"
-      onFooterAction={() => router.replace('/(auth)/login')}>
+      onFooterAction={() => router.replace('/(auth)/login')}
+      legalAccepted={legalAccepted}
+      onAccept={(type: string) => {
+        handleAcceptLegal(type);
+        setLegalAccepted(prev => ({...prev, [type]: true}));
+      }}
+      onReject={(type: string) => {
+        handleRejectLegal(type);
+        setLegalAccepted(prev => ({...prev, [type]: false}));
+      }}>
       <AppInput
         label="Nume"
         icon="person-outline"
@@ -90,7 +136,7 @@ const RegisterScreen = () => {
       <AppInput
         label="Parola"
         icon="lock-outline"
-        placeholder="Min 6 characters"
+        placeholder="Parola"
         isPassword
         value={form.password}
         onChangeText={text => setForm({...form, password: text})}
@@ -98,12 +144,22 @@ const RegisterScreen = () => {
         error={errors.password}
         touched={touched.password}
       />
-
+      <AppInput
+        label="Confirma parola"
+        icon="lock-outline"
+        placeholder="Confirma parola"
+        isPassword
+        value={form.confirmPassword}
+        onChangeText={text => setForm({...form, confirmPassword: text})}
+        onBlur={() => setTouched({...touched, confirmPassword: true})}
+        error={errors.confirmPassword}
+        touched={touched.confirmPassword}
+      />
       <GradientButton
-        text="Creare cont"
-        icon="person-add"
+        text={isLoading ? 'Se incarca...' : 'Creare cont'}
+        icon={isLoading ? null : 'person-add'}
         onPress={handleRegister}
-        disabled={!isFormValid}
+        disabled={!isFormValid || isLoading}
       />
     </AuthLayout>
   );

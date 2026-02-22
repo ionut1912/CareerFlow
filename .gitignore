@@ -20,3 +20,4 @@ CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests.Unit/obj/*
 CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests.Unit/bin/*   
 CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Test.Integration/obj/*   
 CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Test.Integration/bin/*
+CareerFlow.UI/.vscode/settings.json

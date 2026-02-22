@@ -1,18 +1,21 @@
-import SocialLoginButtons from '@/components/SocialLoginButtons';
-import {COLORS, STYLES} from '@/constants/theme';
-import {MaterialIcons} from '@expo/vector-icons';
-import {usePathname, useRouter} from 'expo-router';
-import React from 'react';
+import React, {useState} from 'react';
 import {
-  KeyboardAvoidingView,
-  Platform,
+  View,
+  Text,
   SafeAreaView,
   ScrollView,
+  KeyboardAvoidingView,
+  Platform,
   StyleSheet,
-  Text,
   TouchableOpacity,
-  View,
 } from 'react-native';
+import {MaterialIcons} from '@expo/vector-icons';
+import {useRouter, usePathname} from 'expo-router';
+import {COLORS, STYLES} from '@/constants/theme';
+import SocialLoginButtons from '@/components/SocialLoginButtons';
+import {TabButton} from '../TabButton';
+import {LegalModal} from '../LegalModal';
+import {getLegal} from '@/services/legalService';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -21,7 +24,19 @@ interface AuthLayoutProps {
   footerText: string;
   footerActionText: string;
   onFooterAction: () => void;
+  onReject: (type: string) => void;
+  onAccept: (type: string) => void;
+  legalAccepted?: {
+    terms: boolean;
+    privacy: boolean;
+  };
 }
+
+const LAYOUT_COLORS = {
+  glowBlue: '#3b82f6',
+  logoBorder: 'rgba(175, 37, 244, 0.3)',
+  cardBg: 'rgba(255, 255, 255, 0.05)',
+};
 
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
@@ -30,30 +45,65 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   footerText,
   footerActionText,
   onFooterAction,
+  onReject,
+  onAccept,
+  legalAccepted,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
   const isLogin = pathname.includes('login');
 
+  const [modal, setModal] = useState({
+    visible: false,
+    loading: false,
+    title: '',
+    content: '',
+    type: '',
+  });
+
+  const fetchLegal = async (type: 'privacy' | 'terms') => {
+    setModal(prev => ({...prev, visible: true, loading: true, type}));
+    try {
+      const res = await getLegal(type);
+      const data = res.data;
+      setModal(prev => ({
+        ...prev,
+        loading: false,
+        title:
+          type === 'privacy'
+            ? 'Politica de Confidențialitate'
+            : 'Termeni și Condiții',
+        content: data.content,
+      }));
+    } catch {
+      setModal(prev => ({
+        ...prev,
+        loading: false,
+        title: 'Eroare',
+        content: 'Eroare la încărcarea datelor.',
+      }));
+    }
+  };
+
+  const handleAccept = () => {
+    onAccept(modal.type);
+    setModal(prev => ({...prev, visible: false}));
+  };
+
+  const handleReject = () => {
+    onReject(modal.type);
+    setModal(prev => ({...prev, visible: false}));
+  };
+
   return (
     <View style={styles.container}>
-      <View
-        style={[
-          STYLES.glow,
-          {top: -50, left: -50, backgroundColor: COLORS.primary},
-        ]}
-      />
-      <View
-        style={[
-          STYLES.glow,
-          {bottom: -50, right: -50, backgroundColor: '#3b82f6'},
-        ]}
-      />
+      <View style={[STYLES.glow, styles.glowTopLeft]} />
+      <View style={[STYLES.glow, styles.glowBottomRight]} />
 
-      <SafeAreaView style={{flex: 1}}>
+      <SafeAreaView style={styles.flex}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{flex: 1}}>
+          style={styles.flex}>
           <ScrollView
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}>
@@ -65,18 +115,15 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                     name="psychology"
                     size={40}
                     color={COLORS.primary}
-                    importantForAccessibility="no"
                   />
                 </View>
               </View>
-              <Text style={styles.title} accessibilityRole="header">
-                {title}
-              </Text>
+              <Text style={styles.title}>{title}</Text>
               <Text style={styles.subtitle}>{subtitle}</Text>
             </View>
 
             <View style={styles.card}>
-              <View style={styles.tabBar} accessibilityRole="tablist">
+              <View style={styles.tabBar}>
                 <TabButton
                   title="Inregistrare"
                   active={!isLogin}
@@ -88,62 +135,60 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
                   onPress={() => router.replace('/(auth)/login')}
                 />
               </View>
-
               {children}
-
               <View style={styles.dividerRow}>
                 <View style={styles.divider} />
                 <Text style={styles.dividerText}>SAU CONTINUA CU</Text>
                 <View style={styles.divider} />
               </View>
-              <SocialLoginButtons />
+              <SocialLoginButtons legalAccepted={legalAccepted} />
             </View>
 
             <View style={styles.footer}>
               <Text style={styles.footerMainText}>
                 {footerText}{' '}
-                <Text
-                  style={styles.linkText}
-                  onPress={onFooterAction}
-                  accessibilityRole="button"
-                  accessibilityLabel={footerActionText}>
+                <Text style={styles.linkText} onPress={onFooterAction}>
                   {footerActionText}
                 </Text>
               </Text>
-              <View style={styles.legalRow}>
-                <Text style={styles.legalText}>
-                  Politica de confidentialitate • Termeni si conditii
-                </Text>
+              <View style={styles.legalLinks}>
+                <TouchableOpacity onPress={() => fetchLegal('privacy')}>
+                  <Text style={styles.legalItem}>
+                    Politica de confidențialitate
+                  </Text>
+                </TouchableOpacity>
+                <Text style={styles.sep}> • </Text>
+                <TouchableOpacity onPress={() => fetchLegal('terms')}>
+                  <Text style={styles.legalItem}>Termeni și condiții</Text>
+                </TouchableOpacity>
               </View>
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </SafeAreaView>
+
+      <LegalModal
+        visible={modal.visible}
+        loading={modal.loading}
+        title={modal.title}
+        content={modal.content}
+        onClose={() => setModal(prev => ({...prev, visible: false}))}
+        onAccept={handleAccept}
+        onReject={handleReject}
+      />
     </View>
   );
 };
 
-interface TabButtonProps {
-  title: string;
-  active: boolean;
-  onPress: () => void;
-}
-
-const TabButton: React.FC<TabButtonProps> = ({title, active, onPress}) => (
-  <TouchableOpacity
-    style={[styles.tab, active && styles.activeTab]}
-    onPress={onPress}
-    accessibilityRole="tab"
-    accessibilityState={{selected: active}}
-    accessibilityLabel={title}>
-    <Text style={[styles.tabText, active && styles.activeTabText]}>
-      {title}
-    </Text>
-  </TouchableOpacity>
-);
-
 const styles = StyleSheet.create({
+  flex: {flex: 1},
   container: {flex: 1, backgroundColor: COLORS.background},
+  glowTopLeft: {top: -50, left: -50, backgroundColor: COLORS.primary},
+  glowBottomRight: {
+    bottom: -50,
+    right: -50,
+    backgroundColor: LAYOUT_COLORS.glowBlue,
+  },
   scrollContent: {paddingHorizontal: 24, paddingBottom: 40},
   header: {alignItems: 'center', marginTop: 60, marginBottom: 32},
   logoContainer: {
@@ -155,7 +200,7 @@ const styles = StyleSheet.create({
   logoBox: {
     backgroundColor: COLORS.background,
     borderWidth: 1,
-    borderColor: 'rgba(175, 37, 244, 0.3)',
+    borderColor: LAYOUT_COLORS.logoBorder,
     borderRadius: 16,
     width: '100%',
     height: '100%',
@@ -171,12 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     opacity: 0.4,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: COLORS.text,
-    marginTop: 16,
-  },
+  title: {fontSize: 28, fontWeight: '700', color: COLORS.text, marginTop: 16},
   subtitle: {
     fontSize: 12,
     color: COLORS.textSecondary,
@@ -185,7 +225,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   card: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    backgroundColor: LAYOUT_COLORS.cardBg,
     borderRadius: 24,
     padding: 24,
     borderWidth: 1,
@@ -198,24 +238,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginBottom: 24,
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: 'center',
-    borderRadius: 8,
-  },
-  activeTab: {backgroundColor: COLORS.primary},
-  tabText: {
-    color: COLORS.textSecondary,
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  activeTabText: {color: COLORS.text},
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 24,
-  },
+  dividerRow: {flexDirection: 'row', alignItems: 'center', marginVertical: 24},
   divider: {flex: 1, height: 1, backgroundColor: COLORS.border},
   dividerText: {
     color: COLORS.textMuted,
@@ -226,6 +249,11 @@ const styles = StyleSheet.create({
   footer: {marginTop: 32, alignItems: 'center'},
   footerMainText: {color: COLORS.textMuted, fontSize: 12},
   linkText: {color: COLORS.primary, fontWeight: '600'},
-  legalRow: {flexDirection: 'row', marginTop: 16},
-  legalText: {color: '#4b5563', fontSize: 10},
+  legalLinks: {flexDirection: 'row', marginTop: 16, alignItems: 'center'},
+  legalItem: {
+    color: COLORS.textSecondary,
+    fontSize: 11,
+    textDecorationLine: 'underline',
+  },
+  sep: {color: COLORS.textMuted, fontSize: 11},
 });

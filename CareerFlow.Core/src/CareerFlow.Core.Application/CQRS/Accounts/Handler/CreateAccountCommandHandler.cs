@@ -37,6 +37,12 @@ public class CreateAccountCommandHandler
             throw new UserAlreadyExistsException($"Contul cu email {request.Email} deja exista");
         }
 
+        if (request.Password != request.ConfirmPassword)
+        {
+            _logger.LogError("Nu putem crea parola pentru ca parola si parola de confirmare nu corespund");
+            throw new PasswordNotMatchException("Parolele nu corespund");
+        }
+
         var accountToCreate = Account.Create(request.Email, request.Password, request.Username, request.Name);
         accountToCreate.AcceptPrivacyPolicy();
         accountToCreate.AcceptTerms();

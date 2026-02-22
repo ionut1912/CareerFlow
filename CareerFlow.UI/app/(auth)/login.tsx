@@ -2,12 +2,24 @@ import {AppInput} from '@/components/auth/AppInput';
 import {AuthLayout} from '@/components/auth/AuthLayout';
 import {GradientButton} from '@/components/auth/GradientButton';
 import {COLORS} from '@/constants/theme';
+import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {useRouter} from 'expo-router';
 import React, {useState} from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
+import Toast from 'react-native-toast-message';
+import {handleAcceptLegal, handleRejectLegal} from './utils';
+import {loginThunk} from '@/store/auth/thunks';
 
 const LoginScreen = () => {
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const {loading} = useAppSelector(state => state.auth);
+
+  const [legalAccepted, setLegalAccepted] = useState({
+    terms: false,
+    privacy: false,
+  });
+
   const [form, setForm] = useState({email: '', password: ''});
   const [touched, setTouched] = useState({email: false, password: false});
 
@@ -15,7 +27,7 @@ const LoginScreen = () => {
 
   const errors = {
     email: !form.email
-      ? 'Email ul este necesar'
+      ? 'Email-ul este necesar'
       : !emailRegex.test(form.email)
         ? 'Format invalid'
         : null,
@@ -24,8 +36,20 @@ const LoginScreen = () => {
 
   const isFormValid = !errors.email && !errors.password;
 
-  const handleLogin = () => {
-    if (isFormValid) console.log('Login Success:', form);
+  const handleLogin = async () => {
+    if (!isFormValid || loading) return;
+    try {
+      await dispatch(
+        loginThunk({email: form.email, password: form.password}),
+      ).unwrap();
+      router.replace('/(tabs)');
+    } catch (error: unknown) {
+      Toast.show({
+        type: 'error',
+        text1: 'Eroare la autentificare',
+        text2: error || 'Ceva nu a functionat corect.',
+      });
+    }
   };
 
   return (
@@ -34,7 +58,16 @@ const LoginScreen = () => {
       subtitle="Pregateste mintea pentru cunoastere"
       footerText="Nu ai cont?"
       footerActionText="Inregistreaza-te"
-      onFooterAction={() => router.replace('/(auth)/register')}>
+      onFooterAction={() => router.replace('/(auth)/register')}
+      legalAccepted={legalAccepted}
+      onAccept={(type: string) => {
+        handleAcceptLegal(type);
+        setLegalAccepted(prev => ({...prev, [type]: true}));
+      }}
+      onReject={(type: string) => {
+        handleRejectLegal(type);
+        setLegalAccepted(prev => ({...prev, [type]: false}));
+      }}>
       <AppInput
         label="Adresa de email"
         icon="mail-outline"
@@ -57,16 +90,14 @@ const LoginScreen = () => {
         error={errors.password}
         touched={touched.password}
       />
-
       <TouchableOpacity style={styles.forgotBtn}>
         <Text style={styles.forgotText}>Ai uitat parola?</Text>
       </TouchableOpacity>
-
       <GradientButton
-        text="Autentificare"
-        icon="login"
+        text={loading ? 'Se incarca...' : 'Autentificare'}
+        icon={loading ? null : 'login'}
         onPress={handleLogin}
-        disabled={!isFormValid}
+        disabled={!isFormValid || loading}
       />
     </AuthLayout>
   );
