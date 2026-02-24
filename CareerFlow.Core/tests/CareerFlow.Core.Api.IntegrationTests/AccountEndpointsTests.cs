@@ -172,22 +172,12 @@ public class AccountEndpointsTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task ResetPassword_ShouldReturnUnauthorized_WhenIsNotAuthenticated()
-    {
-        var request = new ResetPasswordRequest("newPassword");
-
-        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", request);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
     public async Task ResetPassword_ShouldReturnBadRequest_WhenLoginWithOldPassword()
     {
-        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
-        var resetPasswordRequest = new ResetPasswordRequest("newPassword");
+        var (_, _, credentials) = await CreateAndAuthenticateUserAsync();
+        var resetPasswordRequest = new ResetPasswordRequest(credentials.Email,"newPassword");
 
-        var response = await authClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
+        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
         var reloginRequest = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -197,10 +187,10 @@ public class AccountEndpointsTests : IntegrationTestBase
     [Fact]
     public async Task ResetPassword_ShouldReturnSuccess_WhenLoginWithNewPassword()
     {
-        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
-        var resetPasswordRequest = new ResetPasswordRequest("newPassword");
+        var (_, _, credentials) = await CreateAndAuthenticateUserAsync();
+        var resetPasswordRequest = new ResetPasswordRequest(credentials.Email,"newPassword");
 
-        var response = await authClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
+        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
         var newLoginRequest = new LoginRequest(credentials.Email, resetPasswordRequest.NewPassword);
         var reloginRequest = await AnonymousClient.PostAsJsonAsync("/account/login", newLoginRequest);
 
@@ -223,10 +213,9 @@ public class AccountEndpointsTests : IntegrationTestBase
     [Fact]
     public async Task ResetPassword_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
-        var resetPasswordRequest = new ResetPasswordRequest("newPassword");
+        var resetPasswordRequest = new ResetPasswordRequest("email@email.com","newPassword");
 
-        var response = await authClient.PutAsJsonAsync("/invalid url", resetPasswordRequest);
+        var response = await AnonymousClient.PutAsJsonAsync("/invalid url", resetPasswordRequest);
 
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
     }

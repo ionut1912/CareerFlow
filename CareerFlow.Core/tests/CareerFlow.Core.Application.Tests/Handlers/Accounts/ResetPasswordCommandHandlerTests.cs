@@ -32,8 +32,8 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     {
         // Arrange
         var account = TestDataFactory.CreateAccount();
-        var command = new ResetPasswordCommand(account.Id, "newPassword");
-        _accountRepositoryMock.Setup(x => x.GetByIdAsync(account.Id, Ct)).ReturnsAsync(account);
+        var command = new ResetPasswordCommand(account.Email, "newPassword");
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
 
         // Act
         await _handler.Handle(command, Ct);
@@ -49,14 +49,14 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     public async Task Handle_WhenAccountDoesNotExist_ThrowsAccountNotFoundException()
     {
         // Arrange
-        var command = new ResetPasswordCommand(Guid.NewGuid(), "newPassword");
-        _accountRepositoryMock.Setup(x => x.GetByIdAsync(command.AccountId, Ct)).ReturnsAsync((Account?)null);
+        var command = new ResetPasswordCommand("testmail", "newPassword");
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct)).ReturnsAsync((Account?)null);
 
         // Act
         var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError(command.AccountId.ToString(), Times.Once());
+        _loggerMock.VerifyLogError(command.Email, Times.Once());
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 }

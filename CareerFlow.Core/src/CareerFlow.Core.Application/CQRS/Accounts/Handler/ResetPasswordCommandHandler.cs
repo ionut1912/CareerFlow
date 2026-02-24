@@ -29,24 +29,19 @@ public class ResetPasswordCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<OutgoingMessages> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
-        var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
+        var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("User-ul cu Id-ul {AccountId} nu a fost gasit", request.AccountId);
-            throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit.");
+            _logger.LogError("User-ul cu Email-ul {Email} nu a fost gasit", request.Email);
+            throw new AccountNotFoundException($"Contul cu Email-ul '{request.Email}' nu a fost gasit.");
         }
 
         account.ResetPassword(request.NewPassword, _passwordService);
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        var messages = new OutgoingMessages
-        {
-            new ResetPasswordNotificationMessage(account.Username, account.Email, "test")
-        };
+        _logger.LogInformation("Parola pentru contul cu email-ul {Email} a fost resetata", request.Email);
 
-        _logger.LogInformation("Parola pentru contul cu id-ul {AccountId} a fost resetata", request.AccountId);
-        return messages;
     }
 }
