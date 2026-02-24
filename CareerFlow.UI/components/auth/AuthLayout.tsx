@@ -21,15 +21,18 @@ interface AuthLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle: string;
-  footerText: string;
-  footerActionText: string;
-  onFooterAction: () => void;
-  onReject: (type: string) => void;
-  onAccept: (type: string) => void;
+  footerText?: string;
+  footerActionText?: string;
+  onFooterAction?: () => void;
+  onReject?: (type: string) => void;
+  onAccept?: (type: string) => void;
   legalAccepted?: {
     terms: boolean;
     privacy: boolean;
   };
+  showTabs?: boolean;
+  showSocialAuth?: boolean;
+  showLegalLinks?: boolean;
 }
 
 const LAYOUT_COLORS = {
@@ -48,6 +51,9 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   onReject,
   onAccept,
   legalAccepted,
+  showTabs = true,
+  showSocialAuth = true,
+  showLegalLinks = true,
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -86,12 +92,12 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   };
 
   const handleAccept = () => {
-    onAccept(modal.type);
+    if (onAccept) onAccept(modal.type);
     setModal(prev => ({...prev, visible: false}));
   };
 
   const handleReject = () => {
-    onReject(modal.type);
+    if (onReject) onReject(modal.type);
     setModal(prev => ({...prev, visible: false}));
   };
 
@@ -123,45 +129,58 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
             </View>
 
             <View style={styles.card}>
-              <View style={styles.tabBar}>
-                <TabButton
-                  title="Inregistrare"
-                  active={!isLogin}
-                  onPress={() => router.replace('/(auth)/register')}
-                />
-                <TabButton
-                  title="Autentificare"
-                  active={isLogin}
-                  onPress={() => router.replace('/(auth)/login')}
-                />
-              </View>
+              {showTabs && (
+                <View style={styles.tabBar}>
+                  <TabButton
+                    title="Inregistrare"
+                    active={!isLogin}
+                    onPress={() => router.replace('/(auth)/register')}
+                  />
+                  <TabButton
+                    title="Autentificare"
+                    active={isLogin}
+                    onPress={() => router.replace('/(auth)/login')}
+                  />
+                </View>
+              )}
+
               {children}
-              <View style={styles.dividerRow}>
-                <View style={styles.divider} />
-                <Text style={styles.dividerText}>SAU CONTINUA CU</Text>
-                <View style={styles.divider} />
-              </View>
-              <SocialLoginButtons legalAccepted={legalAccepted} />
+
+              {showSocialAuth && (
+                <>
+                  <View style={styles.dividerRow}>
+                    <View style={styles.divider} />
+                    <Text style={styles.dividerText}>SAU CONTINUA CU</Text>
+                    <View style={styles.divider} />
+                  </View>
+                  <SocialLoginButtons legalAccepted={legalAccepted} />
+                </>
+              )}
             </View>
 
             <View style={styles.footer}>
-              <Text style={styles.footerMainText}>
-                {footerText}{' '}
-                <Text style={styles.linkText} onPress={onFooterAction}>
-                  {footerActionText}
-                </Text>
-              </Text>
-              <View style={styles.legalLinks}>
-                <TouchableOpacity onPress={() => fetchLegal('privacy')}>
-                  <Text style={styles.legalItem}>
-                    Politica de confidențialitate
+              {footerText && footerActionText && (
+                <Text style={styles.footerMainText}>
+                  {footerText}{' '}
+                  <Text style={styles.linkText} onPress={onFooterAction}>
+                    {footerActionText}
                   </Text>
-                </TouchableOpacity>
-                <Text style={styles.sep}> • </Text>
-                <TouchableOpacity onPress={() => fetchLegal('terms')}>
-                  <Text style={styles.legalItem}>Termeni și condiții</Text>
-                </TouchableOpacity>
-              </View>
+                </Text>
+              )}
+
+              {showLegalLinks && (
+                <View style={styles.legalLinks}>
+                  <TouchableOpacity onPress={() => fetchLegal('privacy')}>
+                    <Text style={styles.legalItem}>
+                      Politica de confidențialitate
+                    </Text>
+                  </TouchableOpacity>
+                  <Text style={styles.sep}> • </Text>
+                  <TouchableOpacity onPress={() => fetchLegal('terms')}>
+                    <Text style={styles.legalItem}>Termeni și condiții</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
             </View>
           </ScrollView>
         </KeyboardAvoidingView>

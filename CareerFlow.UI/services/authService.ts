@@ -25,3 +25,20 @@ export function getCurrentAccount(): Promise<AxiosResponse<AccountDto>> {
     headers: {'requires-auth': true},
   });
 }
+
+export function forgotPassword(
+  email: string,
+  resetPasswordLink: string,
+): Promise<AxiosResponse<void>> {
+  return api.post<void>(`${API_AUTH_URL}/forgot-password`, {
+    email,
+    resetPasswordLink,
+  });
+}
+
+export function resetPassword(
+  email: string,
+  newPassword: string,
+): Promise<AxiosResponse<void>> {
+  return api.post<void>(`${API_AUTH_URL}/reset-password`, {email, newPassword});
+}
