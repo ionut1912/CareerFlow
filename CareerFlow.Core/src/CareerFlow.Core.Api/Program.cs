@@ -86,51 +86,10 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
+app.MapClientEndpoints();
 
 app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
 
-app.MapGet("/.well-known/assetlinks.json", () =>
-{
-    var assetLinks = new[]
-    {
-        new
-        {
-            relation = new[] { "delegate_permission/common.handle_all_urls" },
-            target = new
-            {
-                @namespace = "android_app",
-                package_name = "com.compania.careerflow",
-                sha256_cert_fingerprints = new[] { "AMPRENTA_TA_SHA256_AICI" }
-            }
-        }
-    };
-    return Results.Json(assetLinks);
-});
-
-app.MapGet("/reset-password", () =>
-{
-    var html = @"<!DOCTYPE html>
-    <html>
-      <head>
-        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-        <title>Career Flow</title>
-        <style>
-          body { font-family: sans-serif; text-align: center; padding: 40px 20px; background: #0f172a; color: white; }
-          .btn { display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin: 10px; font-weight: bold; }
-        </style>
-      </head>
-      <body>
-        <h2>Aplicatia nu a fost gasita</h2>
-        <p>Pentru a-ti reseta parola, te rugam sa instalezi aplicatia Career Flow.</p>
-        <div style='margin-top: 30px;'>
-          <a href='https://play.google.com/store/apps/details?id=com.compania.careerflow' class='btn'>Descarca Android</a>
-          <a href='https://apps.apple.com/app/idID_UL_AICI' class='btn'>Descarca iOS</a>
-        </div>
-      </body>
-    </html>";
-    
-    return Results.Content(html, "text/html");
-});
 
 app.Run();
 

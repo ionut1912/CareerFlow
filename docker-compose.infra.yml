@@ -9,7 +9,6 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql
-      - ./init-pw.sql:/docker-entrypoint-initdb.d/init-pw.sql
     networks:
       # FIXED: Changed to match the network defined at the bottom
       - careerflow-network

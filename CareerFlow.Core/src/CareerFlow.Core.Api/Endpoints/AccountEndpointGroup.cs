@@ -45,8 +45,9 @@ public class AccountEndpointGroup : EndpointGroup
         CancellationToken cancellationToken)
     {
         var resetToken = Guid.NewGuid().ToString();
-        var finalLink = $"{forgotPasswordRequest.ResetPasswordLink}?token={resetToken}";
-        var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink);
+        var resetPasswordLink = "https://carerflow-api.ro/reset-password";
+        var finalLink = $"{resetPasswordLink}?token={resetToken}";
+        var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink,resetToken);
         await bus.InvokeAsync(command, cancellationToken);
         return Results.NoContent();
     }

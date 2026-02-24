@@ -6,7 +6,6 @@ import {
   register,
   resetPassword,
 } from '@/services/authService';
-import {API_URL} from '@/services/utils';
 import {secureStorage} from '@/utils/secureStorage';
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {isAxiosError} from 'axios';
@@ -86,9 +85,7 @@ export const requestPasswordResetThunk = createAsyncThunk(
   'auth/requestPasswordReset',
   async (payload: {email: string}, {rejectWithValue}) => {
     try {
-      const resetPasswordLink = `${API_URL}/reset-password`;
-
-      const response = await forgotPassword(payload.email, resetPasswordLink);
+      const response = await forgotPassword(payload.email);
 
       return response.data;
     } catch (error: unknown) {
@@ -105,9 +102,16 @@ export const requestPasswordResetThunk = createAsyncThunk(
 
 export const resetPasswordThunk = createAsyncThunk(
   'auth/resetPassword',
-  async (payload: {email: string; newPassword: string}, {rejectWithValue}) => {
+  async (
+    payload: {email: string; newPassword: string; token: string},
+    {rejectWithValue},
+  ) => {
     try {
-      const response = await resetPassword(payload.email, payload.newPassword);
+      const response = await resetPassword(
+        payload.email,
+        payload.newPassword,
+        payload.token,
+      );
 
       return response.data;
     } catch (error: unknown) {

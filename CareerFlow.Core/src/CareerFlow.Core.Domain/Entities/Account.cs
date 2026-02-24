@@ -39,6 +39,8 @@ public class Account : Entity
     public bool IsFounder { get; private set; }
     public bool TermsAccepted { get; private set; }
     public bool PrivacyPolicyAccepted { get; private set; }
+    public string ResetPasswordToken { get; private set; } = string.Empty;
+    public DateTime ResetPasswordTokenExpiresAt { get; private set; }
 
     public static Account Create(string email, string password, string username, string name)
     {
@@ -72,5 +74,22 @@ public class Account : Entity
     {
         PrivacyPolicyAccepted = true;
         UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void GenerateResetPasswordToken(string token,IPasswordService passwordService)
+    {
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            throw new InvalidFieldException("Token-ul este invalid");
+        }
+
+        ResetPasswordToken = passwordService.HashPassword(token);
+        ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddHours(1);
+    }
+
+    public void ResetPasswordTokenAndExpiry()
+    {
+        ResetPasswordToken=string.Empty;
+        ResetPasswordTokenExpiresAt = DateTime.UtcNow;
     }
 }

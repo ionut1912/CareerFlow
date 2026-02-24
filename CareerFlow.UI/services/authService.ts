@@ -26,19 +26,20 @@ export function getCurrentAccount(): Promise<AxiosResponse<AccountDto>> {
   });
 }
 
-export function forgotPassword(
-  email: string,
-  resetPasswordLink: string,
-): Promise<AxiosResponse<void>> {
+export function forgotPassword(email: string): Promise<AxiosResponse<void>> {
   return api.post<void>(`${API_AUTH_URL}/forgot-password`, {
     email,
-    resetPasswordLink,
   });
 }
 
 export function resetPassword(
   email: string,
   newPassword: string,
+  token: string,
 ): Promise<AxiosResponse<void>> {
-  return api.post<void>(`${API_AUTH_URL}/reset-password`, {email, newPassword});
+  return api.post<void>(`${API_AUTH_URL}/reset-password`, {
+    email,
+    newPassword,
+    token,
+  });
 }
