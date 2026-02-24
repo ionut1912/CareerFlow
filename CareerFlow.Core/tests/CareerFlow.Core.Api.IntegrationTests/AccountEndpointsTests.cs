@@ -3,6 +3,10 @@ using System.Net.Http.Json;
 using CareerFlow.Core.Api.IntegrationTests.Setup;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using Microsoft.Extensions.DependencyInjection;
+using Shared.Domain.Interfaces;
 using Shouldly;
 using Xunit;
 
@@ -172,65 +176,86 @@ public class AccountEndpointsTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task ResetPassword_ShouldReturnUnauthorized_WhenIsNotAuthenticated()
+public async Task ForgotPassword_ShouldReturnNoContent_WhenEmailExists()
+{
+    await CreateAndAuthenticateUserAsync("existing@email.com");
+    var request = new ForgotPasswordRequest("existing@email.com");
+
+    var response = await AnonymousClient.PostAsJsonAsync("/account/forgot-password", request);
+
+    response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+}
+
+[Fact]
+public async Task ForgotPassword_ShouldThrowNotFound_WhenEmailDoesNotExist()
+{
+    var request = new ForgotPasswordRequest("nonexistent@email.com");
+
+    var response = await AnonymousClient.PostAsJsonAsync("/account/forgot-password", request);
+
+    response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+}
+
+[Fact]
+public async Task ResetPassword_ShouldReturnNoContent_WhenTokenAndDataAreValid()
+{
+    var email = "reset-success@email.com";
+    await CreateAndAuthenticateUserAsync(email);
+    
+    var rawToken = "SuperSecretToken123";
+    
+    using (var scope = Factory.Services.CreateScope())
     {
-        var request = new ResetPasswordRequest("newPassword");
-
-        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", request);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+        var repo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
+        var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        
+        var account = await repo.GetAccountByEmailAsync(email, default);
+        account.GenerateResetPasswordToken(rawToken, passwordService);
+        repo.Update(account);
+        await uow.SaveChangesAsync();
     }
 
-    [Fact]
-    public async Task ResetPassword_ShouldReturnBadRequest_WhenLoginWithOldPassword()
+    var resetRequest = new ResetPasswordRequest(email, "NewSecurePassword123!", rawToken);
+
+    var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetRequest);
+
+    response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
+    
+    var loginRequest = new LoginRequest(email, "NewSecurePassword123!");
+    var loginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", loginRequest);
+    loginResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
+}
+
+[Fact]
+public async Task ResetPassword_ShouldReturnBadRequest_WhenTokenIsExpired()
+{
+    var email = "expired@email.com";
+    await CreateAndAuthenticateUserAsync(email);
+    var rawToken = "token123";
+
+    using (var scope = Factory.Services.CreateScope())
     {
-        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
-        var resetPasswordRequest = new ResetPasswordRequest("newPassword");
-
-        var response = await authClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
-        var reloginRequest = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        reloginRequest.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        var repo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
+        var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+        var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+        
+        var account = await repo.GetAccountByEmailAsync(email, default);
+        account.GenerateResetPasswordToken(rawToken, passwordService);
+        
+        var field = account.GetType().GetProperty("ResetPasswordTokenExpiresAt");
+        field?.SetValue(account, DateTime.UtcNow.AddHours(-1));
+        
+        repo.Update(account);
+        await uow.SaveChangesAsync();
     }
 
-    [Fact]
-    public async Task ResetPassword_ShouldReturnSuccess_WhenLoginWithNewPassword()
-    {
-        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
-        var resetPasswordRequest = new ResetPasswordRequest("newPassword");
+    var resetRequest = new ResetPasswordRequest(email, "NewPassword123!", rawToken);
 
-        var response = await authClient.PutAsJsonAsync("/account/reset-password", resetPasswordRequest);
-        var newLoginRequest = new LoginRequest(credentials.Email, resetPasswordRequest.NewPassword);
-        var reloginRequest = await AnonymousClient.PostAsJsonAsync("/account/login", newLoginRequest);
+    var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetRequest);
 
-        response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
-        reloginRequest.EnsureSuccessStatusCode();
-        reloginRequest.StatusCode.ShouldBe(HttpStatusCode.OK);
-
-        var reloginResult = await reloginRequest.Content.ReadFromJsonAsync<AccountDto>();
-        reloginResult.ShouldNotBeNull();
-        reloginResult.Id.ShouldNotBe(Guid.Empty);
-        reloginResult.Email.ShouldNotBeNull();
-        reloginResult.Username.ShouldNotBeNull();
-        reloginResult.RefreshToken.ShouldNotBeNull();
-        reloginResult.Token.ShouldNotBeNull();
-        reloginResult.IsFounder.ShouldBeFalse();
-        reloginResult.PrivacyPolicyAccepted.ShouldBeTrue();
-        reloginResult.TermsAccepted.ShouldBeTrue();
-    }
-
-    [Fact]
-    public async Task ResetPassword_ShouldReturnNotFound_WhenUrlIsInvalid()
-    {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
-        var resetPasswordRequest = new ResetPasswordRequest("newPassword");
-
-        var response = await authClient.PutAsJsonAsync("/invalid url", resetPasswordRequest);
-
-        response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
-    }
-
+    response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+}
     [Fact]
     public async Task GetCurrentAccount_ShouldReturnUnauthorized_WhenNotAuthenticated()
     {

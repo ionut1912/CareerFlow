@@ -29,24 +29,32 @@ public class ResetPasswordCommandHandler
         _unitOfWork = unitOfWork;
     }
 
-    public async Task<OutgoingMessages> Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
+    public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
-        var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
+        var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("User-ul cu Id-ul {AccountId} nu a fost gasit", request.AccountId);
-            throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit.");
+            _logger.LogError("User-ul cu Email-ul {Email} nu a fost gasit", request.Email);
+            throw new AccountNotFoundException($"Contul cu Email-ul '{request.Email}' nu a fost gasit.");
         }
 
+        if (!_passwordService.VerifyPassword(request.Token, account.ResetPasswordToken))
+        {
+            _logger.LogError("Tokenurile nu sunt la fel");
+            throw new PasswordNotMatchException("Tokenurile nu sunt la fel");
+        }
+
+        if (account.ResetPasswordTokenExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogError("Tokenul e expirat");
+            throw new InvalidFieldException("Tokenul e expirat");
+        }
+        
+        account.ResetPasswordTokenAndExpiry();
         account.ResetPassword(request.NewPassword, _passwordService);
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        var messages = new OutgoingMessages
-        {
-            new ResetPasswordNotificationMessage(account.Username, account.Email, "test")
-        };
+        _logger.LogInformation("Parola pentru contul cu email-ul {Email} a fost resetata", request.Email);
 
-        _logger.LogInformation("Parola pentru contul cu id-ul {AccountId} a fost resetata", request.AccountId);
-        return messages;
     }
 }

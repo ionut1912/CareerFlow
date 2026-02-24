@@ -6,6 +6,8 @@ import {
   loginWithSocialThunk,
   logoutThunk,
   registerThunk,
+  requestPasswordResetThunk,
+  resetPasswordThunk,
   restoreSessionThunk,
 } from './thunks';
 
@@ -79,6 +81,30 @@ const authSlice = createSlice({
       })
       .addCase(logoutThunk.fulfilled, state => {
         state.account = null;
+      })
+      .addCase(requestPasswordResetThunk.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(requestPasswordResetThunk.fulfilled, state => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(requestPasswordResetThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      .addCase(resetPasswordThunk.pending, state => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(resetPasswordThunk.fulfilled, state => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(resetPasswordThunk.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
       });
   },
 });

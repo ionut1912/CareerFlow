@@ -1,5 +1,11 @@
 import {CreateAccountRequest, LoginRequest} from '@/models/auth.models';
-import {getCurrentAccount, login, register} from '@/services/authService';
+import {
+  forgotPassword,
+  getCurrentAccount,
+  login,
+  register,
+  resetPassword,
+} from '@/services/authService';
 import {secureStorage} from '@/utils/secureStorage';
 import {createAsyncThunk} from '@reduxjs/toolkit';
 import {isAxiosError} from 'axios';
@@ -72,6 +78,51 @@ export const restoreSessionThunk = createAsyncThunk(
     } catch {
       await secureStorage.clearTokens();
       return rejectWithValue('Session expired');
+    }
+  },
+);
+export const requestPasswordResetThunk = createAsyncThunk(
+  'auth/requestPasswordReset',
+  async (payload: {email: string}, {rejectWithValue}) => {
+    try {
+      const response = await forgotPassword(payload.email);
+
+      return response.data;
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return rejectWithValue(
+          error.response?.data?.message ||
+            error.message ||
+            'Eroare de conexiune la server',
+        );
+      }
+    }
+  },
+);
+
+export const resetPasswordThunk = createAsyncThunk(
+  'auth/resetPassword',
+  async (
+    payload: {email: string; newPassword: string; token: string},
+    {rejectWithValue},
+  ) => {
+    try {
+      const response = await resetPassword(
+        payload.email,
+        payload.newPassword,
+        payload.token,
+      );
+
+      return response.data;
+    } catch (error: unknown) {
+      if (isAxiosError(error)) {
+        return rejectWithValue(
+          error.response?.data?.message ||
+            error.message ||
+            'Eroare de conexiune la server',
+        );
+      }
+      return rejectWithValue('Eroare de conexiune la server');
     }
   },
 );

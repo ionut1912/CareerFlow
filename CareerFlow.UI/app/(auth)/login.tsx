@@ -47,7 +47,8 @@ const LoginScreen = () => {
       Toast.show({
         type: 'error',
         text1: 'Eroare la autentificare',
-        text2: error || 'Ceva nu a functionat corect.',
+        text2:
+          typeof error === 'string' ? error : 'Ceva nu a functionat corect.',
       });
     }
   };
@@ -90,7 +91,9 @@ const LoginScreen = () => {
         error={errors.password}
         touched={touched.password}
       />
-      <TouchableOpacity style={styles.forgotBtn}>
+      <TouchableOpacity
+        style={styles.forgotBtn}
+        onPress={() => router.push('/(auth)/forgot-password')}>
         <Text style={styles.forgotText}>Ai uitat parola?</Text>
       </TouchableOpacity>
       <GradientButton

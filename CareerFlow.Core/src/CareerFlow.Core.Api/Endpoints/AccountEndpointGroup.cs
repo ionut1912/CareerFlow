@@ -19,6 +19,7 @@ public class AccountEndpointGroup : EndpointGroup
         group.MapPost(Register, "/register");
         group.MapPost(Login, "/login");
         group.MapPost(RefreshToken, "/refresh-token");
+        group.MapPost(ForgotPassword, "/forgot-password");
         group.MapPut(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
         group.MapDelete(DeleteUserAccount);
@@ -40,6 +41,25 @@ public class AccountEndpointGroup : EndpointGroup
         return Results.Ok(result);
     }
 
+    private static async Task<IResult> ForgotPassword(IMessageBus bus, ForgotPasswordRequest forgotPasswordRequest,
+        CancellationToken cancellationToken)
+    {
+        var resetToken = Guid.NewGuid().ToString();
+        var resetPasswordLink = "https://carerflow-api.ro/reset-password";
+        var finalLink = $"{resetPasswordLink}?token={resetToken}";
+        var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink,resetToken);
+        await bus.InvokeAsync(command, cancellationToken);
+        return Results.NoContent();
+    }
+    
+    private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext,
+        ResetPasswordRequest resetPasswordRequest, CancellationToken cancellationToken)
+    {
+        var resetPasswordCommand = resetPasswordRequest.ToResetPasswordCommand();
+        await bus.InvokeAsync(resetPasswordCommand, cancellationToken);
+        return Results.NoContent();
+    }
+    
     [Authorize]
     private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest,
         CancellationToken cancellationToken)
@@ -60,17 +80,8 @@ public class AccountEndpointGroup : EndpointGroup
         var result = await bus.InvokeAsync<AccountDto>(currentUserQuery, cancellationToken);
         return Results.Ok(result);
     }
+    
 
-    [Authorize]
-    private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext,
-        ResetPasswordRequest resetPasswordRequest, CancellationToken cancellationToken)
-    {
-        var accountId = httpContext.GetAccountId();
-        if (accountId == Guid.Empty) return Results.Unauthorized();
-        var resetPasswordCommand = resetPasswordRequest.ToResetPasswordCommand(accountId);
-        await bus.InvokeAsync(resetPasswordCommand, cancellationToken);
-        return Results.NoContent();
-    }
 
     [Authorize]
     private static async Task<IResult> DeleteUserAccount(IMessageBus bus, HttpContext httpContext,

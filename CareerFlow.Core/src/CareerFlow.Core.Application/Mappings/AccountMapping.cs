@@ -19,14 +19,19 @@ public static class AccountMapping
         return new CreateAccountCommand(request.Email, request.Password, request.ConfirmPassword,request.Username, request.Name);
     }
 
+    public static ForgotPasswordCommand ToForgotPasswordCommand(this ForgotPasswordRequest request,string link,string token)
+    {
+        return new ForgotPasswordCommand(request.Email, link,token);
+    }
+    
     public static LoginQuery ToLoginQuery(this LoginRequest request)
     {
         return new LoginQuery(request.Email, request.Password);
     }
-
-    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request, Guid accountId)
+    
+    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request)
     {
-        return new ResetPasswordCommand(accountId, request.NewPassword);
+        return new ResetPasswordCommand(request.Email, request.NewPassword,request.Token);
     }
 
     public static CreateRefreshTokenCommand ToCreateRefreshTokenCommand(this RefreshTokenRequest request)

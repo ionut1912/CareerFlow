@@ -86,8 +86,10 @@ app.UseForwardedHeaders(new ForwardedHeadersOptions
 
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
+app.MapClientEndpoints();
 
 app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
+
 
 app.Run();
 
