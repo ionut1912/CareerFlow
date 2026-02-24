@@ -47,6 +47,11 @@ public class Account : Entity
         return new Account(email, password, username, name);
     }
 
+    public void SetResetPasswordExipiresAt(DateTime expiresAt)
+    {
+        ResetPasswordTokenExpiresAt = expiresAt;
+    }
+
     public void HashPassword(IPasswordService passwordService)
     {
         Password = passwordService.HashPassword(Password);

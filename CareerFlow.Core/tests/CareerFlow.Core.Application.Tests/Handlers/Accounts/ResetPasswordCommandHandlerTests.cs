@@ -1,4 +1,5 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Command;
+﻿using System.Reflection.Emit;
+using CareerFlow.Core.Application.CQRS.Accounts.Command;
 using CareerFlow.Core.Application.CQRS.Accounts.Handler;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -32,9 +33,11 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     {
         // Arrange
         var account = TestDataFactory.CreateAccount();
-        var command = new ResetPasswordCommand(account.Email, "newPassword");
+        account.SetResetPasswordExipiresAt(DateTime.UtcNow.AddHours(1));
+        var command = new ResetPasswordCommand(account.Email, "newPassword","token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
-
+        _passwordServiceMock.Setup(x=>x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
         // Act
         await _handler.Handle(command, Ct);
 
@@ -49,7 +52,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     public async Task Handle_WhenAccountDoesNotExist_ThrowsAccountNotFoundException()
     {
         // Arrange
-        var command = new ResetPasswordCommand("testmail", "newPassword");
+        var command = new ResetPasswordCommand("testmail", "newPassword","token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct)).ReturnsAsync((Account?)null);
 
         // Act
@@ -57,6 +60,45 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
 
         // Assert
         _loggerMock.VerifyLogError(command.Email, Times.Once());
+        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+    }
+    
+    [Fact]
+    public async Task Handle_WhenTokenNoMatch_ThrowsPasswordMismatchException()
+    {
+        //Arrange
+        var account = TestDataFactory.CreateAccount();
+        var command = new ResetPasswordCommand(account.Email, "newPassword","token");
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
+        _passwordServiceMock.Setup(x=>x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(false);
+        
+        //Act
+        var exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
+        
+        //Assert
+        exception.Message.ShouldBe("Tokenurile nu sunt la fel");
+        _loggerMock.VerifyLogError("Tokenurile nu sunt la fel", Times.Once());
+        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+    }
+
+    [Fact]
+    public async Task Handle_WhenTokenExpired_ThrowsIInvalidFieldException()
+    {
+        //Arrange
+        var account = TestDataFactory.CreateAccount();
+        account.SetResetPasswordExipiresAt(DateTime.Now.AddDays(-1));
+        var command = new ResetPasswordCommand(account.Email, "newPassword","token");
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
+        _passwordServiceMock.Setup(x=>x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+            .Returns(true);
+        
+        //Act
+        var exception=await Should.ThrowAsync<InvalidFieldException>(() => _handler.Handle(command, Ct));
+        
+        //Assert
+        exception.Message.ShouldBe("Tokenul e expirat");
+        _loggerMock.VerifyLogError("Tokenul e expirat", Times.Once());
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 }

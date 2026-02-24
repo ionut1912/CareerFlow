@@ -32,11 +32,24 @@ public class ResetPasswordCommandHandler
     public async Task Handle(ResetPasswordCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
-        if (account is null||_passwordService.VerifyPassword(request.Token,account.ResetPasswordToken)||account.ResetPasswordTokenExpiresAt<DateTime.UtcNow)
+        if (account is null)
         {
             _logger.LogError("User-ul cu Email-ul {Email} nu a fost gasit", request.Email);
             throw new AccountNotFoundException($"Contul cu Email-ul '{request.Email}' nu a fost gasit.");
         }
+
+        if (!_passwordService.VerifyPassword(request.Token, account.ResetPasswordToken))
+        {
+            _logger.LogError("Tokenurile nu sunt la fel");
+            throw new PasswordNotMatchException("Tokenurile nu sunt la fel");
+        }
+
+        if (account.ResetPasswordTokenExpiresAt <= DateTime.UtcNow)
+        {
+            _logger.LogError("Tokenul e expirat");
+            throw new InvalidFieldException("Tokenul e expirat");
+        }
+        
         account.ResetPasswordTokenAndExpiry();
         account.ResetPassword(request.NewPassword, _passwordService);
         _accountRepository.Update(account);
