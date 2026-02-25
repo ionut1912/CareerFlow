@@ -11,6 +11,7 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<Account> Accounts { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
+    public DbSet<SystemDocument> SystemDocuments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

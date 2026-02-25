@@ -39,13 +39,8 @@ public static class AccountMapping
         return new CreateRefreshTokenCommand(request.Token, request.RefreshToken);
     }
 
-    public static LoginWithGoogleQuery ToLoginWithGoogleQuery(this GoogleLoginRequest request)
+    public static AcceptLegalDocCommand ToAcceptLegalDocCommand(this AcceptLegalDocRequest request,Guid accountId)
     {
-        return new LoginWithGoogleQuery(request.IdToken);
-    }
-
-    public static LoginWithLinkedinQuery ToLoginWithLinkedinQuery(this LinkedInLoginRequest request)
-    {
-        return new LoginWithLinkedinQuery(request.AuthorizationCode);
+        return new AcceptLegalDocCommand(accountId, request.Type);
     }
 }

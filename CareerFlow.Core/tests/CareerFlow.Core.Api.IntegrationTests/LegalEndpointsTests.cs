@@ -16,29 +16,27 @@ public class LegalEndpointsTests:IntegrationTestBase
     public async Task GetLegalDoc_ShouldReturnOK_WhenValidType()
     {
         //Arrange
-        var client = Factory.CreateClient();
         var type = "privacy";
         
         //Act
-        var responese=await client.GetAsync($"/legal?type={type}");
+        var response=await AnonymousClient.GetAsync($"/legal?type={type}");
         
         //Assert
-        responese.EnsureSuccessStatusCode();
-        responese.StatusCode.ShouldBe(HttpStatusCode.OK);
+        response.EnsureSuccessStatusCode();
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
     
     [Fact]
     public async Task GetLegalDoc_ShouldReturnBadRequest_WhenInvalidType()
     {
         //Arrange
-        var client = Factory.CreateClient();
         var type = "test";
 
         //Act
-        var responese = await client.GetAsync($"/legal?type={type}");
+        var response = await AnonymousClient.GetAsync($"/legal?type={type}");
         
         //Assert
-        responese.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
+        response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
     
     

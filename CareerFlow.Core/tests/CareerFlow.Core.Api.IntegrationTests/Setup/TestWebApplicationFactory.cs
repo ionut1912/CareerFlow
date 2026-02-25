@@ -1,3 +1,6 @@
+using System.Net.Http.Headers;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Persistance;
 using DotNet.Testcontainers.Builders;
 using Microsoft.AspNetCore.Hosting;
@@ -69,7 +72,21 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             _rabbitContainer.StopAsync()
         );
     }
-
+    public HttpClient CreateAuthenticatedClient(Account account)
+    {
+        var client = CreateClient();
+    
+        // You need to access your TokenService or whoever handles JWT generation
+        using var scope = Services.CreateScope();
+        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+    
+        // Generate a token for the non-existent ID
+        var token = tokenService.GenerateToken(account); 
+    
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+    
+        return client;
+    }
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         builder.UseEnvironment("Testing");

@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using CareerFlow.Core.Api.IntegrationTests.Setup;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Domain.Entities;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -30,15 +31,20 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         return Task.CompletedTask;
     }
 
+    protected HttpClient CreateClientForNonExistentUser(Account account)
+    {
+
+        return Factory.CreateAuthenticatedClient(account);
+    }
+
     protected async Task<(HttpClient Client, AccountDto Account, LoginRequest Credentials)>
-        CreateAndAuthenticateUserAsync(
-            string? email = null, string password = "testPassword")
+        CreateAndAuthenticateUserAsync(string? email = null, string password = "testPassword")
     {
         var targetEmail = email ?? $"test_{Guid.NewGuid():N}@email.com";
         var targetUsername = $"user_{Guid.NewGuid():N}";
 
         var registerResponse = await AnonymousClient.PostAsJsonAsync("/account/register",
-            new CreateAccountRequest(targetEmail, password, password,targetUsername, "Test Name"));
+            new CreateAccountRequest(targetEmail, password, password, targetUsername, "Test Name"));
 
         if (!registerResponse.IsSuccessStatusCode)
         {

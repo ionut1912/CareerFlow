@@ -20,6 +20,7 @@ public class AccountEndpointGroup : EndpointGroup
         group.MapPost(Login, "/login");
         group.MapPost(RefreshToken, "/refresh-token");
         group.MapPost(ForgotPassword, "/forgot-password");
+        group.MapPost(AcceptLegal,"/accept-legaldoc");
         group.MapPut(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
         group.MapDelete(DeleteUserAccount);
@@ -57,6 +58,17 @@ public class AccountEndpointGroup : EndpointGroup
     {
         var resetPasswordCommand = resetPasswordRequest.ToResetPasswordCommand();
         await bus.InvokeAsync(resetPasswordCommand, cancellationToken);
+        return Results.NoContent();
+    }
+
+    [Authorize]
+    private static async Task<IResult> AcceptLegal(IMessageBus bus, AcceptLegalDocRequest acceptLegalDocRequest,HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        var accountId = httpContext.GetAccountId();
+        if (accountId == Guid.Empty) return Results.Unauthorized();
+        var acceptLegalDocCommand = acceptLegalDocRequest.ToAcceptLegalDocCommand(accountId);
+        await bus.InvokeAsync(acceptLegalDocCommand, cancellationToken);
         return Results.NoContent();
     }
     
