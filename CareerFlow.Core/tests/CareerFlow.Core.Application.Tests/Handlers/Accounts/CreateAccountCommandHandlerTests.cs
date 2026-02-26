@@ -31,7 +31,7 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     public async Task Handle_WhenEmailIsUnique_CreatesAccount()
     {
         // Arrange
-        var command = new CreateAccountCommand("new@email.com", "pass", "pass","user", "name");
+        var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
             .ReturnsAsync((Account?)null);
 
@@ -49,7 +49,7 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     public async Task Handle_WhenEmailExists_ThrowsUserAlreadyExistsException()
     {
         // Arrange
-        var command = new CreateAccountCommand("exist@email.com", "pass", "pass","user", "name");
+        var command = new CreateAccountCommand("exist@email.com", "pass", "pass", "user", "name");
         var existingAccount = TestDataFactory.CreateAccount();
 
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
@@ -68,16 +68,36 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     public async Task Handle_WhenPasswordsAreDifferent_ThrowsPasswordNotMatchException()
     {
         //Arrange
-        var command = new CreateAccountCommand("new@email.com", "pass", "pass2","user", "name");
+        var command = new CreateAccountCommand("new@email.com", "pass", "pass2", "user", "name");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
             .ReturnsAsync((Account?)null);
-        
+
         //Act
-        var exception= await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
-        
+        var exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
+
         //Assert
         exception.Message.ShouldBe("Parolele nu corespund");
         _loggerMock.VerifyLogError("nu corespund", Times.Once());
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
+    }
+
+    [Theory]
+    [InlineData(true, false, false, false)]
+    [InlineData(false, true, false, false)]
+    [InlineData(false, false, true, false)]
+    [InlineData(false, false, false, true)]
+    [InlineData(true, true, true, true)]
+    public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
+        bool isRepoNull, bool isPasswordServiceNull, bool isUowNull, bool isLoggerNull)
+    {
+        //Arrange
+        var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
+
+        //Act
+        await Should.ThrowAsync<ArgumentNullException>(() => new CreateAccountCommandHandler(
+            isRepoNull ? null : _accountRepositoryMock.Object,
+            isPasswordServiceNull ? null : _passwordServiceMock.Object,
+            isUowNull ? null : _unitOfWorkMock.Object,
+            isLoggerNull ? null : _loggerMock.Object).Handle(command, Ct));
     }
 }

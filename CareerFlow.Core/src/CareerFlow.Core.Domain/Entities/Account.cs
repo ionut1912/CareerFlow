@@ -81,12 +81,9 @@ public class Account : Entity
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void GenerateResetPasswordToken(string token,IPasswordService passwordService)
+    public void GenerateResetPasswordToken(string token, IPasswordService passwordService)
     {
-        if (string.IsNullOrWhiteSpace(token))
-        {
-            throw new InvalidFieldException("Token-ul este invalid");
-        }
+        if (string.IsNullOrWhiteSpace(token)) throw new InvalidFieldException("Token-ul este invalid");
 
         ResetPasswordToken = passwordService.HashPassword(token);
         ResetPasswordTokenExpiresAt = DateTime.UtcNow.AddHours(1);
@@ -94,7 +91,7 @@ public class Account : Entity
 
     public void ResetPasswordTokenAndExpiry()
     {
-        ResetPasswordToken=string.Empty;
+        ResetPasswordToken = string.Empty;
         ResetPasswordTokenExpiresAt = DateTime.UtcNow;
     }
 }

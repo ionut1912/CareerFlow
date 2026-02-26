@@ -13,11 +13,11 @@ public class ForgotPasswordCommandHandler
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ILogger<ForgotPasswordCommandHandler> _logger;
-    private readonly IPasswordService  _passwordService;
+    private readonly IPasswordService _passwordService;
     private readonly IUnitOfWork _unitOfWork;
 
     public ForgotPasswordCommandHandler(IAccountRepository accountRepository,
-        ILogger<ForgotPasswordCommandHandler> logger,IPasswordService passwordService, 
+        ILogger<ForgotPasswordCommandHandler> logger, IPasswordService passwordService,
         IUnitOfWork unitOfWork)
     {
         _accountRepository = accountRepository;
@@ -34,8 +34,8 @@ public class ForgotPasswordCommandHandler
             _logger.LogError("User-ul cu email-ul {Email} nu a fost gasit", request.Email);
             throw new AccountNotFoundException($"Contul cu email-ul '{request.Email}' nu a fost gasit.");
         }
-        
-        account.GenerateResetPasswordToken(request.Token,_passwordService);
+
+        account.GenerateResetPasswordToken(request.Token, _passwordService);
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var messages = new OutgoingMessages

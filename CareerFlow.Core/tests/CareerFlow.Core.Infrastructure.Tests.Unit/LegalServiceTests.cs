@@ -1,137 +1,68 @@
 using System.Net;
-using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Infrastructure.Services;
-using Microsoft.Extensions.Options;
 using Moq;
-using Moq.Protected;
 using Shouldly;
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
-public class LegalServiceTests : IDisposable
+public class LegalServiceTests
 {
-    private readonly Mock<HttpMessageHandler> _handlerMock;
-    private readonly HttpClient _httpClient;
-    private readonly Mock<IOptions<LegalDocSettings>> _optionsMock;
-    private readonly LegalDocSettings _settings;
+    private readonly Mock<IGithubPagesRequestsSender> _requestsSenderMock;
+    private readonly LegalService _sut;
 
     public LegalServiceTests()
     {
-        _settings = new LegalDocSettings { GitHubPagesBaseUrl = "https://legal.careerflow.com/" };
-        _optionsMock = new Mock<IOptions<LegalDocSettings>>();
-        _optionsMock.Setup(x => x.Value).Returns(_settings);
-
-        _handlerMock = new Mock<HttpMessageHandler>();
-        _httpClient = new HttpClient(_handlerMock.Object);
-    }
-
-    [Theory]
-    [InlineData("privacy", "privacy.md")]
-    [InlineData("terms", "terms.md")]
-    [InlineData("PRIVACY", "privacy.md")]
-    public async Task GetDocumentAsync_ShouldConstructCorrectUrl_AndReturnSuccess(string type, string expectedFileName)
-    {
-        var expectedContent = "# Legal Content";
-        SetupHttpMessage(HttpStatusCode.OK, expectedContent);
-
-        var service = new LegalService(_httpClient, _optionsMock.Object);
-
-        var result = await service.GetDocumentAsync(type, CancellationToken.None);
-
-        result.ShouldNotBeNull();
-        result.Content.ShouldBe(expectedContent);
-        result.Source.ShouldBe("GitHub Pages");
-
-        _handlerMock.Protected().Verify(
-            "SendAsync",
-            Times.Once(),
-            ItExpr.Is<HttpRequestMessage>(req =>
-                req.RequestUri!.ToString().EndsWith(expectedFileName)),
-            ItExpr.IsAny<CancellationToken>()
-        );
+        _requestsSenderMock = new Mock<IGithubPagesRequestsSender>();
+        _sut = new LegalService(_requestsSenderMock.Object);
     }
 
     [Fact]
-    public async Task GetDocumentAsync_ShouldReturnNull_WhenGithubReturns404()
+    public async Task GetDocumentAsync_WhenResponseIsSuccess_ShouldReturnLegalDocument()
     {
-        SetupHttpMessage(HttpStatusCode.NotFound, "");
+        // Arrange
+        var docType = "terms-of-service";
+        var content = "Standard Legal Text";
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(content)
+        };
 
-        var service = new LegalService(_httpClient, _optionsMock.Object);
+        _requestsSenderMock
+            .Setup(x => x.GetContentAsync(docType, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
 
-        var result = await service.GetDocumentAsync("privacy", CancellationToken.None);
+        // Act
+        var result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
 
+        // Assert
+        result.ShouldNotBeNull();
+        result.Content.ShouldBe(content);
+        result.Source.ShouldBe("GitHub Pages");
+    }
+
+    [Fact]
+    public async Task GetDocumentAsync_WhenResponseFails_ShouldReturnNull()
+    {
+        // Arrange
+        var response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
+
+        _requestsSenderMock
+            .Setup(x => x.GetContentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(response);
+
+        // Act
+        var result = await _sut.GetDocumentAsync("any-type", CancellationToken.None);
+
+        // Assert
         result.ShouldBeNull();
     }
 
     [Fact]
-    public async Task GetDocumentAsync_ShouldHandleBaseUrlWithoutTrailingSlash()
+    public void Constructor_WhenSenderIsNull_ShouldThrowException()
     {
-        _settings.GitHubPagesBaseUrl = "https://legal.careerflow.com";
-        SetupHttpMessage(HttpStatusCode.OK, "content");
-
-        var service = new LegalService(_httpClient, _optionsMock.Object);
-
-        var result = await service.GetDocumentAsync("terms", CancellationToken.None);
-
-        result.ShouldNotBeNull();
-    }
-
-    [Fact]
-    public async Task GetDocumentAsync_ShouldThrowException_WhenHttpClientFails()
-    {
-        _handlerMock.Protected()
-            .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>())
-            .ThrowsAsync(new HttpRequestException("Network error"));
-
-        var service = new LegalService(_httpClient, _optionsMock.Object);
-
-        await Should.ThrowAsync<HttpRequestException>(async () =>
-            await service.GetDocumentAsync("privacy", CancellationToken.None));
-    }
-
-    [Fact]
-    public async Task GetDocumentAsync_ShouldRespectCancellationToken()
-    {
-        var cts = new CancellationTokenSource();
-
-        _handlerMock.Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .Returns<HttpRequestMessage, CancellationToken>(async (request, token) =>
-            {
-                await cts.CancelAsync();
-                throw new OperationCanceledException(cts.Token);
-            });
-
-        var service = new LegalService(_httpClient, _optionsMock.Object);
-
-        await Should.ThrowAsync<OperationCanceledException>(async () =>
-            await service.GetDocumentAsync("privacy", cts.Token));
-    }
-
-    private void SetupHttpMessage(HttpStatusCode statusCode, string content)
-    {
-        _handlerMock.Protected()
-            .Setup<Task<HttpResponseMessage>>(
-                "SendAsync",
-                ItExpr.IsAny<HttpRequestMessage>(),
-                ItExpr.IsAny<CancellationToken>()
-            )
-            .ReturnsAsync(new HttpResponseMessage
-            {
-                StatusCode = statusCode,
-                Content = new StringContent(content)
-            });
-    }
-
-    public void Dispose()
-    {
-        _httpClient.Dispose();
-        GC.SuppressFinalize(this);
+        // Act & Assert (Sintaxa curată Shouldly pentru excepții)
+        Should.Throw<ArgumentNullException>(() => new LegalService(null!));
     }
 }

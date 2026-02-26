@@ -49,4 +49,20 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
         // Assert
         _loggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
     }
+
+    [Theory]
+    [InlineData(true, false)]
+    [InlineData(false, true)]
+    [InlineData(true, true)]
+    public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
+        bool isRepoNull, bool isLoggerNull)
+    {
+        //Arrange
+        var query = new GetCurrentAccountQuery(Guid.NewGuid());
+
+        //Act&Assert
+        await Should.ThrowAsync<ArgumentNullException>(() => new GetCurrentAccountQueryHandler(
+            isRepoNull ? null : _accountRepositoryMock.Object,
+            isLoggerNull ? null : _loggerMock.Object).Handle(query, Ct));
+    }
 }

@@ -1,10 +1,6 @@
-using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Infrastructure.Configurations;
-using Microsoft.Extensions.Options;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
-using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Api.Endpoints;
 
@@ -21,17 +17,18 @@ public class SocialEndpointGroup : EndpointGroup
 
     private static IResult GoogleMobileLogin(ISocialService service)
     {
-        var url=service.GoogleMobileLogin();
+        var url = service.GoogleMobileLogin();
 
         return Results.Redirect(url);
     }
 
     private static async Task<IResult> GoogleMobileCallback(
         string code,
+        string state,
         ISocialService service,
         CancellationToken cancellationToken)
     {
-        var url = await service.GoogleMobileCallBack(code, cancellationToken);
+        var url = await service.GoogleMobileCallBack(code, state, cancellationToken);
 
         return Results.Redirect(url);
     }
@@ -45,10 +42,11 @@ public class SocialEndpointGroup : EndpointGroup
 
     private static async Task<IResult> LinkedInMobileCallback(
         string code,
+        string state,
         ISocialService service,
         CancellationToken cancellationToken)
     {
-        var url = await service.LinkedInCallBack(code, cancellationToken);
+        var url = await service.LinkedInCallBack(code, state, cancellationToken);
         return Results.Redirect(url);
     }
 }

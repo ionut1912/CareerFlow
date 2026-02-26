@@ -54,4 +54,22 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
         _accountRepositoryMock.Verify(x => x.Delete(It.IsAny<Account>()), Times.Never);
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
     }
+
+    [Theory]
+    [InlineData(true, false, false)]
+    [InlineData(false, true, false)]
+    [InlineData(false, false, true)]
+    [InlineData(true, true, true)]
+    public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
+        bool isAccountRepoNull, bool isUowNull, bool isLoggerNull)
+    {
+        //Act
+        var command = new DeleteAccountCommand(Guid.NewGuid());
+
+        //Arrange&Assert
+        await Should.ThrowAsync<ArgumentNullException>(() => new DeleteAccountCommandHandler(
+            isAccountRepoNull ? null : _accountRepositoryMock.Object,
+            isUowNull ? null : _unitOfWorkMock.Object,
+            isLoggerNull ? null : _loggerMock.Object).Handle(command, Ct));
+    }
 }

@@ -2,10 +2,8 @@
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Rabbit.Events.Events;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
-using Wolverine;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
@@ -49,12 +47,11 @@ public class ResetPasswordCommandHandler
             _logger.LogError("Tokenul e expirat");
             throw new InvalidFieldException("Tokenul e expirat");
         }
-        
+
         account.ResetPasswordTokenAndExpiry();
         account.ResetPassword(request.NewPassword, _passwordService);
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Parola pentru contul cu email-ul {Email} a fost resetata", request.Email);
-
     }
 }

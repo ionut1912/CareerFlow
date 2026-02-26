@@ -1,3 +1,5 @@
+using System.Text;
+
 namespace CareerFlow.Core.Api.Endpoints;
 
 public static class ClientEndpoints
@@ -47,7 +49,7 @@ public static class ClientEndpoints
                   </body>
                 </html>";
 
-            return Results.Content(html, "text/html", System.Text.Encoding.UTF8);
+            return Results.Content(html, "text/html", Encoding.UTF8);
         });
 
         return endpoints;

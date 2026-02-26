@@ -127,4 +127,26 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         //Assert
         _loggerMock.VerifyLogError(storedToken.UserId.ToString(), Times.Once());
     }
+
+    [Theory]
+    [InlineData(true, false, false, false, false)]
+    [InlineData(false, true, false, false, false)]
+    [InlineData(false, false, true, false, false)]
+    [InlineData(false, false, false, true, false)]
+    [InlineData(false, false, false, false, true)]
+    [InlineData(true, true, true, true, true)]
+    public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
+        bool isLoggerNull, bool isAccountRepoNull, bool isTokenServiceNull, bool isRefreshRepoNull, bool isUowNull)
+    {
+        //Arrange
+        var command = new CreateRefreshTokenCommand("token", "refresh");
+
+        //Act&Assert
+        await Should.ThrowAsync<ArgumentNullException>(() => new CreateRefreshTokenCommandHandler(
+            isLoggerNull ? null : _loggerMock.Object,
+            isAccountRepoNull ? null : _accountRepositoryMock.Object,
+            isTokenServiceNull ? null : _tokenServiceMock.Object,
+            isRefreshRepoNull ? null : _refreshTokenRepositoryMock.Object,
+            isUowNull ? null : _unitOfWorkMock.Object).Handle(command, Ct));
+    }
 }

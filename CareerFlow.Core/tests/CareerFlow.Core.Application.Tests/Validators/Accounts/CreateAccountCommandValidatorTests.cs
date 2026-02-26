@@ -17,7 +17,8 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WhenCommandIsValid_ShouldNotHaveErrors()
     {
         // Arrange
-        var command = new CreateAccountCommand("test@email.com", "Password123!", "Password123!","username", "Test Name");
+        var command =
+            new CreateAccountCommand("test@email.com", "Password123!", "Password123!", "username", "Test Name");
 
         // Act
         var result = _validator.TestValidate(command);
@@ -33,7 +34,7 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WhenEmailIsEmpty_ShouldHaveError(string email)
     {
         // Arrange: Create command with the invalid email and dummy data for others
-        var command = new CreateAccountCommand(email, "pass", "pass","user", "name");
+        var command = new CreateAccountCommand(email, "pass", "pass", "user", "name");
 
         // Act
         var result = _validator.TestValidate(command);
@@ -50,7 +51,7 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WhenEmailIsInvalidFormat_ShouldHaveError(string email)
     {
         // Arrange
-        var command = new CreateAccountCommand(email, "pass", "pass","user", "name");
+        var command = new CreateAccountCommand(email, "pass", "pass", "user", "name");
 
         // Act
         var result = _validator.TestValidate(command);
@@ -66,7 +67,7 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WhenPasswordIsEmpty_ShouldHaveError(string password)
     {
         // Arrange
-        var command = new CreateAccountCommand("test@test.com", password, password,"user", "name");
+        var command = new CreateAccountCommand("test@test.com", password, password, "user", "name");
 
         // Act
         var result = _validator.TestValidate(command);
@@ -82,7 +83,7 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WhenUsernameIsEmpty_ShouldHaveError(string username)
     {
         // Arrange
-        var command = new CreateAccountCommand("test@test.com", "testPassword", "testPassword",username, "name");
+        var command = new CreateAccountCommand("test@test.com", "testPassword", "testPassword", username, "name");
 
         // Act
         var result = _validator.TestValidate(command);
@@ -98,7 +99,7 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WheNameIsEmpty_ShouldHaveError(string name)
     {
         // Arrange
-        var command = new CreateAccountCommand("test@test.com", "testPassword","testPassword", "test", name);
+        var command = new CreateAccountCommand("test@test.com", "testPassword", "testPassword", "test", name);
 
         // Act
         var result = _validator.TestValidate(command);
@@ -114,11 +115,11 @@ public class CreateAccountCommandValidatorTests
     public void Validate_WheConfirmPasswordIsEmpty_ShouldHaveError(string confirmPassword)
     {
         //Arrange
-        var command = new CreateAccountCommand("test@test.com", "testPassword",confirmPassword, "test", "name");
-        
+        var command = new CreateAccountCommand("test@test.com", "testPassword", confirmPassword, "test", "name");
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.ConfirmPassword)
             .WithErrorMessage("Parola de confirmare este necesara");
