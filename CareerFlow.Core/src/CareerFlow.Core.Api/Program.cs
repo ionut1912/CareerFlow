@@ -77,6 +77,14 @@ builder.Services
     .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("HangfirePolicy", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+    });
+});
+
 builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
@@ -105,9 +113,11 @@ app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
 app.MapClientEndpoints();
 
 app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
+
 app.MapHangfireDashboard("/hangfire", new DashboardOptions
         { Authorization = new List<IDashboardAuthorizationFilter>() })
     .RequireAuthorization("HangfirePolicy");
+
 RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
     "check-terms-update",
     job => job.CheckForUpdatesAsync("Terms", CancellationToken.None),
