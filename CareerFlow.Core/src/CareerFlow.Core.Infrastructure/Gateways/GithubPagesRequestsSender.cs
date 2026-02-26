@@ -4,8 +4,9 @@ using Microsoft.Extensions.Options;
 
 namespace CareerFlow.Core.Infrastructure.Gateways;
 
-public class GithubPagesRequestsSender:IGithubPagesRequestsSender
-{    private readonly HttpClient _httpClient;
+public class GithubPagesRequestsSender : IGithubPagesRequestsSender
+{
+    private readonly HttpClient _httpClient;
     private readonly LegalDocSettings _legalDocSettings;
 
     public GithubPagesRequestsSender(HttpClient httpClient, IOptions<LegalDocSettings> legalDocOptions)

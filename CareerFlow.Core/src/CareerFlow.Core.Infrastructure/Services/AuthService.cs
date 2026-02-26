@@ -77,7 +77,7 @@ public class AuthService : IAuthService
 
         return account;
     }
-    
+
     public async Task<string> ExchangeGoogleCodeAsync(string code, CancellationToken cancellationToken = default)
     {
         var tokenReq = new FormUrlEncodedContent(new Dictionary<string, string>

@@ -89,4 +89,24 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         // Assert
         _loggerMock.VerifyLogError("parola", Times.Once());
     }
+
+    [Theory]
+    [InlineData(true, false, false, false, false, false)]
+    [InlineData(false, true, false, false, false, false)]
+    [InlineData(false, false, true, false, false, false)]
+    [InlineData(false, false, false, true, false, false)]
+    [InlineData(false, false, false, false, true, false)]
+    [InlineData(false, false, false, false, false, true)]
+    public void Constructor_WhenDependenciesAreNull_ThrowsArgumentNullException(
+        bool isRepoNull, bool isPasswordServiceNull, bool isTokenServiceNull,
+        bool isRefreshTokenServiceNull, bool isUnitOfWorkNull, bool isLoggerNull)
+    {
+        Should.Throw<ArgumentNullException>(() => new LoginQueryHandler(
+            isRepoNull ? null : _accountRepositoryMock.Object,
+            isPasswordServiceNull ? null : _passwordServiceMock.Object,
+            isTokenServiceNull ? null : _tokenServiceMock.Object,
+            isRefreshTokenServiceNull ? null : _refreshTokenRepositoryMock.Object,
+            isUnitOfWorkNull ? null : _unitOfWorkMock.Object,
+            isLoggerNull ? null : _loggerMock.Object));
+    }
 }

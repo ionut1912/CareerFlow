@@ -1,5 +1,4 @@
-﻿using System.Reflection.Emit;
-using CareerFlow.Core.Application.CQRS.Accounts.Command;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Command;
 using CareerFlow.Core.Application.CQRS.Accounts.Handler;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -34,9 +33,9 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         // Arrange
         var account = TestDataFactory.CreateAccount();
         account.SetResetPasswordExipiresAt(DateTime.UtcNow.AddHours(1));
-        var command = new ResetPasswordCommand(account.Email, "newPassword","token");
+        var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
-        _passwordServiceMock.Setup(x=>x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+        _passwordServiceMock.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(true);
         // Act
         await _handler.Handle(command, Ct);
@@ -52,7 +51,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     public async Task Handle_WhenAccountDoesNotExist_ThrowsAccountNotFoundException()
     {
         // Arrange
-        var command = new ResetPasswordCommand("testmail", "newPassword","token");
+        var command = new ResetPasswordCommand("testmail", "newPassword", "token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct)).ReturnsAsync((Account?)null);
 
         // Act
@@ -62,20 +61,20 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         _loggerMock.VerifyLogError(command.Email, Times.Once());
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
     }
-    
+
     [Fact]
     public async Task Handle_WhenTokenNoMatch_ThrowsPasswordMismatchException()
     {
         //Arrange
         var account = TestDataFactory.CreateAccount();
-        var command = new ResetPasswordCommand(account.Email, "newPassword","token");
+        var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
-        _passwordServiceMock.Setup(x=>x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+        _passwordServiceMock.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(false);
-        
+
         //Act
         var exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
-        
+
         //Assert
         exception.Message.ShouldBe("Tokenurile nu sunt la fel");
         _loggerMock.VerifyLogError("Tokenurile nu sunt la fel", Times.Once());
@@ -88,17 +87,38 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         //Arrange
         var account = TestDataFactory.CreateAccount();
         account.SetResetPasswordExipiresAt(DateTime.Now.AddDays(-1));
-        var command = new ResetPasswordCommand(account.Email, "newPassword","token");
+        var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
-        _passwordServiceMock.Setup(x=>x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
+        _passwordServiceMock.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
             .Returns(true);
-        
+
         //Act
-        var exception=await Should.ThrowAsync<InvalidFieldException>(() => _handler.Handle(command, Ct));
-        
+        var exception = await Should.ThrowAsync<InvalidFieldException>(() => _handler.Handle(command, Ct));
+
         //Assert
         exception.Message.ShouldBe("Tokenul e expirat");
         _loggerMock.VerifyLogError("Tokenul e expirat", Times.Once());
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
+    }
+
+    [Theory]
+    [InlineData(true, false, false, false)]
+    [InlineData(false, true, false, false)]
+    [InlineData(false, false, true, false)]
+    [InlineData(false, false, false, true)]
+    [InlineData(true, true, true, true)]
+    public async Task Constructor_WhenDependenciesAreNull_ThrowsArgumentNullException(bool isLoggerNull,
+        bool isAccountRepoNull, bool isPasswordServiceNull, bool isUnitOfWorkNull)
+    {
+        //Arrange
+        var account = TestDataFactory.CreateAccount();
+        var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
+
+        //Act&Assert
+        var exception = await Should.ThrowAsync<ArgumentNullException>(() => new ResetPasswordCommandHandler(
+            isLoggerNull ? null : _loggerMock.Object,
+            isAccountRepoNull ? null : _accountRepositoryMock.Object,
+            isPasswordServiceNull ? null : _passwordServiceMock.Object,
+            isUnitOfWorkNull ? null : _unitOfWorkMock.Object).Handle(command, Ct));
     }
 }

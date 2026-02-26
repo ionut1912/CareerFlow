@@ -33,7 +33,6 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
 
     protected HttpClient CreateClientForNonExistentUser(Account account)
     {
-
         return Factory.CreateAuthenticatedClient(account);
     }
 

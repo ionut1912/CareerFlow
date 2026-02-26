@@ -6,7 +6,7 @@ using Xunit;
 namespace CareerFlow.Core.Api.IntegrationTests;
 
 [Trait("Category", "Integration")]
-public class LegalEndpointsTests:IntegrationTestBase
+public class LegalEndpointsTests : IntegrationTestBase
 {
     public LegalEndpointsTests(TestWebApplicationFactory factory) : base(factory)
     {
@@ -17,15 +17,15 @@ public class LegalEndpointsTests:IntegrationTestBase
     {
         //Arrange
         var type = "privacy";
-        
+
         //Act
-        var response=await AnonymousClient.GetAsync($"/legal?type={type}");
-        
+        var response = await AnonymousClient.GetAsync($"/legal?type={type}");
+
         //Assert
         response.EnsureSuccessStatusCode();
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
     }
-    
+
     [Fact]
     public async Task GetLegalDoc_ShouldReturnBadRequest_WhenInvalidType()
     {
@@ -34,10 +34,8 @@ public class LegalEndpointsTests:IntegrationTestBase
 
         //Act
         var response = await AnonymousClient.GetAsync($"/legal?type={type}");
-        
+
         //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
-    
-    
 }

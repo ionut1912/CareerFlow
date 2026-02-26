@@ -20,7 +20,7 @@ public class AccountEndpointGroup : EndpointGroup
         group.MapPost(Login, "/login");
         group.MapPost(RefreshToken, "/refresh-token");
         group.MapPost(ForgotPassword, "/forgot-password");
-        group.MapPost(AcceptLegal,"/accept-legaldoc");
+        group.MapPost(AcceptLegal, "/accept-legaldoc");
         group.MapPut(ResetPassword, "/reset-password");
         group.MapGet(GetCurrentAccount, "/current");
         group.MapDelete(DeleteUserAccount);
@@ -48,11 +48,11 @@ public class AccountEndpointGroup : EndpointGroup
         var resetToken = Guid.NewGuid().ToString();
         var resetPasswordLink = "https://carerflow-api.ro/reset-password";
         var finalLink = $"{resetPasswordLink}?token={resetToken}";
-        var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink,resetToken);
+        var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink, resetToken);
         await bus.InvokeAsync(command, cancellationToken);
         return Results.NoContent();
     }
-    
+
     private static async Task<IResult> ResetPassword(IMessageBus bus, HttpContext httpContext,
         ResetPasswordRequest resetPasswordRequest, CancellationToken cancellationToken)
     {
@@ -62,7 +62,8 @@ public class AccountEndpointGroup : EndpointGroup
     }
 
     [Authorize]
-    private static async Task<IResult> AcceptLegal(IMessageBus bus, AcceptLegalDocRequest acceptLegalDocRequest,HttpContext httpContext,
+    private static async Task<IResult> AcceptLegal(IMessageBus bus, AcceptLegalDocRequest acceptLegalDocRequest,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
@@ -71,7 +72,7 @@ public class AccountEndpointGroup : EndpointGroup
         await bus.InvokeAsync(acceptLegalDocCommand, cancellationToken);
         return Results.NoContent();
     }
-    
+
     [Authorize]
     private static async Task<IResult> RefreshToken(IMessageBus bus, RefreshTokenRequest refreshTokenRequest,
         CancellationToken cancellationToken)
@@ -92,7 +93,6 @@ public class AccountEndpointGroup : EndpointGroup
         var result = await bus.InvokeAsync<AccountDto>(currentUserQuery, cancellationToken);
         return Results.Ok(result);
     }
-    
 
 
     [Authorize]

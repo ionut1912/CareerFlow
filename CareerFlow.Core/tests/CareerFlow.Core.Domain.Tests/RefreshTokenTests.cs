@@ -2,7 +2,7 @@
 using CareerFlow.Core.Domain.Exceptions;
 using Shouldly;
 
-namespace CareerFlow.Core.Domain.Tests.Helpers;
+namespace CareerFlow.Core.Domain.Tests;
 
 public class RefreshTokenTests
 {

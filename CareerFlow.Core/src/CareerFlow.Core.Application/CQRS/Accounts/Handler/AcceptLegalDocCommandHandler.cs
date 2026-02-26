@@ -9,16 +9,17 @@ namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 public class AcceptLegalDocCommandHandler
 {
     private readonly IAccountRepository _accountRepository;
-    private readonly IUnitOfWork _unitOfWork;
     private readonly ILogger<AcceptLegalDocCommandHandler> _logger;
+    private readonly IUnitOfWork _unitOfWork;
 
 
-    public AcceptLegalDocCommandHandler(IAccountRepository accountRepository, IUnitOfWork unitOfWork, ILogger<AcceptLegalDocCommandHandler> logger)
+    public AcceptLegalDocCommandHandler(IAccountRepository accountRepository, IUnitOfWork unitOfWork,
+        ILogger<AcceptLegalDocCommandHandler> logger)
     {
         ArgumentNullException.ThrowIfNull(accountRepository);
         ArgumentNullException.ThrowIfNull(unitOfWork);
         ArgumentNullException.ThrowIfNull(logger);
-        
+
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
         _logger = logger;
@@ -26,26 +27,26 @@ public class AcceptLegalDocCommandHandler
 
     public async Task Handle(AcceptLegalDocCommand request, CancellationToken cancellationToken)
     {
-        var account=await _accountRepository.GetByIdAsync(request.AccountId,cancellationToken);
+        var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account == null)
         {
-            _logger.LogError("Account with Id {Id} does not exist", request.AccountId);
-            throw new AccountNotFoundException($"Countul cu id-ul {request.AccountId} nu a fost gasit");
+            _logger.LogError("Contul cu  {Id} nu exista", request.AccountId);
+            throw new AccountNotFoundException($"Contul cu id-ul {request.AccountId} nu a fost gasit");
         }
 
-        switch (request.Type)
+        var normalizedType = request.Type?.Trim();
+        switch (normalizedType)
         {
-            case "Terms":
+            case var t when string.Equals(t, "Terms", StringComparison.OrdinalIgnoreCase):
                 account.AcceptTerms();
                 break;
-            case "Privacy":
+            case var t when string.Equals(t, "Privacy", StringComparison.OrdinalIgnoreCase):
                 account.AcceptPrivacyPolicy();
                 break;
             default:
                 throw new LegalDocInvalidTypeException("Invalid legal document type");
-            
         }
-        
+
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }

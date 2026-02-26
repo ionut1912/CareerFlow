@@ -14,6 +14,7 @@ using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Core.Rabbit.Events.Events;
 using Hangfire;
+using Hangfire.Dashboard;
 using Hangfire.PostgreSql;
 using InfisicalConfiguration;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -72,7 +73,7 @@ builder.Services
     .AddRepositoriesConfig<IGoogleTokenValidator, GoogleTokenValidator>()
     .AddRepositoriesConfig<IMailClient, PostmarkMailClient>()
     .AddRepositoriesConfig<ISocialService, SocialService>()
-    .AddRepositoriesConfig<ILegalService,LegalService>()
+    .AddRepositoriesConfig<ILegalService, LegalService>()
     .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 
@@ -80,15 +81,17 @@ builder.Services.AddHangfire(configuration => configuration
     .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
     .UseSimpleAssemblyNameTypeSerializer()
     .UseRecommendedSerializerSettings()
-    .UsePostgreSqlStorage(options => 
+    .UsePostgreSqlStorage(options =>
         options.UseNpgsqlConnection(builder.Configuration.GetConnectionString("DefaultConnection"))));
+
+builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
 app.MigrateDatabaseConfig<ApplicationDbContext>();
 
-app.UseGlobalExceptionHandler<Program>()
-    .UseRequestDurationLogging<Program>()
+app.UseGlobalExceptionHandler<CareerFlow.Core.Api.Program>()
+    .UseRequestDurationLogging<CareerFlow.Core.Api.Program>()
     .UseStandardMiddleware()
     .MapStandardEndpoints();
 
@@ -102,7 +105,9 @@ app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
 app.MapClientEndpoints();
 
 app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
-app.UseHangfireDashboard();
+app.MapHangfireDashboard("/hangfire", new DashboardOptions
+        { Authorization = new List<IDashboardAuthorizationFilter>() })
+    .RequireAuthorization("HangfirePolicy");
 RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
     "check-terms-update",
     job => job.CheckForUpdatesAsync("Terms", CancellationToken.None),
@@ -114,6 +119,9 @@ RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
     Cron.Hourly);
 app.Run();
 
-public partial class Program
+namespace CareerFlow.Core.Api
 {
+    public class Program
+    {
+    }
 }

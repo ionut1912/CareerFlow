@@ -21,7 +21,7 @@ public class GetLegalDocQueryHandler
 
     public async Task<LegalDocumentResponse> Handle(GetLegalDocQuery request, CancellationToken cancellationToken)
     {
-        if (!request.Type.Equals("privacy", StringComparison.OrdinalIgnoreCase) && 
+        if (!request.Type.Equals("privacy", StringComparison.OrdinalIgnoreCase) &&
             !request.Type.Equals("terms", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogError("Tipul precizat nu exista {type}", request.Type.ToLower());

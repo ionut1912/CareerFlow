@@ -24,7 +24,8 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task Register_ShouldReturnSuccess_WhenDataIsValid()
     {
         // Arrange
-        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "testPassword", "newUsername", "testName");
+        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "testPassword", "newUsername",
+            "testName");
 
         // Act
         var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
@@ -40,7 +41,8 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task Register_ShouldReturnBadRequest_WhenPasswordsMisMATCH()
     {
         // Arrange
-        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "testPassword2", "newUsername", "testName");
+        var request = new CreateAccountRequest("newEmail@email.com", "testPassword", "testPassword2", "newUsername",
+            "testName");
 
         // Act
         var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
@@ -79,7 +81,8 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task Register_ShouldReturnBadRequest_WhenAccountExists()
     {
         // Arrange
-        var request = new CreateAccountRequest("testEmail@email.com", "testPassword", "testPassword", "testUsername", "testName");
+        var request = new CreateAccountRequest("testEmail@email.com", "testPassword", "testPassword", "testUsername",
+            "testName");
         await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         // Act
@@ -416,7 +419,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task AcceptLegal_ShouldReturnNotFound_WhenAccountDoesNotExistInDatabase()
     {
         // Arrange
-        var account=Account.Create("testEmail@email.com","testPassword","testUsername","testName");
+        var account = Account.Create("testEmail@email.com", "testPassword", "testUsername", "testName");
         var orphanedClient = CreateClientForNonExistentUser(account);
         var request = new AcceptLegalDocRequest("Terms");
 

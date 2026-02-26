@@ -1,14 +1,13 @@
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models;
-using CareerFlow.Core.Infrastructure.Configurations;
-using Microsoft.Extensions.Options;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
 public class LegalService : ILegalService
 {
     private readonly IGithubPagesRequestsSender _requestsSender;
+
     public LegalService(IGithubPagesRequestsSender requestsSender)
     {
         ArgumentNullException.ThrowIfNull(requestsSender);

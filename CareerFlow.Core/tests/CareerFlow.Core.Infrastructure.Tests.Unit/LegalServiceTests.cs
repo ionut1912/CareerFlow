@@ -1,8 +1,8 @@
+using System.Net;
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Infrastructure.Services;
 using Moq;
 using Shouldly;
-using System.Net;
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit;
@@ -24,9 +24,9 @@ public class LegalServiceTests
         // Arrange
         var docType = "terms-of-service";
         var content = "Standard Legal Text";
-        var response = new HttpResponseMessage(HttpStatusCode.OK) 
-        { 
-            Content = new StringContent(content) 
+        var response = new HttpResponseMessage(HttpStatusCode.OK)
+        {
+            Content = new StringContent(content)
         };
 
         _requestsSenderMock
@@ -47,7 +47,7 @@ public class LegalServiceTests
     {
         // Arrange
         var response = new HttpResponseMessage(HttpStatusCode.InternalServerError);
-        
+
         _requestsSenderMock
             .Setup(x => x.GetContentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(response);
