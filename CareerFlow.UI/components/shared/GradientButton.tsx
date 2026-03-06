@@ -18,7 +18,7 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
   disabled,
 }) => (
   <TouchableOpacity
-    style={[styles.container, disabled && {opacity: 0.5}]}
+    style={[styles.container, disabled && styles.disabled]}
     activeOpacity={0.8}
     disabled={disabled}
     onPress={onPress}
@@ -32,8 +32,8 @@ export const GradientButton: React.FC<GradientButtonProps> = ({
         <MaterialIcons
           name={icon}
           size={20}
-          color="white"
-          style={{marginRight: 8}}
+          color={COLORS.white}
+          style={styles.icon}
         />
       )}
       <Text style={styles.text}>{text}</Text>
@@ -51,11 +51,21 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  disabled: {
+    opacity: 0.5,
+  },
   gradient: {
     flexDirection: 'row',
     height: 52,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  text: {color: 'white', fontSize: 16, fontWeight: '700'},
+  icon: {
+    marginRight: 8,
+  },
+  text: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: '700',
+  },
 });

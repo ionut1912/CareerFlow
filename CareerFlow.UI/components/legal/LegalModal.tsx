@@ -1,17 +1,18 @@
-import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  ScrollView,
-  ActivityIndicator,
-  StyleSheet,
-} from 'react-native';
-import {MaterialIcons} from '@expo/vector-icons';
-import Markdown from 'react-native-markdown-display';
 import {COLORS} from '@/constants/theme';
 import {markdownStyles} from '@/constants/markdownStyles';
+import {MaterialIcons} from '@expo/vector-icons';
+import React from 'react';
+import {
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import Markdown from 'react-native-markdown-display';
+import {ModalActionButton} from './ModalActionButton';
 
 interface LegalModalProps {
   visible: boolean;
@@ -27,8 +28,6 @@ const MODAL_COLORS = {
   overlay: 'rgba(0,0,0,0.85)',
   background: '#121212',
   divider: 'rgba(255,255,255,0.1)',
-  rejectBg: 'rgba(255,255,255,0.05)',
-  white: '#fff',
 };
 
 export const LegalModal: React.FC<LegalModalProps> = ({
@@ -49,7 +48,11 @@ export const LegalModal: React.FC<LegalModalProps> = ({
       <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
-          <TouchableOpacity onPress={onClose} style={styles.closeIcon}>
+          <TouchableOpacity
+            onPress={onClose}
+            style={styles.closeIcon}
+            accessibilityRole="button"
+            accessibilityLabel="Închide">
             <MaterialIcons name="close" size={24} color={COLORS.text} />
           </TouchableOpacity>
         </View>
@@ -67,17 +70,16 @@ export const LegalModal: React.FC<LegalModalProps> = ({
             </ScrollView>
 
             <View style={styles.actionRow}>
-              <TouchableOpacity
-                style={[styles.btn, styles.btnReject]}
-                onPress={onReject}>
-                <Text style={styles.btnTextReject}>Refuză</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.btn, styles.btnAccept]}
-                onPress={onAccept}>
-                <Text style={styles.btnTextAccept}>Acceptă</Text>
-              </TouchableOpacity>
+              <ModalActionButton
+                label="Refuză"
+                variant="reject"
+                onPress={onReject}
+              />
+              <ModalActionButton
+                label="Acceptă"
+                variant="accept"
+                onPress={onAccept}
+              />
             </View>
           </>
         )}
@@ -120,30 +122,5 @@ const styles = StyleSheet.create({
     paddingTop: 20,
     borderTopWidth: 1,
     borderTopColor: MODAL_COLORS.divider,
-  },
-  btn: {
-    flex: 1,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  btnReject: {
-    backgroundColor: MODAL_COLORS.rejectBg,
-    borderWidth: 1,
-    borderColor: COLORS.border,
-  },
-  btnAccept: {
-    backgroundColor: COLORS.primary,
-  },
-  btnTextReject: {
-    color: COLORS.textSecondary,
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  btnTextAccept: {
-    color: MODAL_COLORS.white,
-    fontWeight: '700',
-    fontSize: 14,
   },
 });

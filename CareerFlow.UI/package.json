@@ -9,12 +9,22 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "prepare": "husky"
+    "prepare": "husky",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:unit": "jest tests/unit",
+    "test:integration": "jest tests/integration",
+    "test:coverage": "jest --coverage"
   },
-  "lint-staged": {
+  "overrides": {
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-test-renderer": "19.1.0"
+  },
+"lint-staged": {
     "*.{js,jsx,ts,tsx}": [
-      "npx prettier --write",
-      "./node_modules/.bin/eslint"
+      "prettier --write",
+      "eslint --fix"
     ]
   },
   "dependencies": {
@@ -41,6 +51,8 @@
     "expo-symbols": "~1.0.8",
     "expo-system-ui": "~6.0.9",
     "expo-web-browser": "~15.0.10",
+    "jest": "~29.7.0",
+    "jest-expo": "~54.0.17",
     "lucide-react-native": "^0.563.0",
     "nativewind": "^4.2.1",
     "react": "19.1.0",
@@ -60,7 +72,11 @@
     "tailwindcss": "3.3.2"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
+    "@types/react-test-renderer": "^19.1.0",
     "@typescript-eslint/eslint-plugin": "^8.56.0",
     "eslint": "^9.39.2",
     "eslint-config-expo": "~10.0.0",
@@ -70,6 +86,7 @@
     "husky": "^9.1.7",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
+    "react-test-renderer": "19.1.0",
     "tailwindcss": "^3.3.2",
     "typescript": "~5.9.2"
   },

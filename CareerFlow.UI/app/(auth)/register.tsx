@@ -1,88 +1,65 @@
 import {AppInput} from '@/components/auth/AppInput';
 import {AuthLayout} from '@/components/auth/AuthLayout';
-import {GradientButton} from '@/components/auth/GradientButton';
-import {useRouter} from 'expo-router';
-import React, {useState} from 'react';
-import Toast from 'react-native-toast-message';
-import {handleAcceptLegal, handleRejectLegal} from './utils';
-import {ErrorFields, RegisterForm, TouchedFields} from '@/models/ui.models';
+import {GradientButton} from '@/components/shared/GradientButton';
+import {RegisterForm, ErrorFields} from '@/models/ui.models';
 import {registerThunk} from '@/store/auth/thunks';
 import {useAppDispatch, useAppSelector} from '@/store/hook';
+import {useRouter} from 'expo-router';
+import React from 'react';
+import {useFormState} from '@/hooks/useFormState';
+import {useLegalAcceptance} from '@/hooks/useLegalAcceptance';
+import {showErrorToast, showSuccessToast} from '@/utils/toast';
+import {
+  validateName,
+  validateEmail,
+  validatePassword,
+  validateRequired,
+  validateConfirmPassword,
+} from '@/utils/validators';
+
+const INITIAL_FORM: RegisterForm = {
+  name: '',
+  email: '',
+  username: '',
+  password: '',
+  confirmPassword: '',
+};
 
 const RegisterScreen = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const {loading: isLoading} = useAppSelector(state => state.auth);
-  const [legalAccepted, setLegalAccepted] = useState({
-    terms: false,
-    privacy: false,
-  });
-  const [form, setForm] = useState<RegisterForm>({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-    confirmPassword: '',
-  });
-  const [touched, setTouched] = useState<TouchedFields>({
-    name: false,
-    email: false,
-    password: false,
-    username: false,
-    confirmPassword: false,
-  });
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const {form, touched, handleChange, handleBlur} =
+    useFormState<RegisterForm>(INITIAL_FORM);
+
+  const {legalAccepted, onAccept, onReject, isLegalComplete} =
+    useLegalAcceptance();
+
   const errors: ErrorFields = {
-    name: !form.name
-      ? 'Numele este necesar'
-      : form.name.trim().length < 2
-        ? 'Numele trebuie sa aiba minim 2 caractere'
-        : null,
-    email: !form.email
-      ? 'Email-ul este necesar'
-      : !emailRegex.test(form.email)
-        ? 'Format invalid'
-        : null,
-    password: !form.password
-      ? 'Parola este necesara'
-      : form.password.length < 6
-        ? 'Parola trebuie sa aiba minim 6 caractere'
-        : null,
-    username: !form.username ? 'Numele de utilizator este necesar' : null,
-    confirmPassword: !form.confirmPassword
-      ? 'Confirmarea parolei este necesara'
-      : form.confirmPassword !== form.password
-        ? 'Parolele nu se potrivesc'
-        : null,
+    name: validateName(form.name),
+    email: validateEmail(form.email),
+    password: validatePassword(form.password),
+    username: validateRequired(
+      form.username,
+      'Numele de utilizator este necesar',
+    ),
+    confirmPassword: validateConfirmPassword(
+      form.password,
+      form.confirmPassword,
+    ),
   };
 
-  const hasFieldErrors =
-    !!errors.name ||
-    !!errors.email ||
-    !!errors.password ||
-    !!errors.username ||
-    !!errors.confirmPassword;
-  const legalComplete = legalAccepted.terms && legalAccepted.privacy;
-  const isFormValid = !hasFieldErrors && legalComplete;
+  const isFormValid = !Object.values(errors).some(Boolean) && isLegalComplete;
 
   const handleRegister = async () => {
     if (!isFormValid || isLoading) return;
     try {
       await dispatch(registerThunk(form)).unwrap();
-      Toast.show({
-        type: 'success',
-        text1: 'Cont creat cu succes!',
-        text2: 'Te rugam sa te autentifici.',
-      });
+      showSuccessToast('Cont creat cu succes!', 'Te rugam sa te autentifici.');
       setTimeout(() => router.replace('/(auth)/login'), 1500);
-    } catch (error: unknown) {
-      Toast.show({
-        type: 'error',
-        text1: 'Eroare la inregistrare',
-        text2:
-          typeof error === 'string' ? error : 'Ceva nu a functionat corect.',
-      });
+    } catch (error) {
+      showErrorToast('Eroare la inregistrare', error);
     }
   };
 
@@ -94,21 +71,15 @@ const RegisterScreen = () => {
       footerActionText="Autentificare"
       onFooterAction={() => router.replace('/(auth)/login')}
       legalAccepted={legalAccepted}
-      onAccept={(type: string) => {
-        handleAcceptLegal(type);
-        setLegalAccepted(prev => ({...prev, [type]: true}));
-      }}
-      onReject={(type: string) => {
-        handleRejectLegal(type);
-        setLegalAccepted(prev => ({...prev, [type]: false}));
-      }}>
+      onAccept={onAccept}
+      onReject={onReject}>
       <AppInput
         label="Nume"
         icon="person-outline"
         placeholder="John Doe"
         value={form.name}
-        onChangeText={text => setForm({...form, name: text})}
-        onBlur={() => setTouched({...touched, name: true})}
+        onChangeText={handleChange('name')}
+        onBlur={handleBlur('name')}
         error={errors.name}
         touched={touched.name}
       />
@@ -117,8 +88,8 @@ const RegisterScreen = () => {
         icon="person-outline"
         placeholder="jdoe"
         value={form.username}
-        onChangeText={text => setForm({...form, username: text})}
-        onBlur={() => setTouched({...touched, username: true})}
+        onChangeText={handleChange('username')}
+        onBlur={handleBlur('username')}
         error={errors.username}
         touched={touched.username}
       />
@@ -128,8 +99,8 @@ const RegisterScreen = () => {
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={text => setForm({...form, email: text})}
-        onBlur={() => setTouched({...touched, email: true})}
+        onChangeText={handleChange('email')}
+        onBlur={handleBlur('email')}
         error={errors.email}
         touched={touched.email}
       />
@@ -139,8 +110,8 @@ const RegisterScreen = () => {
         placeholder="Parola"
         isPassword
         value={form.password}
-        onChangeText={text => setForm({...form, password: text})}
-        onBlur={() => setTouched({...touched, password: true})}
+        onChangeText={handleChange('password')}
+        onBlur={handleBlur('password')}
         error={errors.password}
         touched={touched.password}
       />
@@ -150,8 +121,8 @@ const RegisterScreen = () => {
         placeholder="Confirma parola"
         isPassword
         value={form.confirmPassword}
-        onChangeText={text => setForm({...form, confirmPassword: text})}
-        onBlur={() => setTouched({...touched, confirmPassword: true})}
+        onChangeText={handleChange('confirmPassword')}
+        onBlur={handleBlur('confirmPassword')}
         error={errors.confirmPassword}
         touched={touched.confirmPassword}
       />
