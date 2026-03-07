@@ -86,7 +86,10 @@ export default function SocialLoginButtons({
   return (
     <View style={styles.container}>
       {tooltipVisible && !legalComplete && (
-        <Animated.View style={[styles.tooltip, {opacity: tooltipOpacity}]}>
+        <Animated.View
+          style={[styles.tooltip, {opacity: tooltipOpacity}]}
+          accessibilityLiveRegion="assertive"
+          accessibilityRole="alert">
           <FontAwesome
             name="exclamation-circle"
             size={13}

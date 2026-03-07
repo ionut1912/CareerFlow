@@ -1,24 +1,24 @@
 import React from 'react';
 import {render, screen, fireEvent} from '@testing-library/react-native';
-import {Text, TouchableOpacity, View} from 'react-native';
+import {Text, View, TouchableOpacity} from 'react-native';
 import {useRouter, usePathname} from 'expo-router';
 import {useLegalModal} from '@/hooks/useLegalModal';
 import {AuthLayout} from '@/components/auth/AuthLayout';
+
+const MockText = Text;
+const MockView = View;
+const MockTouchableOpacity = TouchableOpacity;
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
   usePathname: jest.fn(),
 }));
 
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-}));
-
 jest.mock('@/components/auth/SocialLoginButtons', () => {
   return {
     __esModule: true,
     default: function MockSocialButtons() {
-      return <Text>MockedSocialButtons</Text>;
+      return <MockText>MockedSocialButtons</MockText>;
     },
   };
 });
@@ -26,7 +26,7 @@ jest.mock('@/components/auth/SocialLoginButtons', () => {
 jest.mock('@/components/legal/LegalModal', () => {
   return {
     LegalModal: function MockLegalModal() {
-      return <View testID="mock-legal-modal" />;
+      return <MockView testID="mock-legal-modal" />;
     },
   };
 });
@@ -41,9 +41,9 @@ jest.mock('@/components/shared/TabButton', () => {
       onPress: () => void;
     }) {
       return (
-        <TouchableOpacity onPress={onPress}>
-          <Text>{title}</Text>
-        </TouchableOpacity>
+        <MockTouchableOpacity onPress={onPress}>
+          <MockText>{title}</MockText>
+        </MockTouchableOpacity>
       );
     },
   };
@@ -74,7 +74,7 @@ describe('AuthLayout Unit Tests', () => {
   it('renders children and basic text props correctly', () => {
     render(
       <AuthLayout title="Test Title" subtitle="Test Subtitle">
-        <Text>Child Component</Text>
+        <MockText>Child Component</MockText>
       </AuthLayout>,
     );
 
@@ -91,7 +91,7 @@ describe('AuthLayout Unit Tests', () => {
         showTabs={false}
         showSocialAuth={false}
         showLegalLinks={false}>
-        <Text>Child</Text>
+        <MockText>Child</MockText>
       </AuthLayout>,
     );
 
@@ -104,7 +104,7 @@ describe('AuthLayout Unit Tests', () => {
   it('handles routing when tab buttons are pressed', () => {
     render(
       <AuthLayout title="Title" subtitle="Subtitle">
-        <Text>Child</Text>
+        <MockText>Child</MockText>
       </AuthLayout>,
     );
 
@@ -124,7 +124,7 @@ describe('AuthLayout Unit Tests', () => {
         footerText="Don't have an account?"
         footerActionText="Sign Up"
         onFooterAction={mockFooterAction}>
-        <Text>Child</Text>
+        <MockText>Child</MockText>
       </AuthLayout>,
     );
 
@@ -138,7 +138,7 @@ describe('AuthLayout Unit Tests', () => {
   it('opens the legal modal when legal links are pressed', () => {
     render(
       <AuthLayout title="Title" subtitle="Subtitle">
-        <Text>Child</Text>
+        <MockText>Child</MockText>
       </AuthLayout>,
     );
 

@@ -1,26 +1,16 @@
 import React from 'react';
-import {View, Text, ViewProps} from 'react-native';
 import {render, screen, fireEvent} from '@testing-library/react-native';
+import {Text} from 'react-native';
 import {GradientButton} from '@/components/shared/GradientButton';
 
-jest.mock('expo-linear-gradient', () => ({
-  LinearGradient: ({
-    children,
-    style,
-  }: {
-    children: React.ReactNode;
-    style?: ViewProps['style'];
-  }) => (
-    <View style={style} testID="mock-linear-gradient">
-      {children}
-    </View>
-  ),
-}));
+type IconProps = {name: string};
+
+const MockIcon = (props: IconProps) => <Text>{props.name}</Text>;
 
 jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: ({name}: {name: string}) => (
-    <Text testID={`icon-${name}`}>{name}</Text>
-  ),
+  MaterialIcons: (props: IconProps) => <MockIcon {...props} />,
+  Ionicons: (props: IconProps) => <MockIcon {...props} />,
+  FontAwesome: (props: IconProps) => <MockIcon {...props} />,
 }));
 
 describe('GradientButton Unit Tests', () => {
@@ -40,7 +30,7 @@ describe('GradientButton Unit Tests', () => {
 
   it('renders an icon when the icon prop is provided', () => {
     render(<GradientButton text="Trimite" onPress={jest.fn()} icon="send" />);
-    expect(screen.getByTestId('icon-send')).toBeTruthy();
+    expect(screen.getByText('send')).toBeTruthy();
   });
 
   it('does not call onPress and sets accessibility state when disabled', () => {

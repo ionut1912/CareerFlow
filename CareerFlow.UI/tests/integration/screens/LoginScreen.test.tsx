@@ -11,17 +11,6 @@ import {loginThunk} from '@/store/auth/thunks';
 import {showErrorToast} from '@/utils/toast';
 import {useRouter} from 'expo-router';
 import LoginScreen from '@/app/(auth)/login';
-import {View} from 'react-native';
-
-jest.mock('@expo/vector-icons', () => {
-  return {
-    MaterialIcons: View,
-    MaterialCommunityIcons: View,
-    Ionicons: View,
-    Feather: View,
-    FontAwesome: View,
-  };
-});
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),

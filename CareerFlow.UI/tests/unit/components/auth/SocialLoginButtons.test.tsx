@@ -1,9 +1,12 @@
 import React from 'react';
-import {Text, TouchableOpacity} from 'react-native';
 import {render, screen, fireEvent, act} from '@testing-library/react-native';
+import {Text, TouchableOpacity} from 'react-native';
 import {useSocialAuth} from '@/hooks/useSocialAuth';
 import {useAppSelector} from '@/store/hook';
 import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
+
+const MockTouchableOpacity = TouchableOpacity;
+const MockText = Text;
 
 jest.mock('@/hooks/useSocialAuth', () => ({
   useSocialAuth: jest.fn(),
@@ -11,12 +14,6 @@ jest.mock('@/hooks/useSocialAuth', () => ({
 
 jest.mock('@/store/hook', () => ({
   useAppSelector: jest.fn(),
-}));
-
-jest.mock('@expo/vector-icons', () => ({
-  FontAwesome: function MockFontAwesome() {
-    return <Text testID="icon-exclamation">Icon</Text>;
-  },
 }));
 
 jest.mock('@/components/auth/SocialButton', () => ({
@@ -32,14 +29,14 @@ jest.mock('@/components/auth/SocialButton', () => ({
     loading?: boolean;
   }) {
     return (
-      <TouchableOpacity
+      <MockTouchableOpacity
         onPress={onPress}
         disabled={disabled}
         testID={`btn-${label}`}>
-        <Text>
+        <MockText>
           {label} {loading ? 'Loading' : ''}
-        </Text>
-      </TouchableOpacity>
+        </MockText>
+      </MockTouchableOpacity>
     );
   },
 }));
@@ -57,7 +54,7 @@ describe('SocialLoginButtons Integration', () => {
       loginWithLinkedin: mockLoginWithLinkedin,
     });
 
-    (useAppSelector as jest.Mock).mockReturnValue({auth: {loading: false}});
+    (useAppSelector as jest.Mock).mockReturnValue(false);
   });
 
   afterEach(() => {

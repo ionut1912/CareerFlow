@@ -1,17 +1,14 @@
 import React from 'react';
-import {Text, TouchableOpacity} from 'react-native';
 import {render, screen, fireEvent} from '@testing-library/react-native';
+import {Text, TouchableOpacity} from 'react-native';
 import {LegalModal} from '@/components/legal/LegalModal';
 
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: function MockMaterialIcons({name}: {name: string}) {
-    return <Text testID={`icon-${name}`}>{name}</Text>;
-  },
-}));
+const MockText = Text;
+const MockTouchableOpacity = TouchableOpacity;
 
 jest.mock('react-native-markdown-display', () => {
   return function MockMarkdownDisplay({children}: {children: React.ReactNode}) {
-    return <Text testID="mock-markdown">{children}</Text>;
+    return <MockText testID="mock-markdown">{children}</MockText>;
   };
 });
 
@@ -24,9 +21,9 @@ jest.mock('@/components/legal/ModalActionButton', () => ({
     onPress: () => void;
   }) {
     return (
-      <TouchableOpacity onPress={onPress} testID={`action-btn-${label}`}>
-        <Text>{label}</Text>
-      </TouchableOpacity>
+      <MockTouchableOpacity onPress={onPress} testID={`action-btn-${label}`}>
+        <MockText>{label}</MockText>
+      </MockTouchableOpacity>
     );
   },
 }));

@@ -1,18 +1,17 @@
 import React from 'react';
 import {render, screen, fireEvent} from '@testing-library/react-native';
-import {AppInput} from '@/components/auth/AppInput';
 import {TouchableOpacity, Text} from 'react-native';
+import {AppInput} from '@/components/auth/AppInput';
 
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-}));
+const MockTouchableOpacity = TouchableOpacity;
+const MockText = Text;
 
 jest.mock('@/components/auth/PasswordVisibilityToggle', () => {
   return {
     PasswordVisibilityToggle: ({onToggle}: {onToggle: () => void}) => (
-      <TouchableOpacity onPress={onToggle} testID="password-toggle">
-        <Text>Toggle</Text>
-      </TouchableOpacity>
+      <MockTouchableOpacity onPress={onToggle} testID="password-toggle">
+        <MockText>Toggle</MockText>
+      </MockTouchableOpacity>
     ),
   };
 });

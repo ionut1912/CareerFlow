@@ -4,7 +4,7 @@ import {GradientButton} from '@/components/shared/GradientButton';
 import {requestPasswordResetThunk} from '@/store/auth/thunks';
 import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {useRouter} from 'expo-router';
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
 import {useFormState} from '@/hooks/useFormState';
 import {showErrorToast, showSuccessToast} from '@/utils/toast';
 import {validateEmail} from '@/utils/validators';
@@ -13,11 +13,20 @@ const ForgotPasswordScreen = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
   const {loading: isLoading} = useAppSelector(state => state.auth);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {form, touched, handleChange, handleBlur} = useFormState({email: ''});
 
   const error = validateEmail(form.email);
   const isFormValid = !error;
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleRequestReset = async () => {
     if (!isFormValid || isLoading) return;
@@ -27,7 +36,10 @@ const ForgotPasswordScreen = () => {
         'Email trimis!',
         'Verifică-ți căsuța de email pentru link-ul de resetare.',
       );
-      setTimeout(() => router.replace('/(auth)/login'), 2000);
+      redirectTimerRef.current = setTimeout(
+        () => router.replace('/(auth)/login'),
+        2000,
+      );
     } catch (err) {
       showErrorToast('Eroare', err, 'Nu am putut trimite email-ul.');
     }

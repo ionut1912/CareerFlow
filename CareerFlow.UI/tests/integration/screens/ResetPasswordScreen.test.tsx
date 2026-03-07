@@ -12,17 +12,6 @@ import {resetPasswordThunk} from '@/store/auth/thunks';
 import {showErrorToast, showSuccessToast} from '@/utils/toast';
 import {useRouter, useLocalSearchParams} from 'expo-router';
 import ResetPasswordScreen from '@/app/(auth)/reset-password';
-import {View} from 'react-native';
-
-jest.mock('@expo/vector-icons', () => {
-  return {
-    MaterialIcons: View,
-    MaterialCommunityIcons: View,
-    Ionicons: View,
-    Feather: View,
-    FontAwesome: View,
-  };
-});
 
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),

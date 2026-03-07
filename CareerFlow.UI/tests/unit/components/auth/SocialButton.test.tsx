@@ -1,12 +1,19 @@
 import React from 'react';
-import {Text} from 'react-native';
 import {render, screen, fireEvent} from '@testing-library/react-native';
+import {Text} from 'react-native';
 import {SocialButton} from '@/components/auth/SocialButton';
 
+type IconProps = {name: string; testID?: string};
+
+const MockIconComponent = (props: IconProps) => (
+  <Text testID={props.testID}>{props.name}</Text>
+);
+
 jest.mock('@expo/vector-icons', () => ({
-  FontAwesome: function MockFontAwesome({name}: {name: string}) {
-    return <Text testID={`icon-${name}`}>{name}</Text>;
-  },
+  MaterialIcons: (props: IconProps) => <MockIconComponent {...props} />,
+  Ionicons: (props: IconProps) => <MockIconComponent {...props} />,
+  FontAwesome: (props: IconProps) => <MockIconComponent {...props} />,
+  AntDesign: (props: IconProps) => <MockIconComponent {...props} />,
 }));
 
 describe('SocialButton Unit Tests', () => {
@@ -22,7 +29,7 @@ describe('SocialButton Unit Tests', () => {
     );
 
     expect(screen.getByText('Google')).toBeTruthy();
-    expect(screen.getByTestId('icon-google')).toBeTruthy();
+    expect(screen.getByText('google')).toBeTruthy();
     expect(
       screen.getByRole('button', {name: 'Continuă cu Google'}),
     ).toBeTruthy();
@@ -59,7 +66,7 @@ describe('SocialButton Unit Tests', () => {
     );
 
     expect(screen.queryByText('Facebook')).toBeNull();
-    expect(screen.queryByTestId('icon-facebook')).toBeNull();
+    expect(screen.queryByText('facebook')).toBeNull();
   });
 
   it('does not trigger onPress and sets accessibility state when disabled', () => {

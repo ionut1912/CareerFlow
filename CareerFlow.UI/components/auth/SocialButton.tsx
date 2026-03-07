@@ -53,7 +53,8 @@ export const SocialButton: React.FC<SocialButtonProps> = ({
       activeOpacity={showAsDisabled ? 1 : 0.7}
       accessibilityRole="button"
       accessibilityLabel={`Continuă cu ${label}`}
-      accessibilityState={{disabled: showAsDisabled}}>
+      accessibilityState={{disabled: disabled || loading, busy: loading}}
+      accessibilityLiveRegion="polite">
       {loading ? (
         <ActivityIndicator color="white" />
       ) : (

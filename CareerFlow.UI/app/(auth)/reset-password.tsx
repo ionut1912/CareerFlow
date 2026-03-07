@@ -4,7 +4,8 @@ import {GradientButton} from '@/components/shared/GradientButton';
 import {resetPasswordThunk} from '@/store/auth/thunks';
 import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {useLocalSearchParams, useRouter} from 'expo-router';
-import React from 'react';
+import React, {useEffect, useRef} from 'react';
+import {Text} from 'react-native';
 import {useFormState} from '@/hooks/useFormState';
 import {showErrorToast, showSuccessToast} from '@/utils/toast';
 import {
@@ -20,8 +21,29 @@ const ResetPasswordScreen = () => {
   const router = useRouter();
   const {token} = useLocalSearchParams<{token: string}>();
   const {loading: isLoading} = useAppSelector(state => state.auth);
-
   const {form, touched, handleChange, handleBlur} = useFormState(INITIAL_FORM);
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+      }
+    };
+  }, []);
+
+  if (!token) {
+    return (
+      <AuthLayout
+        title="Link invalid"
+        subtitle=""
+        showTabs={false}
+        showSocialAuth={false}
+        showLegalLinks={false}>
+        <Text>Link-ul de resetare este invalid sau a expirat.</Text>
+      </AuthLayout>
+    );
+  }
 
   const errors = {
     email: validateEmail(form.email),
@@ -45,7 +67,10 @@ const ResetPasswordScreen = () => {
         }),
       ).unwrap();
       showSuccessToast('Parolă resetată!');
-      setTimeout(() => router.replace('/(auth)/login'), 1500);
+      redirectTimerRef.current = setTimeout(
+        () => router.replace('/(auth)/login'),
+        1500,
+      );
     } catch (err) {
       showErrorToast('Eroare la resetare', err);
     }
