@@ -1,8 +1,7 @@
-import React, {useState} from 'react';
+import React from 'react';
 import {
   View,
   Text,
-  SafeAreaView,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -12,10 +11,11 @@ import {
 import {MaterialIcons} from '@expo/vector-icons';
 import {useRouter, usePathname} from 'expo-router';
 import {COLORS, STYLES} from '@/constants/theme';
-import SocialLoginButtons from '@/components/SocialLoginButtons';
-import {TabButton} from '../TabButton';
-import {LegalModal} from '../LegalModal';
-import {getLegal} from '@/services/legalService';
+import SocialLoginButtons from '@/components/auth/SocialLoginButtons';
+import {TabButton} from '../shared/TabButton';
+import {LegalModal} from '../legal/LegalModal';
+import {useLegalModal} from '@/hooks/useLegalModal';
+import {SafeAreaView} from 'react-native-safe-area-context';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -26,10 +26,7 @@ interface AuthLayoutProps {
   onFooterAction?: () => void;
   onReject?: (type: string) => void;
   onAccept?: (type: string) => void;
-  legalAccepted?: {
-    terms: boolean;
-    privacy: boolean;
-  };
+  legalAccepted?: {terms: boolean; privacy: boolean};
   showTabs?: boolean;
   showSocialAuth?: boolean;
   showLegalLinks?: boolean;
@@ -41,6 +38,10 @@ const LAYOUT_COLORS = {
   cardBg: 'rgba(255, 255, 255, 0.05)',
 };
 
+/**
+ * Shared layout wrapper for auth screens.
+ * Legal modal state extracted to useLegalModal (SRP).
+ */
 export const AuthLayout: React.FC<AuthLayoutProps> = ({
   children,
   title,
@@ -59,47 +60,10 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
   const pathname = usePathname();
   const isLogin = pathname.includes('login');
 
-  const [modal, setModal] = useState({
-    visible: false,
-    loading: false,
-    title: '',
-    content: '',
-    type: '',
-  });
-
-  const fetchLegal = async (type: 'privacy' | 'terms') => {
-    setModal(prev => ({...prev, visible: true, loading: true, type}));
-    try {
-      const res = await getLegal(type);
-      const data = res.data;
-      setModal(prev => ({
-        ...prev,
-        loading: false,
-        title:
-          type === 'privacy'
-            ? 'Politica de Confidențialitate'
-            : 'Termeni și Condiții',
-        content: data.content,
-      }));
-    } catch {
-      setModal(prev => ({
-        ...prev,
-        loading: false,
-        title: 'Eroare',
-        content: 'Eroare la încărcarea datelor.',
-      }));
-    }
-  };
-
-  const handleAccept = () => {
-    if (onAccept) onAccept(modal.type);
-    setModal(prev => ({...prev, visible: false}));
-  };
-
-  const handleReject = () => {
-    if (onReject) onReject(modal.type);
-    setModal(prev => ({...prev, visible: false}));
-  };
+  const {modal, open, close, handleAccept, handleReject} = useLegalModal(
+    onAccept,
+    onReject,
+  );
 
   return (
     <View style={styles.container}>
@@ -170,13 +134,13 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
 
               {showLegalLinks && (
                 <View style={styles.legalLinks}>
-                  <TouchableOpacity onPress={() => fetchLegal('privacy')}>
+                  <TouchableOpacity onPress={() => open('privacy')}>
                     <Text style={styles.legalItem}>
                       Politica de confidențialitate
                     </Text>
                   </TouchableOpacity>
                   <Text style={styles.sep}> • </Text>
-                  <TouchableOpacity onPress={() => fetchLegal('terms')}>
+                  <TouchableOpacity onPress={() => open('terms')}>
                     <Text style={styles.legalItem}>Termeni și condiții</Text>
                   </TouchableOpacity>
                 </View>
@@ -191,7 +155,7 @@ export const AuthLayout: React.FC<AuthLayoutProps> = ({
         loading={modal.loading}
         title={modal.title}
         content={modal.content}
-        onClose={() => setModal(prev => ({...prev, visible: false}))}
+        onClose={close}
         onAccept={handleAccept}
         onReject={handleReject}
       />

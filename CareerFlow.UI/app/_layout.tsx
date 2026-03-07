@@ -14,6 +14,9 @@ export const unstable_settings = {
   initialRouteName: '(auth)/login',
 };
 
+/** Shared screen option — avoids repeating { headerShown: false } (DRY). */
+const HIDDEN_HEADER = {headerShown: false} as const;
+
 export default function RootLayout() {
   return (
     <Provider store={store}>
@@ -22,6 +25,10 @@ export default function RootLayout() {
   );
 }
 
+/**
+ * Inner layout component — separated so it can access the Redux store
+ * via hooks (Provider must be an ancestor).
+ */
 function AppLayout() {
   const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
@@ -32,10 +39,10 @@ function AppLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack screenOptions={{headerShown: false}}>
-        <Stack.Screen name="(auth)" options={{headerShown: false}} />
-        <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-        <Stack.Screen name="index" options={{headerShown: false}} />
+      <Stack screenOptions={HIDDEN_HEADER}>
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="index" />
         <Stack.Screen
           name="modal"
           options={{presentation: 'modal', title: 'Modal', headerShown: true}}

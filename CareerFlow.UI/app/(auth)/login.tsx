@@ -1,37 +1,30 @@
 import {AppInput} from '@/components/auth/AppInput';
 import {AuthLayout} from '@/components/auth/AuthLayout';
-import {GradientButton} from '@/components/auth/GradientButton';
+import {GradientButton} from '@/components/shared/GradientButton';
 import {COLORS} from '@/constants/theme';
+import {loginThunk} from '@/store/auth/thunks';
 import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {useRouter} from 'expo-router';
-import React, {useState} from 'react';
+import React from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
-import Toast from 'react-native-toast-message';
-import {handleAcceptLegal, handleRejectLegal} from './utils';
-import {loginThunk} from '@/store/auth/thunks';
+import {useFormState} from '@/hooks/useFormState';
+import {useLegalAcceptance} from '@/hooks/useLegalAcceptance';
+import {showErrorToast} from '@/utils/toast';
+import {validateEmail, validateRequired} from '@/utils/validators';
+
+const INITIAL_FORM = {email: '', password: ''};
 
 const LoginScreen = () => {
   const router = useRouter();
   const dispatch = useAppDispatch();
   const {loading} = useAppSelector(state => state.auth);
 
-  const [legalAccepted, setLegalAccepted] = useState({
-    terms: false,
-    privacy: false,
-  });
-
-  const [form, setForm] = useState({email: '', password: ''});
-  const [touched, setTouched] = useState({email: false, password: false});
-
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const {form, touched, handleChange, handleBlur} = useFormState(INITIAL_FORM);
+  const {legalAccepted, onAccept, onReject} = useLegalAcceptance();
 
   const errors = {
-    email: !form.email
-      ? 'Email-ul este necesar'
-      : !emailRegex.test(form.email)
-        ? 'Format invalid'
-        : null,
-    password: !form.password ? 'Parola este necesara' : null,
+    email: validateEmail(form.email),
+    password: validateRequired(form.password, 'Parola este necesara'),
   };
 
   const isFormValid = !errors.email && !errors.password;
@@ -43,13 +36,8 @@ const LoginScreen = () => {
         loginThunk({email: form.email, password: form.password}),
       ).unwrap();
       router.replace('/(tabs)');
-    } catch (error: unknown) {
-      Toast.show({
-        type: 'error',
-        text1: 'Eroare la autentificare',
-        text2:
-          typeof error === 'string' ? error : 'Ceva nu a functionat corect.',
-      });
+    } catch (error) {
+      showErrorToast('Eroare la autentificare', error);
     }
   };
 
@@ -61,22 +49,16 @@ const LoginScreen = () => {
       footerActionText="Inregistreaza-te"
       onFooterAction={() => router.replace('/(auth)/register')}
       legalAccepted={legalAccepted}
-      onAccept={(type: string) => {
-        handleAcceptLegal(type);
-        setLegalAccepted(prev => ({...prev, [type]: true}));
-      }}
-      onReject={(type: string) => {
-        handleRejectLegal(type);
-        setLegalAccepted(prev => ({...prev, [type]: false}));
-      }}>
+      onAccept={onAccept}
+      onReject={onReject}>
       <AppInput
         label="Adresa de email"
         icon="mail-outline"
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={text => setForm({...form, email: text})}
-        onBlur={() => setTouched({...touched, email: true})}
+        onChangeText={handleChange('email')}
+        onBlur={handleBlur('email')}
         error={errors.email}
         touched={touched.email}
       />
@@ -86,8 +68,8 @@ const LoginScreen = () => {
         placeholder="••••••••"
         isPassword
         value={form.password}
-        onChangeText={text => setForm({...form, password: text})}
-        onBlur={() => setTouched({...touched, password: true})}
+        onChangeText={handleChange('password')}
+        onBlur={handleBlur('password')}
         error={errors.password}
         touched={touched.password}
       />
