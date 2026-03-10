@@ -29,7 +29,7 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
     public virtual Task DisposeAsync()
     {
        AnonymousClient?.Dispose();
-        await Task.CompletedTask;
+        return Task.CompletedTask;
     }
 
     protected HttpClient CreateClientForNonExistentUser(Account account)
