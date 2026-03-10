@@ -18,11 +18,3 @@ export const completeOnboardingThunk = createAsyncThunk(
     return true;
   },
 );
-
-export const resetOnboardingThunk = createAsyncThunk(
-  'app/resetOnboarding',
-  async () => {
-    await AsyncStorage.removeItem(ONBOARDING_KEY);
-    return false;
-  },
-);

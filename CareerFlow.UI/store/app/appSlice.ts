@@ -1,10 +1,6 @@
 import {createSlice} from '@reduxjs/toolkit';
 import {AppState} from './models';
-import {
-  completeOnboardingThunk,
-  initializeAppStatusThunk,
-  resetOnboardingThunk,
-} from './thunks';
+import {completeOnboardingThunk, initializeAppStatusThunk} from './thunks';
 
 const initialState: AppState = {
   hasSeenOnboarding: false,
@@ -25,9 +21,6 @@ const appSlice = createSlice({
     });
     builder.addCase(completeOnboardingThunk.fulfilled, state => {
       state.hasSeenOnboarding = true;
-    });
-    builder.addCase(resetOnboardingThunk.fulfilled, state => {
-      state.hasSeenOnboarding = false;
     });
   },
 });
