@@ -9,12 +9,9 @@ import React, {useEffect} from 'react';
 import 'react-native-reanimated';
 import Toast from 'react-native-toast-message';
 import {Provider} from 'react-redux';
+import {initializeAppStatusThunk} from '@/store/app/thunks';
 
-export const unstable_settings = {
-  initialRouteName: '(auth)/login',
-};
-
-/** Shared screen option — avoids repeating { headerShown: false } (DRY). */
+export const unstable_settings = {initialRouteName: '(auth)/login'};
 const HIDDEN_HEADER = {headerShown: false} as const;
 
 export default function RootLayout() {
@@ -25,21 +22,19 @@ export default function RootLayout() {
   );
 }
 
-/**
- * Inner layout component — separated so it can access the Redux store
- * via hooks (Provider must be an ancestor).
- */
 function AppLayout() {
   const colorScheme = useColorScheme();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
     dispatch(restoreSessionThunk());
+    dispatch(initializeAppStatusThunk());
   }, [dispatch]);
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack screenOptions={HIDDEN_HEADER}>
+        <Stack.Screen name="(onboarding)" />
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(tabs)" />
         <Stack.Screen name="index" />
