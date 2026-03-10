@@ -1,12 +1,13 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
   StyleSheet,
   FlatList,
-  Dimensions,
+  useWindowDimensions,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  AccessibilityInfo,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {COLORS} from '@/constants/theme';
@@ -16,15 +17,21 @@ import {ONBOARDING_STEPS} from '@/constants/onboardingData';
 import {useAppDispatch} from '@/store/hook';
 import {completeOnboardingThunk} from '@/store/app/thunks';
 import {SafeAreaView} from 'react-native-safe-area-context';
-
-const {width} = Dimensions.get('window');
+import {showErrorToast} from '@/utils/toast';
 
 export default function OnboardingScreen() {
+  const {width} = useWindowDimensions();
   const router = useRouter();
   const dispatch = useAppDispatch();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
 
   const isLastStep = currentIndex === ONBOARDING_STEPS.length - 1;
+
+  useEffect(() => {
+    const message = `Pasul ${currentIndex + 1} din ${ONBOARDING_STEPS.length}`;
+    AccessibilityInfo.announceForAccessibility(message);
+  }, [currentIndex]);
 
   const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const contentOffset = event.nativeEvent.contentOffset.x;
@@ -35,12 +42,19 @@ export default function OnboardingScreen() {
   };
 
   const finishOnboarding = async () => {
-    await dispatch(completeOnboardingThunk()).unwrap();
-    router.replace('/(auth)/login');
+    if (isLoading) return;
+    setIsLoading(true);
+    try {
+      await dispatch(completeOnboardingThunk()).unwrap();
+      router.replace('/(auth)/login');
+    } catch (error) {
+      setIsLoading(false);
+      showErrorToast('Eroare la finalizarea onboarding-ului', error);
+    }
   };
 
   const renderItem = ({item}: {item: (typeof ONBOARDING_STEPS)[0]}) => (
-    <View style={styles.slide}>
+    <View style={[styles.slide, {width}]}>
       <View style={styles.illustrationContainer}>
         <item.Illustration width="100%" height="100%" />
       </View>
@@ -67,7 +81,11 @@ export default function OnboardingScreen() {
         style={styles.flatList}
       />
 
-      <View style={styles.footer}>
+      <View style={styles.footer} accessibilityLiveRegion="polite">
+        <Text style={styles.srOnly}>
+          {`Pasul ${currentIndex + 1} din ${ONBOARDING_STEPS.length}`}
+        </Text>
+
         <ProgressDots
           total={ONBOARDING_STEPS.length}
           currentIndex={currentIndex}
@@ -76,12 +94,13 @@ export default function OnboardingScreen() {
         <View style={styles.actionArea}>
           {isLastStep ? (
             <GradientButton
-              text="Get Started"
+              text={isLoading ? 'Se incarca...' : 'Get Started'}
               icon="rocket"
               onPress={finishOnboarding}
+              disabled={isLoading}
             />
           ) : (
-            <Text style={styles.swipeHint}>Swipe to continue</Text>
+            <Text style={styles.swipeHint}>Gliseaza pentru a continua</Text>
           )}
         </View>
       </View>
@@ -92,13 +111,12 @@ export default function OnboardingScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.background, // Removed the fallback literal
+    backgroundColor: COLORS.background,
   },
   flatList: {
     flex: 1,
   },
   slide: {
-    width: width,
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -119,14 +137,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 32,
     fontWeight: '900',
-    color: COLORS.text, // Replaced #FFFFFF
+    color: COLORS.text,
     textAlign: 'center',
     marginBottom: 16,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 17,
-    color: COLORS.textSecondary, // Replaced #cbd5e1
+    color: COLORS.textSecondary,
     textAlign: 'center',
     lineHeight: 26,
   },
@@ -143,10 +161,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   swipeHint: {
-    color: COLORS.textMuted, // Replaced #64748b
+    color: COLORS.textMuted,
     textAlign: 'center',
     fontSize: 14,
     fontWeight: '500',
     opacity: 0.8,
+  },
+  srOnly: {
+    position: 'absolute',
+    width: 1,
+    height: 1,
+    padding: 0,
+    margin: -1,
+    overflow: 'hidden',
+    opacity: 0,
   },
 });

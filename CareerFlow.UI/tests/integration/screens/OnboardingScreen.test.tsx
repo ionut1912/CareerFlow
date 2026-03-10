@@ -14,6 +14,11 @@ jest.mock('@/store/hook', () => ({
   useAppDispatch: jest.fn(),
 }));
 
+jest.mock('@expo/vector-icons', () => ({
+  MaterialIcons: 'MaterialIcons',
+  Ionicons: 'Ionicons',
+}));
+
 jest.mock('@/store/app/thunks', () => ({
   completeOnboardingThunk: jest.fn(() => ({
     unwrap: jest.fn().mockResolvedValue(true),
@@ -41,12 +46,17 @@ jest.mock('@/constants/onboardingData', () => ({
 }));
 
 jest.mock('react-native-safe-area-context', () => ({
-  SafeAreaView: ({children}) => children,
+  SafeAreaView: ({children}: {children: React.ReactNode}) => children,
 }));
 
+interface GradientButtonProps {
+  text: string;
+  onPress: () => void;
+}
+
 jest.mock('@/components/shared/GradientButton', () => ({
-  GradientButton: ({text, onPress}) => {
-    const MockButton = 'MockButton';
+  GradientButton: ({text, onPress}: GradientButtonProps) => {
+    const MockButton = 'MockButton' as unknown as React.ElementType;
     return (
       <MockButton testID="get-started-button" onPress={onPress}>
         {text}
@@ -57,7 +67,7 @@ jest.mock('@/components/shared/GradientButton', () => ({
 
 jest.mock('@/components/onboarding/ProgressDots', () => ({
   ProgressDots: () => {
-    const MockProgress = 'MockProgress';
+    const MockProgress = 'MockProgress' as unknown as React.ElementType;
     return <MockProgress testID="progress-dots" />;
   },
 }));
@@ -69,8 +79,8 @@ describe('OnboardingScreen Integration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    useRouter.mockReturnValue({replace: mockReplace});
-    useAppDispatch.mockReturnValue(mockDispatch);
+    (useRouter as jest.Mock).mockReturnValue({replace: mockReplace});
+    (useAppDispatch as jest.Mock).mockReturnValue(mockDispatch);
   });
 
   it('renders the first slide correctly on mount', () => {
@@ -78,7 +88,7 @@ describe('OnboardingScreen Integration', () => {
 
     expect(getByText('Step 1 Title')).toBeTruthy();
     expect(getByText('Step 1 Subtitle')).toBeTruthy();
-    expect(getByText('Swipe to continue')).toBeTruthy();
+    expect(getByText('Gliseaza pentru a continua')).toBeTruthy();
     expect(queryByTestId('get-started-button')).toBeNull();
   });
 
@@ -96,7 +106,7 @@ describe('OnboardingScreen Integration', () => {
 
     expect(getByText('Step 2 Title')).toBeTruthy();
     expect(getByText('Step 2 Subtitle')).toBeTruthy();
-    expect(getByText('Swipe to continue')).toBeTruthy();
+    expect(getByText('Gliseaza pentru a continua')).toBeTruthy();
   });
 
   it('reveals the "Get Started" button upon reaching the final slide', () => {
@@ -112,7 +122,7 @@ describe('OnboardingScreen Integration', () => {
     });
 
     expect(getByText('Step 3 Title')).toBeTruthy();
-    expect(queryByText('Swipe to continue')).toBeNull();
+    expect(queryByText('Gliseaza pentru a continua')).toBeNull();
     expect(getByTestId('get-started-button')).toBeTruthy();
   });
 
