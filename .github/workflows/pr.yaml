@@ -21,8 +21,8 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
+          # Pinning to the base stable version to avoid 404 on unreleased patches
+          dotnet-version: '10.0.100' 
 
       - name: Restore dependencies
         run: dotnet restore
@@ -50,8 +50,7 @@ jobs:
       - name: Set up .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
-          dotnet-quality: 'ga'
+          dotnet-version: '10.0.100'
 
       - name: Restore dependencies
         run: dotnet restore
