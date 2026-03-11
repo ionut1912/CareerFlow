@@ -7,6 +7,7 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Extensions;
 using CareerFlow.Core.Infrastructure.Gateways;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Persistance;
@@ -60,7 +61,7 @@ builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSender>();
 
 builder.Services.AddScoped<LegalDocumentCheckerJob>();
-
+builder.Services.AddOpenAIIntegration();
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
@@ -79,10 +80,7 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("HangfirePolicy", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-    });
+    options.AddPolicy("HangfirePolicy", policy => { policy.RequireAuthenticatedUser(); });
 });
 
 builder.Services.AddHangfire(configuration => configuration

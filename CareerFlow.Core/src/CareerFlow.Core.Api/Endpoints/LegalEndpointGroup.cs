@@ -1,5 +1,5 @@
 using CareerFlow.Core.Application.CQRS.Legal.Query;
-using CareerFlow.Core.Domain.Models;
+using CareerFlow.Core.Domain.Models.Legal;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 using Wolverine;

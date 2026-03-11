@@ -28,7 +28,7 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
 
     public virtual Task DisposeAsync()
     {
-       AnonymousClient?.Dispose();
+        AnonymousClient?.Dispose();
         return Task.CompletedTask;
     }
 

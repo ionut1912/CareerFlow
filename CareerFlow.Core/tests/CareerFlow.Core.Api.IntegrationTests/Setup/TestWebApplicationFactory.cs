@@ -46,6 +46,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         Environment.SetEnvironmentVariable("JwtSettings__Key", "testjwtsuperlongkeyforauthentication");
         Environment.SetEnvironmentVariable("JwtSettings__Issuer", "testjwtissuer");
         Environment.SetEnvironmentVariable("JwtSettings__Audience", "testaudience");
+        Environment.SetEnvironmentVariable("OpenAI__ApiKey", "testkey");
 
         using var scope = Services.CreateScope();
         var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -65,6 +66,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         Environment.SetEnvironmentVariable("JwtSettings__Key", null);
         Environment.SetEnvironmentVariable("JwtSettings__Issuer", null);
         Environment.SetEnvironmentVariable("JwtSettings__Audience", null);
+        Environment.SetEnvironmentVariable("OpenAI__ApiKey", null);
 
         await Task.WhenAll(
             _dbContainer.StopAsync(),
