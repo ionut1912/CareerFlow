@@ -19,17 +19,17 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          cd projects/CareerFlow
+          script: |
+            cd projects/CareerFlow
 
-          # Pull latest code
-          git pull origin master
+            # Pull latest code
+            git pull origin master
 
-          # Stop AND remove containers first
-          docker compose down --rmi all --volumes --remove-orphans
+            # Stop AND remove containers first
+            docker compose down --rmi all --volumes --remove-orphans
 
-          # Now safe to prune everything else
-          docker system prune -af --volumes
+            # Now safe to prune everything else
+            docker system prune -af --volumes
 
-          # Rebuild and start
-          docker compose up -d --build
+            # Rebuild and start
+            docker compose up -d --build
