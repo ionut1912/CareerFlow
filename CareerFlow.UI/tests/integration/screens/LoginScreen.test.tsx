@@ -12,6 +12,7 @@ import {showErrorToast} from '@/utils/toast';
 import {useRouter} from 'expo-router';
 import LoginScreen from '@/app/(auth)/login';
 
+// expo-router and other mocks remain at the top
 jest.mock('expo-router', () => ({
   useRouter: jest.fn(),
   usePathname: jest.fn(() => '/login'),

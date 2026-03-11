@@ -78,6 +78,7 @@ const LoginScreen = () => {
         onPress={() => router.push('/(auth)/forgot-password')}>
         <Text style={styles.forgotText}>Ai uitat parola?</Text>
       </TouchableOpacity>
+
       <GradientButton
         text={loading ? 'Se incarca...' : 'Autentificare'}
         icon={loading ? null : 'login'}
