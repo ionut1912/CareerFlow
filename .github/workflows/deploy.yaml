@@ -19,20 +19,17 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            # Navigate to project directory
-            cd /projects/CareerFlow
-            # Pull latest code from GitHub
-            git pull origin master
+        script: |
+          cd projects/CareerFlow
 
-            # Stop running containers
-            docker compose down
+          # Pull latest code
+          git pull origin master
 
-            # Remove all Docker images (force)
-            docker rmi $(docker images -q) -f || true
+          # Stop AND remove containers first
+          docker compose down --rmi all --volumes --remove-orphans
 
+          # Now safe to prune everything else
+          docker system prune -af --volumes
 
-            docker system prune -af --volumes
-
-            # Rebuild and start containers in detached mode
-            docker compose up -d --build
+          # Rebuild and start
+          docker compose up -d --build
