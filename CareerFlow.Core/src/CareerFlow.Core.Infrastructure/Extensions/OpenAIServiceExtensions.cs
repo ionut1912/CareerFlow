@@ -1,8 +1,8 @@
 using System.Net.Http.Headers;
-using CareerFlow.Core.Domain.Abstractions.Http;
-using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Http;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 using CareerFlow.Core.Infrastructure.Services.OpenAi;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -43,7 +43,7 @@ public static class OpenAIServiceExtensions
 
         // Embedding service (no decorator needed — straightforward)
         services.AddScoped<IAIEmbeddingService, OpenAIEmbeddingService>();
-
+        services.AddScoped<ChatApplicationService>();
         return services;
     }
 }

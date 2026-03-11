@@ -1,7 +1,7 @@
-using CareerFlow.Core.Domain.Abstractions.Http;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models.OpenAi;
 using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
 using CareerFlow.Core.Infrastructure.Services.OpenAi;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -22,24 +22,26 @@ public sealed class OpenAICompletionServiceTests
     }
 
     private static ChatResponse BuildChatResponse(string content, int tokens = 10, string finish = "stop")
-        => new(
-            Choices: [new ChatChoiceDto(new ChatMessageDto("assistant", content), finish)],
-            Usage: new ChatUsageDto(tokens,tokens,tokens));
+    {
+        return new ChatResponse(
+            [new ChatChoiceDto(new ChatMessageDto("assistant", content), finish)],
+            new ChatUsageDto(tokens, tokens, tokens));
+    }
 
     [Fact]
     public async Task CompleteAsync_WithPromptOnly_SendsToChatCompletionsEndpoint()
-    {https://platform.openai.com/login
+    {
         // Arrange
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 "chat/completions", It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildChatResponse("Hi there"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: "Hello"));
+        await _sut.CompleteAsync(new CompletionRequest("Hello"));
 
         // Assert
-        _httpClientMock.Verify(c => c.PostAsync<ChatRequest, ChatResponse>(
+        _httpClientMock.Verify(c => c.CreateAsync<ChatRequest, ChatResponse>(
             "chat/completions", It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -51,13 +53,13 @@ public sealed class OpenAICompletionServiceTests
         ChatRequest? capturedPayload = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, ChatRequest, CancellationToken>((_, payload, _) => capturedPayload = payload)
             .ReturnsAsync(BuildChatResponse("It is a framework"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: prompt));
+        await _sut.CompleteAsync(new CompletionRequest(prompt));
 
         // Assert
         capturedPayload.ShouldNotBeNull();
@@ -73,13 +75,13 @@ public sealed class OpenAICompletionServiceTests
         ChatRequest? captured = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, ChatRequest, CancellationToken>((_, req, _) => captured = req)
             .ReturnsAsync(BuildChatResponse("ok"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: "test", Model: null));
+        await _sut.CompleteAsync(new CompletionRequest("test", null));
 
         // Assert
         captured.ShouldNotBeNull();
@@ -94,13 +96,13 @@ public sealed class OpenAICompletionServiceTests
         ChatRequest? captured = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, ChatRequest, CancellationToken>((_, req, _) => captured = req)
             .ReturnsAsync(BuildChatResponse("ok"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: "test", Model: customModel));
+        await _sut.CompleteAsync(new CompletionRequest("test", customModel));
 
         // Assert
         captured.ShouldNotBeNull();
@@ -119,13 +121,13 @@ public sealed class OpenAICompletionServiceTests
         ChatRequest? captured = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, ChatRequest, CancellationToken>((_, req, _) => captured = req)
             .ReturnsAsync(BuildChatResponse("ok"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: "unused", Messages: messages));
+        await _sut.CompleteAsync(new CompletionRequest("unused", Messages: messages));
 
         // Assert
         captured.ShouldNotBeNull();
@@ -143,12 +145,12 @@ public sealed class OpenAICompletionServiceTests
         const string expectedFinish = "length";
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildChatResponse(expectedContent, expectedTokens, expectedFinish));
 
         // Act
-        var result = await _sut.CompleteAsync(new CompletionRequest(Prompt: "map me"));
+        var result = await _sut.CompleteAsync(new CompletionRequest("map me"));
 
         // Assert
         result.Content.ShouldBe(expectedContent);
@@ -163,18 +165,18 @@ public sealed class OpenAICompletionServiceTests
         ChatRequest? captured = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, ChatRequest, CancellationToken>((_, req, _) => captured = req)
             .ReturnsAsync(BuildChatResponse("ok"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: "x", MaxTokens: 256, Temperature: 0.2f));
+        await _sut.CompleteAsync(new CompletionRequest("x", MaxTokens: 256, Temperature: 0.2f));
 
         // Assert
         captured.ShouldNotBeNull();
         captured.MaxTokens.ShouldBe(256);
-        captured.Temperature.ShouldBe(0.2f, tolerance: 0.001f);
+        captured.Temperature.ShouldBe(0.2f, 0.001f);
     }
 
     [Fact]
@@ -182,13 +184,12 @@ public sealed class OpenAICompletionServiceTests
     {
         // Arrange
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new OpenAIException(401,"Unauthorized"));
+            .ThrowsAsync(new OpenAIException(401, "Unauthorized"));
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<OpenAIException>(
-            () => _sut.CompleteAsync(new CompletionRequest(Prompt: "boom")));
+        var ex = await Should.ThrowAsync<OpenAIException>(() => _sut.CompleteAsync(new CompletionRequest("boom")));
 
         ex.StatusCode.ShouldBe(401);
     }
@@ -201,15 +202,15 @@ public sealed class OpenAICompletionServiceTests
         var token = cts.Token;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<ChatRequest, ChatResponse>(
+            .Setup(c => c.CreateAsync<ChatRequest, ChatResponse>(
                 It.IsAny<string>(), It.IsAny<ChatRequest>(), token))
             .ReturnsAsync(BuildChatResponse("ok"));
 
         // Act
-        await _sut.CompleteAsync(new CompletionRequest(Prompt: "x"), token);
+        await _sut.CompleteAsync(new CompletionRequest("x"), token);
 
         // Assert
-        _httpClientMock.Verify(c => c.PostAsync<ChatRequest, ChatResponse>(
+        _httpClientMock.Verify(c => c.CreateAsync<ChatRequest, ChatResponse>(
             It.IsAny<string>(), It.IsAny<ChatRequest>(), token), Times.Once);
     }
 }

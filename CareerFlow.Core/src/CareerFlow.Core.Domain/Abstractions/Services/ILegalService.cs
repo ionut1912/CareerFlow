@@ -1,4 +1,3 @@
-using CareerFlow.Core.Domain.Models;
 using CareerFlow.Core.Domain.Models.Legal;
 
 namespace CareerFlow.Core.Domain.Abstractions.Services;

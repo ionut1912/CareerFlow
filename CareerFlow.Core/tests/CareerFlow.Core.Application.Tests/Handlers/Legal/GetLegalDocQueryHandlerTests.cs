@@ -3,7 +3,6 @@ using CareerFlow.Core.Application.CQRS.Legal.Query;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models;
 using CareerFlow.Core.Domain.Models.Legal;
 using Moq;
 using Shouldly;

@@ -1,4 +1,4 @@
-namespace CareerFlow.Core.Domain.Models.OpenAi;
+namespace CareerFlow.Core.Infrastructure.Modles.OpenAi;
 
 public sealed record ChatRequest(
     string Model,

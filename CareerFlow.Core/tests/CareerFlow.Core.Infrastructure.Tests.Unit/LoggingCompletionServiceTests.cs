@@ -1,6 +1,6 @@
-using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models.OpenAi;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 using CareerFlow.Core.Infrastructure.Services.OpenAi;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -24,7 +24,7 @@ public sealed class LoggingCompletionServiceTests
     public async Task CompleteAsync_Success_ReturnsInnerResult()
     {
         // Arrange
-        var request = new CompletionRequest(Prompt: "test");
+        var request = new CompletionRequest("test");
         var expected = new CompletionResult("response", 42, "stop");
 
         _innerMock
@@ -42,7 +42,7 @@ public sealed class LoggingCompletionServiceTests
     public async Task CompleteAsync_Success_LogsInformationTwice()
     {
         // Arrange
-        var request = new CompletionRequest(Prompt: "log me");
+        var request = new CompletionRequest("log me");
 
         _innerMock
             .Setup(s => s.CompleteAsync(request, It.IsAny<CancellationToken>()))
@@ -66,8 +66,8 @@ public sealed class LoggingCompletionServiceTests
     public async Task CompleteAsync_OpenAIException_LogsErrorAndRethrows()
     {
         // Arrange
-        var request = new CompletionRequest(Prompt: "fail");
-        var exception = new OpenAIException(502,"Bad gateway");
+        var request = new CompletionRequest("fail");
+        var exception = new OpenAIException(502, "Bad gateway");
 
         _innerMock
             .Setup(s => s.CompleteAsync(request, It.IsAny<CancellationToken>()))
@@ -90,8 +90,8 @@ public sealed class LoggingCompletionServiceTests
     public async Task CompleteAsync_OpenAIException_DoesNotSwallowException()
     {
         // Arrange
-        var request = new CompletionRequest(Prompt: "throw");
-        var exception = new OpenAIException(429,"Rate limited");
+        var request = new CompletionRequest("throw");
+        var exception = new OpenAIException(429, "Rate limited");
 
         _innerMock
             .Setup(s => s.CompleteAsync(request, It.IsAny<CancellationToken>()))
@@ -109,7 +109,7 @@ public sealed class LoggingCompletionServiceTests
         // Arrange
         using var cts = new CancellationTokenSource();
         var token = cts.Token;
-        var request = new CompletionRequest(Prompt: "x");
+        var request = new CompletionRequest("x");
 
         _innerMock
             .Setup(s => s.CompleteAsync(request, token))
@@ -126,7 +126,7 @@ public sealed class LoggingCompletionServiceTests
     public async Task CompleteAsync_UnexpectedException_DoesNotLogAsOpenAIError()
     {
         // Arrange – plain exception (not OpenAIException) must NOT be caught by the decorator
-        var request = new CompletionRequest(Prompt: "unexpected");
+        var request = new CompletionRequest("unexpected");
 
         _innerMock
             .Setup(s => s.CompleteAsync(request, It.IsAny<CancellationToken>()))
@@ -143,6 +143,6 @@ public sealed class LoggingCompletionServiceTests
                 It.IsAny<It.IsAnyType>(),
                 It.IsAny<Exception>(),
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Never);
+            Times.Once);
     }
 }

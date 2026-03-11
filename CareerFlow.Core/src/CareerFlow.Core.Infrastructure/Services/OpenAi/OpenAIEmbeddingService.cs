@@ -1,22 +1,17 @@
-using CareerFlow.Core.Domain.Abstractions.Http;
-using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Domain.Models.OpenAi;
-using CareerFlow.Core.Infrastructure.Configurations;
-using Microsoft.Extensions.Options;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 
 namespace CareerFlow.Core.Infrastructure.Services.OpenAi;
 
 public sealed class OpenAIEmbeddingService : IAIEmbeddingService
 {
     private readonly IOpenAIHttpClient _client;
-    private readonly OpenAIOptions _options;
 
     public OpenAIEmbeddingService(
-        IOpenAIHttpClient client,
-        IOptions<OpenAIOptions> options)
+        IOpenAIHttpClient client)
     {
         _client = client;
-        _options = options.Value;
     }
 
     public async Task<EmbeddingResult> GetEmbeddingAsync(
@@ -24,18 +19,21 @@ public sealed class OpenAIEmbeddingService : IAIEmbeddingService
         CancellationToken ct = default)
     {
         var payload = new EmbeddingRequest(
-            Input: text,
-            Model: "text-embedding-3-small"
+            text,
+            "text-embedding-3-small"
         );
 
-        var response = await _client.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+        var response = await _client.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
             "embeddings", payload, ct);
 
         return MapToResult(response);
     }
 
-    private static EmbeddingResult MapToResult(EmbeddingResponse response) => new(
-        Vector: response.Data[0].Embedding,
-        TokensUsed: response.Usage.TotalTokens
-    );
+    private static EmbeddingResult MapToResult(EmbeddingResponse response)
+    {
+        return new EmbeddingResult(
+            response.Data[0].Embedding,
+            response.Usage.TotalTokens
+        );
+    }
 }

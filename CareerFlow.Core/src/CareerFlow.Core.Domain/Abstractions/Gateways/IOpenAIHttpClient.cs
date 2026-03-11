@@ -1,8 +1,8 @@
-namespace CareerFlow.Core.Domain.Abstractions.Http;
+namespace CareerFlow.Core.Domain.Abstractions.Gateways;
 
 public interface IOpenAIHttpClient
 {
-    Task<TResponse> PostAsync<TRequest, TResponse>(
+    Task<TResponse> CreateAsync<TRequest, TResponse>(
         string endpoint,
         TRequest body,
         CancellationToken ct = default);

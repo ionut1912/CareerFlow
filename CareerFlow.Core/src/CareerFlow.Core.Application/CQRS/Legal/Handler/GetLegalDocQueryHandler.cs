@@ -1,7 +1,6 @@
 using CareerFlow.Core.Application.CQRS.Legal.Query;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models;
 using CareerFlow.Core.Domain.Models.Legal;
 using Microsoft.Extensions.Logging;
 

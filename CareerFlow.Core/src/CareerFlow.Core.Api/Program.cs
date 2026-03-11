@@ -80,10 +80,7 @@ builder.Services
 
 builder.Services.AddAuthorization(options =>
 {
-    options.AddPolicy("HangfirePolicy", policy =>
-    {
-        policy.RequireAuthenticatedUser();
-    });
+    options.AddPolicy("HangfirePolicy", policy => { policy.RequireAuthenticatedUser(); });
 });
 
 builder.Services.AddHangfire(configuration => configuration

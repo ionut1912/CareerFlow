@@ -74,7 +74,7 @@ public class SocialService(
     private string GenerateAndStoreState()
     {
         var stateBytes = RandomNumberGenerator.GetBytes(32);
-        
+
         var state = Convert.ToBase64String(stateBytes)
             .Replace("+", "-")
             .Replace("/", "_")
@@ -88,9 +88,7 @@ public class SocialService(
     private void ValidateState(string state)
     {
         if (string.IsNullOrWhiteSpace(state) || !cache.TryGetValue(state, out _))
-        {
             throw new InvalidOperationException("Invalid or missing state parameter. CSRF validation failed.");
-        }
 
         cache.Remove(state);
     }

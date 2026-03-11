@@ -1,20 +1,16 @@
-using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Domain.Models.OpenAi;
-using Microsoft.Extensions.Logging;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 
 namespace CareerFlow.Core.Infrastructure.Services.OpenAi;
 
 public sealed class ChatApplicationService
 {
     private readonly IAICompletionService _completionService;
-    private readonly ILogger<ChatApplicationService> _logger;
 
     public ChatApplicationService(
-        IAICompletionService completionService,
-        ILogger<ChatApplicationService> logger)
+        IAICompletionService completionService)
     {
         _completionService = completionService;
-        _logger = logger;
     }
 
     public async Task<string> AskAsync(string userMessage, CancellationToken ct = default)
@@ -22,7 +18,7 @@ public sealed class ChatApplicationService
         ArgumentException.ThrowIfNullOrWhiteSpace(userMessage);
 
         var request = new CompletionRequest(
-            Prompt: userMessage,
+            userMessage,
             MaxTokens: 500,
             Temperature: 0.7f
         );
@@ -40,7 +36,7 @@ public sealed class ChatApplicationService
         ArgumentException.ThrowIfNullOrWhiteSpace(userMessage);
 
         var request = new CompletionRequest(
-            Prompt: userMessage,
+            userMessage,
             Messages:
             [
                 new Message("system", systemPrompt),

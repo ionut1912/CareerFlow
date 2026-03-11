@@ -1,4 +1,4 @@
-namespace CareerFlow.Core.Domain.Models.OpenAi;
+namespace CareerFlow.Core.Infrastructure.Modles.OpenAi;
 
 public record CompletionRequest(
     string Prompt,

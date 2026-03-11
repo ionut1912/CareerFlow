@@ -1,9 +1,7 @@
-using CareerFlow.Core.Domain.Abstractions.Http;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models.OpenAi;
-using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
 using CareerFlow.Core.Infrastructure.Services.OpenAi;
-using Microsoft.Extensions.Options;
 using Moq;
 using Shouldly;
 using Xunit;
@@ -17,20 +15,22 @@ public sealed class OpenAIEmbeddingServiceTests
 
     public OpenAIEmbeddingServiceTests()
     {
-        var options = Options.Create(new OpenAIOptions { DefaultModel = "gpt-4o-mini" });
-        _sut = new OpenAIEmbeddingService(_httpClientMock.Object, options);
+        _sut = new OpenAIEmbeddingService(_httpClientMock.Object);
     }
 
     private static EmbeddingResponse BuildEmbeddingResponse(float[] vector, int tokens = 5)
-        => new(
-            Data: [new EmbeddingDataDto(Embedding: vector, Index: 0)],
-            Usage: new EmbeddingUsageDto(PromptTokens: tokens, TotalTokens: tokens));
+    {
+        return new EmbeddingResponse(
+            [new EmbeddingDataDto(vector, 0)],
+            new EmbeddingUsageDto(tokens, tokens));
+    }
+
     [Fact]
     public async Task GetEmbeddingAsync_ValidText_CallsEmbeddingsEndpoint()
     {
         // Arrange
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 "embeddings", It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildEmbeddingResponse([0.1f, 0.2f, 0.3f]));
 
@@ -38,7 +38,7 @@ public sealed class OpenAIEmbeddingServiceTests
         await _sut.GetEmbeddingAsync("some text");
 
         // Assert
-        _httpClientMock.Verify(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+        _httpClientMock.Verify(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
             "embeddings", It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()), Times.Once);
     }
 
@@ -49,7 +49,7 @@ public sealed class OpenAIEmbeddingServiceTests
         EmbeddingRequest? captured = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, EmbeddingRequest, CancellationToken>((_, req, _) => captured = req)
             .ReturnsAsync(BuildEmbeddingResponse([0.1f]));
@@ -70,7 +70,7 @@ public sealed class OpenAIEmbeddingServiceTests
         EmbeddingRequest? captured = null;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
             .Callback<string, EmbeddingRequest, CancellationToken>((_, req, _) => captured = req)
             .ReturnsAsync(BuildEmbeddingResponse([0.5f]));
@@ -90,7 +90,7 @@ public sealed class OpenAIEmbeddingServiceTests
         float[] expectedVector = [0.1f, 0.5f, 0.9f, -0.3f];
 
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildEmbeddingResponse(expectedVector));
 
@@ -108,7 +108,7 @@ public sealed class OpenAIEmbeddingServiceTests
         const int expectedTokens = 33;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildEmbeddingResponse([0.1f], expectedTokens));
 
@@ -124,13 +124,12 @@ public sealed class OpenAIEmbeddingServiceTests
     {
         // Arrange
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new OpenAIException(500,"Internal Server Error"));
+            .ThrowsAsync(new OpenAIException(500, "Internal Server Error"));
 
         // Act & Assert
-        var ex = await Should.ThrowAsync<OpenAIException>(
-            () => _sut.GetEmbeddingAsync("bad input"));
+        var ex = await Should.ThrowAsync<OpenAIException>(() => _sut.GetEmbeddingAsync("bad input"));
 
         ex.StatusCode.ShouldBe(500);
     }
@@ -143,7 +142,7 @@ public sealed class OpenAIEmbeddingServiceTests
         var token = cts.Token;
 
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), token))
             .ReturnsAsync(BuildEmbeddingResponse([0.1f]));
 
@@ -151,7 +150,7 @@ public sealed class OpenAIEmbeddingServiceTests
         await _sut.GetEmbeddingAsync("cancel test", token);
 
         // Assert
-        _httpClientMock.Verify(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+        _httpClientMock.Verify(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
             It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), token), Times.Once);
     }
 
@@ -164,7 +163,7 @@ public sealed class OpenAIEmbeddingServiceTests
             largeVector[i] = (float)Math.Sin(i);
 
         _httpClientMock
-            .Setup(c => c.PostAsync<EmbeddingRequest, EmbeddingResponse>(
+            .Setup(c => c.CreateAsync<EmbeddingRequest, EmbeddingResponse>(
                 It.IsAny<string>(), It.IsAny<EmbeddingRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildEmbeddingResponse(largeVector, 50));
 
@@ -173,6 +172,6 @@ public sealed class OpenAIEmbeddingServiceTests
 
         // Assert
         result.Vector.Length.ShouldBe(1536);
-        result.Vector[0].ShouldBe((float)Math.Sin(0), tolerance: 0.001f);
+        result.Vector[0].ShouldBe((float)Math.Sin(0), 0.001f);
     }
 }

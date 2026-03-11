@@ -1,6 +1,5 @@
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Domain.Models;
 using CareerFlow.Core.Domain.Models.Legal;
 
 namespace CareerFlow.Core.Infrastructure.Services;

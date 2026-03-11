@@ -1,7 +1,7 @@
 using System.Diagnostics;
-using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models.OpenAi;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services.OpenAi;
@@ -25,8 +25,7 @@ public sealed class LoggingCompletionService : IAICompletionService
     {
         using var scope = _logger.BeginScope(new
         {
-            Model = request.Model,
-            MaxTokens = request.MaxTokens
+            request.Model, request.MaxTokens
         });
 
         _logger.LogInformation("Sending completion request to OpenAI");
@@ -47,6 +46,11 @@ public sealed class LoggingCompletionService : IAICompletionService
             _logger.LogError(ex,
                 "Completion failed after {ElapsedMs}ms with status {StatusCode}",
                 sw.ElapsedMilliseconds, ex.StatusCode);
+            throw;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Completion failed after {ElapsedMs}", sw.ElapsedMilliseconds);
             throw;
         }
     }

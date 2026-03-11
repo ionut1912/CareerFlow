@@ -1,8 +1,7 @@
-using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models.OpenAi;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 using CareerFlow.Core.Infrastructure.Services.OpenAi;
-using Microsoft.Extensions.Logging;
 using Moq;
 using Shouldly;
 using Xunit;
@@ -12,12 +11,11 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 public sealed class ChatApplicationServiceTests
 {
     private readonly Mock<IAICompletionService> _completionServiceMock = new();
-    private readonly Mock<ILogger<ChatApplicationService>> _loggerMock = new();
     private readonly ChatApplicationService _sut;
 
     public ChatApplicationServiceTests()
     {
-        _sut = new ChatApplicationService(_completionServiceMock.Object, _loggerMock.Object);
+        _sut = new ChatApplicationService(_completionServiceMock.Object);
     }
 
     // ── AskAsync ──────────────────────────────────────────────────────────────
@@ -31,7 +29,7 @@ public sealed class ChatApplicationServiceTests
 
         _completionServiceMock
             .Setup(s => s.CompleteAsync(It.IsAny<CompletionRequest>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new CompletionResult(Content: expectedContent, TokensUsed: 10, FinishReason: "stop"));
+            .ReturnsAsync(new CompletionResult(expectedContent, 10, "stop"));
 
         // Act
         var result = await _sut.AskAsync(userMessage);
@@ -59,7 +57,7 @@ public sealed class ChatApplicationServiceTests
         capturedRequest.ShouldNotBeNull();
         capturedRequest.Prompt.ShouldBe(userMessage);
         capturedRequest.MaxTokens.ShouldBe(500);
-        capturedRequest.Temperature.ShouldBe(0.7f, tolerance: 0.001f);
+        capturedRequest.Temperature.ShouldBe(0.7f, 0.001f);
     }
 
     [Theory]
@@ -97,7 +95,7 @@ public sealed class ChatApplicationServiceTests
         // Arrange
         _completionServiceMock
             .Setup(s => s.CompleteAsync(It.IsAny<CompletionRequest>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new OpenAIException(500,"Service error"));
+            .ThrowsAsync(new OpenAIException(500, "Service error"));
 
         // Act & Assert
         var ex = await Should.ThrowAsync<OpenAIException>(() => _sut.AskAsync("Hello"));
@@ -162,8 +160,7 @@ public sealed class ChatApplicationServiceTests
         string? systemPrompt, string? userMessage)
     {
         // Act & Assert
-        await Should.ThrowAsync<ArgumentException>(
-            () => _sut.AskWithSystemPromptAsync(systemPrompt!, userMessage!));
+        await Should.ThrowAsync<ArgumentException>(() => _sut.AskWithSystemPromptAsync(systemPrompt!, userMessage!));
     }
 
     [Fact]

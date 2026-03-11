@@ -1,6 +1,6 @@
-using CareerFlow.Core.Domain.Models.OpenAi;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
 
-namespace CareerFlow.Core.Domain.Abstractions.Services;
+namespace CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 
 public interface IAIEmbeddingService
 {

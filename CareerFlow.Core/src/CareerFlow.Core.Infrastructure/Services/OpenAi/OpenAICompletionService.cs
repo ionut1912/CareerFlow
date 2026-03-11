@@ -1,7 +1,8 @@
-using CareerFlow.Core.Domain.Abstractions.Http;
-using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Domain.Models.OpenAi;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
+using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Modles.OpenAi;
+using CareerFlow.Core.Infrastructure.OpenAIAbstractions;
 using Microsoft.Extensions.Options;
 
 namespace CareerFlow.Core.Infrastructure.Services.OpenAi;
@@ -25,25 +26,32 @@ public sealed class OpenAICompletionService : IAICompletionService
     {
         var payload = BuildPayload(request);
 
-        var response = await _client.PostAsync<ChatRequest, ChatResponse>(
+        var response = await _client.CreateAsync<ChatRequest, ChatResponse>(
             "chat/completions", payload, ct);
 
         return MapToResult(response);
     }
 
-    private ChatRequest BuildPayload(CompletionRequest request) => new(
-        Model: request.Model ?? _options.DefaultModel,
-        Messages: request.Messages?
-                      .Select(m => new ChatMessageDto(m.Role, m.Content))
-                      .ToList()
-                  ?? [new ChatMessageDto("user", request.Prompt)],
-        MaxTokens: request.MaxTokens,
-        Temperature: request.Temperature
-    );
+    private ChatRequest BuildPayload(CompletionRequest request)
+    {
+        return new ChatRequest(
+            request.Model ?? _options.DefaultModel,
+            request.Messages?
+                .Select(m => new ChatMessageDto(m.Role, m.Content))
+                .ToList()
+            ?? [new ChatMessageDto("user", request.Prompt)],
+            request.MaxTokens,
+            request.Temperature
+        );
+    }
 
-    private static CompletionResult MapToResult(ChatResponse response) => new(
-        Content: response.Choices[0].Message.Content,
-        TokensUsed: response.Usage.TotalTokens,
-        FinishReason: response.Choices[0].FinishReason
-    );
+    private static CompletionResult MapToResult(ChatResponse response)
+    {
+        var choice = response.Choices?.FirstOrDefault() ??
+                     throw new OpenAIException(0, "No choices returned from OpenAI");
+        return new CompletionResult(
+            choice.Message?.Content ?? string.Empty,
+            response.Usage?.TotalTokens ?? 0,
+            choice.FinishReason ?? "unknown");
+    }
 }

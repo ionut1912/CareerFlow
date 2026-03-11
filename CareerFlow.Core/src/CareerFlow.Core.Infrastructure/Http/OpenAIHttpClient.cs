@@ -1,7 +1,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using CareerFlow.Core.Domain.Abstractions.Http;
+using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
@@ -9,14 +9,14 @@ namespace CareerFlow.Core.Infrastructure.Http;
 
 public sealed class OpenAIHttpClient : IOpenAIHttpClient
 {
-    private readonly HttpClient _http;
-    private readonly ILogger<OpenAIHttpClient> _logger;
-
     private static readonly JsonSerializerOptions JsonOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
+
+    private readonly HttpClient _http;
+    private readonly ILogger<OpenAIHttpClient> _logger;
 
     public OpenAIHttpClient(HttpClient http, ILogger<OpenAIHttpClient> logger)
     {
@@ -24,7 +24,7 @@ public sealed class OpenAIHttpClient : IOpenAIHttpClient
         _logger = logger;
     }
 
-    public async Task<TResponse> PostAsync<TRequest, TResponse>(
+    public async Task<TResponse> CreateAsync<TRequest, TResponse>(
         string endpoint,
         TRequest body,
         CancellationToken ct = default)
