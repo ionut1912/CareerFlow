@@ -6,6 +6,8 @@ EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 ARG BUILD_CONFIGURATION=Release
+ARG PACKAGE_TOKEN                          
+ENV PACKAGE_TOKEN=$PACKAGE_TOKEN   
 WORKDIR /src
 COPY ["nuget.config", "."]
 COPY ["src/CareerFlow.Core.Api/CareerFlow.Core.Api.csproj", "src/CareerFlow.Core.Api/"]
