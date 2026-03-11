@@ -22,6 +22,7 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
         problemDetails = exception switch
         {
             ValidationException ex => CreateFromFluent(ex),
+            OpenAIException ex=>Create(ex.StatusCode,"OpenAiFail",ex.Message),
             DocumentEtagExistsException ex => Create(400, "Document Etag Exists", ex.Message),
             AccountNotFoundException ex => Create(404, "Account Not Found", ex.Message),
             InvalidFieldException ex => Create(400, "Invalid Field", ex.Message),
