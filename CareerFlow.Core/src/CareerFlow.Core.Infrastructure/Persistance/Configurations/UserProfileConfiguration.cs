@@ -10,10 +10,18 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
     public void Configure(EntityTypeBuilder<UserProfile> builder)
     {
         builder.HasKey(u => u.Id);
+
+        builder.HasOne(up => up.Account)
+            .WithOne(a => a.UserProfile)
+            .HasForeignKey<UserProfile>(up => up.AccountId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.Property(u => u.AccountId)
             .IsRequired();
+
         builder.HasIndex(up => up.AccountId)
             .IsUnique();
+
         builder.Property(up => up.Domain)
             .HasMaxLength(100);
 
@@ -32,7 +40,6 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
         builder.Property(up => up.CreatedAt).IsRequired();
         builder.Property(up => up.UpdatedAt).IsRequired(false);
 
-        // LearningType value object → single string column
         builder.Property(up => up.LearningType)
             .HasConversion(
                 lt => lt.Value,
@@ -41,18 +48,14 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
             .HasMaxLength(50)
             .HasColumnName("learning_type");
 
-        // UserTypes value objects → owned collection table
         builder.OwnsMany(up => up.UserTypes, ut =>
             {
                 ut.ToTable("user_profile_user_types");
-
                 ut.WithOwner().HasForeignKey("UserProfileId");
-
                 ut.Property(u => u.Value)
                     .IsRequired()
                     .HasMaxLength(50)
                     .HasColumnName("user_type");
-
                 ut.HasKey("UserProfileId", "Value");
             })
             .UsePropertyAccessMode(PropertyAccessMode.Field);

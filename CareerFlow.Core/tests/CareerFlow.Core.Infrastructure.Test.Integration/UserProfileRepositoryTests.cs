@@ -54,7 +54,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
     {
         // Arrange
         var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, "Engineering");
+        var profile = BuildProfile(account.Id);
 
         // Act
         await _sut.AddAsync(profile);
@@ -158,7 +158,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         var account1 = await SeedAccountAsync("a1@test.com");
         var account2 = await SeedAccountAsync("a2@test.com");
         await _sut.AddAsync(BuildProfile(account1.Id, "Finance"));
-        await _sut.AddAsync(BuildProfile(account2.Id, "Engineering"));
+        await _sut.AddAsync(BuildProfile(account2.Id));
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
@@ -281,7 +281,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         var account2 = await SeedAccountAsync("acc2@test.com");
 
         await _sut.AddAsync(BuildProfile(account1.Id, "Finance"));
-        await _sut.AddAsync(BuildProfile(account2.Id, "Engineering"));
+        await _sut.AddAsync(BuildProfile(account2.Id));
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 

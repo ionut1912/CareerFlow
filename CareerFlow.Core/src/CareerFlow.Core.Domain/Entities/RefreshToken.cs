@@ -17,7 +17,6 @@ public class RefreshToken : Entity
             throw new InvalidFieldException("Tokenul este invalid");
         if (string.IsNullOrWhiteSpace(jwtToken))
             throw new InvalidFieldException("Jwt-ul este invalid");
-
         if (expiryDate == default)
             throw new InvalidFieldException("Data de expirare este invalida");
         if (expiryDate <= DateTime.UtcNow)
@@ -33,6 +32,7 @@ public class RefreshToken : Entity
     }
 
     public Guid UserId { get; private set; }
+    public Account Account { get; private set; } = null!;
     public string Token { get; private set; } = string.Empty;
     public string JwtToken { get; private set; } = string.Empty;
     public bool IsUsed { get; private set; }

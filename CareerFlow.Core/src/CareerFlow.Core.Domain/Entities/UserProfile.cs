@@ -17,7 +17,8 @@ public class UserProfile : Entity
         if (accountId == Guid.Empty) throw new InvalidFieldException("User id este invalid");
         if (learningType is null) throw new InvalidFieldException("Learning type nu poate fi null");
         if (userTypes is null) throw new InvalidFieldException("User types nu poate fi null");
-        if (string.IsNullOrWhiteSpace(learningType.Value)) throw new InvalidFieldException("User learning type este invalid");
+        if (string.IsNullOrWhiteSpace(learningType.Value))
+            throw new InvalidFieldException("User learning type este invalid");
         if (userTypes.Count == 0) throw new InvalidFieldException("User types este invalid");
 
         AccountId = accountId;
@@ -48,7 +49,8 @@ public class UserProfile : Entity
     {
         if (newLearningType is null) throw new InvalidFieldException("Learning type nu poate fi null");
         if (newUserTypes is null) throw new InvalidFieldException("User types nu poate fi null");
-        if (string.IsNullOrWhiteSpace(newLearningType.Value)) throw new InvalidFieldException("User learning type este invalid");
+        if (string.IsNullOrWhiteSpace(newLearningType.Value))
+            throw new InvalidFieldException("User learning type este invalid");
         if (newUserTypes.Count == 0) throw new InvalidFieldException("User types este invalid");
         if (string.IsNullOrWhiteSpace(newDomain)) throw new InvalidFieldException("Domain nu poate fi null");
 
