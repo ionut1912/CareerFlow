@@ -11,18 +11,21 @@ public class RefreshTokenConfiguration : IEntityTypeConfiguration<RefreshToken>
         builder.HasKey(rt => rt.Id);
 
         builder.HasIndex(rt => rt.UserId);
+        builder.HasIndex(rt => rt.TokenHash).IsUnique();
 
         builder.HasOne(rt => rt.Account)
             .WithMany()
             .HasForeignKey(rt => rt.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.Property(rt => rt.Token)
+        builder.Property(rt => rt.TokenHash)
             .IsRequired()
-            .HasMaxLength(512);
+            .HasMaxLength(512)
+            .HasColumnName("token_hash");
 
-        builder.Property(rt => rt.JwtToken)
+        builder.Property(rt => rt.JwtId)
             .IsRequired()
-            .HasMaxLength(2048);
+            .HasMaxLength(128)
+            .HasColumnName("jwt_id");
     }
 }

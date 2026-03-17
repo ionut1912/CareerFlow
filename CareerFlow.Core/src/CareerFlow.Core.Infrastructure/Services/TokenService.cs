@@ -60,9 +60,11 @@ public class TokenService : ITokenService
 
     public RefreshToken GenerateRefreshToken(Guid userId, string jwtToken)
     {
-        var refreshToken =
-            RefreshToken.Create(userId, GenerateRandomString(35), jwtToken, DateTime.UtcNow.AddMonths(6));
-        return refreshToken;
+        var handler = new JsonWebTokenHandler();
+        var jwt = handler.ReadJsonWebToken(jwtToken);
+        var jti = jwt.GetClaim(JwtRegisteredClaimNames.Jti).Value; // extracts the 36-char GUID
+
+        return RefreshToken.Create(userId, GenerateRandomString(35), jti, DateTime.UtcNow.AddMonths(6));
     }
 
     private static string GenerateRandomString(int length)

@@ -37,7 +37,7 @@ public class UserProfile : Entity
     public int IncorrectAnswersForQuiz { get; private set; }
     public int Experience { get; private set; }
     public LearningType LearningType { get; private set; } = LearningType.Visual;
-    public IReadOnlyCollection<UserType> UserTypes => _userTypes;
+    public IReadOnlyCollection<UserType> UserTypes => _userTypes.AsReadOnly();
 
     public static UserProfile Create(Guid accountId, LearningType learningType, List<UserType> userTypes,
         string? domain = "Student")

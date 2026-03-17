@@ -68,7 +68,7 @@ public class SocialService(
         await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return string.Format(MobileAppDeepLinkFormat, jwt.Token, refreshToken.Token);
+        return string.Format(MobileAppDeepLinkFormat, jwt.Token, refreshToken.TokenHash);
     }
 
     private string GenerateAndStoreState()

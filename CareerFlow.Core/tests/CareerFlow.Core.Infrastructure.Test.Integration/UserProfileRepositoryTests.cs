@@ -150,7 +150,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         // Assert
         result.ShouldBeEmpty();
     }
-    
+
 
     // ════════════════════════════════════════════════════════════════════════
     // Update

@@ -10,6 +10,6 @@ public class RefreshTokenRepository(DbSet<RefreshToken> dbSet)
 {
     public async Task<RefreshToken?> GetExistingTokenAsync(string refreshToken, CancellationToken cancellationToken)
     {
-        return await dbSet.FirstOrDefaultAsync(rt => rt.Token == refreshToken, cancellationToken);
+        return await dbSet.FirstOrDefaultAsync(rt => rt.TokenHash == refreshToken, cancellationToken);
     }
 }

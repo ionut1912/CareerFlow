@@ -53,7 +53,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
 
         //Assert
         result.Token.ShouldBe(newAuthResult.Token);
-        result.RefreshToken.ShouldBe(newRefreshToken.Token);
+        result.RefreshToken.ShouldBe(newRefreshToken.TokenHash);
         _refreshTokenRepositoryMock.Verify(x => x.Update(storedToken), Times.Once);
         _refreshTokenRepositoryMock.Verify(x => x.AddAsync(newRefreshToken, Ct), Times.Once);
         _unitOfWorkMock.VerifySaveChanges(Times.Once());

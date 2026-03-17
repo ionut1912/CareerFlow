@@ -74,6 +74,6 @@ public class CreateRefreshTokenCommandHandler
         await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         _logger.LogInformation("Refresh token-ul a fost creat cu succes pentru user-ul cu id-ul {Id}", user.Id);
-        return new RefreshTokenDto(newJwtToken.Token, newRefreshToken.Token);
+        return new RefreshTokenDto(newJwtToken.Token, newRefreshToken.TokenHash);
     }
 }
