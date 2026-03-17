@@ -33,5 +33,9 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
         builder.Property(a => a.IsFounder)
             .HasDefaultValue(false)
             .IsRequired();
+        builder.HasOne(a => a.UserProfile)
+            .WithOne(up => up.Account)
+            .HasForeignKey<UserProfile>(a => a.AccountId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

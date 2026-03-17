@@ -1,17 +1,25 @@
 ﻿using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Infrastructure.Persistance.Configurations;
 using Microsoft.EntityFrameworkCore;
 
 namespace CareerFlow.Core.Infrastructure.Test.Integration.Setup;
 
+/// <summary>
+/// Lightweight DbContext used exclusively by integration tests.
+/// Mirrors the production context but lives inside the test project so it
+/// never pollutes production code.
+/// </summary>
 public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options) : DbContext(options)
 {
-    public DbSet<Account> Accounts => Set<Account>();
+    public DbSet<Account>     Accounts     => Set<Account>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
+    public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
+        // ── Account ──────────────────────────────────────────────────────────
         modelBuilder.Entity<Account>(b =>
         {
             b.HasKey(a => a.Id);
@@ -20,6 +28,7 @@ public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options)
             b.HasIndex(a => a.Email).IsUnique();
         });
 
+        // ── RefreshToken ─────────────────────────────────────────────────────
         modelBuilder.Entity<RefreshToken>(b =>
         {
             b.HasKey(r => r.Id);
@@ -29,5 +38,13 @@ public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options)
                 .WithMany()
                 .HasForeignKey(r => r.UserId);
         });
+
+        // ── UserProfile – reuse the real EF configuration ────────────────────
+        modelBuilder.ApplyConfiguration(new UserProfileConfiguration());
+
+        modelBuilder.Entity<UserProfile>()
+            .HasOne(up => up.Account)
+            .WithMany()
+            .HasForeignKey(up => up.AccountId);
     }
 }
