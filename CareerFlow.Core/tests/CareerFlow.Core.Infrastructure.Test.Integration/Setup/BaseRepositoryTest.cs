@@ -18,10 +18,10 @@ public abstract class BaseRepositoryTest : IAsyncLifetime
 
         Context = new TestAppDbContext(options);
 
-        // Strategy: Use a clean delete for simplicity in this context. 
-        // In highly complex systems, Respawner or Transactions are preferred.
         _resetDatabase = async () =>
         {
+            // Delete in FK-safe order: children before parents
+            Context.UserProfiles.RemoveRange(Context.UserProfiles);
             Context.RefreshTokens.RemoveRange(Context.RefreshTokens);
             Context.Accounts.RemoveRange(Context.Accounts);
             await Context.SaveChangesAsync();
@@ -40,7 +40,6 @@ public abstract class BaseRepositoryTest : IAsyncLifetime
         await Context.DisposeAsync();
     }
 
-    // Shared Helper Methods (DRY)
     protected static Account CreateAccount(string email)
     {
         return Account.Create(email, "Password1!", "username", "Full Name");

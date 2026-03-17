@@ -22,10 +22,12 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
         problemDetails = exception switch
         {
             ValidationException ex => CreateFromFluent(ex),
-            OpenAIException ex => Create(
-                ex.StatusCode,
-                "OpenAI Error",
-                "The AI request could not be completed."),
+            InvalidLearningTypeException ex => Create(400, "Invalid Learning Type", ex.Message),
+            UserTypeAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
+            DomainAlreadyExistsException ex => Create(400, "Domain Already Exists", ex.Message),
+            UserProfileNotFoundException ex => Create(404, "User Profile Not Found", ex.Message),
+            InvalidUserTypeException ex => Create(400, "Invalid User Type", ex.Message),
+            LearningTypeAlreadyExistsException ex => Create(400, "Learning Type Already Exists", ex.Message),
             DocumentEtagExistsException ex => Create(400, "Document Etag Exists", ex.Message),
             AccountNotFoundException ex => Create(404, "Account Not Found", ex.Message),
             InvalidFieldException ex => Create(400, "Invalid Field", ex.Message),

@@ -1,13 +1,13 @@
-﻿using CareerFlow.Core.Api.Endpoints;
+﻿using CareerFlow.Core.Api.Features.Account;
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Application.Messages;
+using CareerFlow.Core.Application.Serialization;
 using CareerFlow.Core.Application.Validators;
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
-using CareerFlow.Core.Infrastructure.Extensions;
 using CareerFlow.Core.Infrastructure.Gateways;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Persistance;
@@ -27,6 +27,11 @@ using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, CareerFlowJsonContext.Default);
+});
 
 var infisicalClientId = configuration["Infisical:ClientId"];
 var infisicalClientSecret = configuration["Infisical:ClientSecret"];
@@ -60,12 +65,13 @@ builder.Services.Configure<LegalDocSettings>(builder.Configuration.GetSection(Le
 builder.Services.AddHttpClient<IAuthService, AuthService>();
 builder.Services.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSender>();
 
+builder.Services.AddMemoryCache();
 builder.Services.AddScoped<LegalDocumentCheckerJob>();
-builder.Services.AddOpenAIIntegration();
 builder.Services
     .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
     .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
+    .AddRepository<UserProfile, UserProfileRepository, IUserProfileRepository, ApplicationDbContext>()
     .AddRepositoriesConfig<ITokenService, TokenService>()
     .AddRepositoriesConfig<IPasswordService, PasswordService>()
     .AddRepositoriesConfig<IAuthService, AuthService>()
@@ -119,12 +125,12 @@ app.MapHangfireDashboard("/hangfire", new DashboardOptions
 RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
     "check-terms-update",
     job => job.CheckForUpdatesAsync("Terms", CancellationToken.None),
-    Cron.Hourly);
+    Cron.Daily);
 
 RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
     "check-privacy-update",
     job => job.CheckForUpdatesAsync("Privacy", CancellationToken.None),
-    Cron.Hourly);
+    Cron.Daily);
 app.Run();
 
 namespace CareerFlow.Core.Api

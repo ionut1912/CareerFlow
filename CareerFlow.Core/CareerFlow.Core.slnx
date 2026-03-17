@@ -12,8 +12,6 @@
         <Project Path="tests/CareerFlow.Core.Api.IntegrationTests/CareerFlow.Core.Api.IntegrationTests.csproj"/>
         <Project Path="tests/CareerFlow.Core.Application.Tests/CareerFlow.Core.Application.Tests.csproj"
                  Id="df02d2fb-801d-4bed-8fe7-ecdb76d9a1ca"/>
-        <Project Path="tests/CareerFlow.Core.Domain.Tests/CareerFlow.Core.Domain.Tests.csproj"
-                 Id="26597ede-2066-4295-aef0-f510bde97b10"/>
         <Project
                 Path="tests/CareerFlow.Core.Infrastructure.Test.Integration/CareerFlow.Core.Infrastructure.Test.Integration.csproj"/>
         <Project

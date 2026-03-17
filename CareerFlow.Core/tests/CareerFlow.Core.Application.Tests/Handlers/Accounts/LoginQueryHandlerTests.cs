@@ -54,7 +54,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
 
         // Assert
         result.Token.ShouldBe(authResult.Token);
-        result.RefreshToken.ShouldBe(refreshToken.Token);
+        result.RefreshToken.ShouldBe(refreshToken.TokenHash);
         _refreshTokenRepositoryMock.Verify(x => x.AddAsync(refreshToken, Ct), Times.Once);
         _unitOfWorkMock.VerifySaveChanges(Times.Once());
     }

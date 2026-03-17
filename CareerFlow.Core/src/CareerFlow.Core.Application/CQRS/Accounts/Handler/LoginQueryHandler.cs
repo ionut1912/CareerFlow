@@ -62,7 +62,7 @@ public class LoginQueryHandler
         var refreshToken = _jwtTokenService.GenerateRefreshToken(account.Id, jwtToken.Token);
         await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
-        var accountDto = account.ToAccountDto(jwtToken.Token, refreshToken.Token);
+        var accountDto = account.ToAccountDto(jwtToken.Token, refreshToken.TokenHash);
 
         _logger.LogInformation("Procesul de logare realizat cu succes");
         return accountDto;
