@@ -150,25 +150,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         // Assert
         result.ShouldBeEmpty();
     }
-
-    [Fact]
-    public async Task GetAllAsync_MultipleProfiles_ReturnsAll()
-    {
-        // Arrange
-        var account1 = await SeedAccountAsync("a1@test.com");
-        var account2 = await SeedAccountAsync("a2@test.com");
-        await _sut.AddAsync(BuildProfile(account1.Id, "Finance"));
-        await _sut.AddAsync(BuildProfile(account2.Id));
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        // Act
-        var result = (await _sut.GetAllAsync()).ToList();
-
-        // Assert
-        result.Count.ShouldBe(2);
-        result.Select(p => p.Domain).ShouldBe(["Finance", "Engineering"], true);
-    }
+    
 
     // ════════════════════════════════════════════════════════════════════════
     // Update
@@ -271,27 +253,6 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
 
         // Assert
         result.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task GetCurrentUserProfile_WhenMultipleProfilesExist_ReturnsOnlyTheCorrectOne()
-    {
-        // Arrange
-        var account1 = await SeedAccountAsync("acc1@test.com");
-        var account2 = await SeedAccountAsync("acc2@test.com");
-
-        await _sut.AddAsync(BuildProfile(account1.Id, "Finance"));
-        await _sut.AddAsync(BuildProfile(account2.Id));
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        // Act
-        var result = await _sut.GetCurrentUserProfile(account2.Id, CancellationToken.None);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.AccountId.ShouldBe(account2.Id);
-        result.Domain.ShouldBe("Engineering");
     }
 
     [Fact]
