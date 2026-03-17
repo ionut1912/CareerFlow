@@ -6,7 +6,7 @@ namespace CareerFlow.Core.Application.Tests.Validators.UserProfiles;
 
 public class CreateUserProfileCommandValidatorTests
 {
-    private readonly CreateUserProfileCommandValidator  _validator;
+    private readonly CreateUserProfileCommandValidator _validator;
 
     public CreateUserProfileCommandValidatorTests()
     {
@@ -18,10 +18,10 @@ public class CreateUserProfileCommandValidatorTests
     {
         //Arrange
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student"], "test");
-        
+
         //Act
-        var result =  _validator.TestValidate(command);
-        
+        var result = _validator.TestValidate(command);
+
         //Assert
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -32,11 +32,11 @@ public class CreateUserProfileCommandValidatorTests
     public void Validate_EmptyLearningType_ShouldHaveError(string learningType)
     {
         //Arrange
-        var command=new CreateUserProfileCommand(Guid.NewGuid(), learningType, ["Student"], "test");
-        
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), learningType, ["Student"], "test");
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.LearningType)
             .WithErrorMessage("Tipul de invatare este necesar.");
@@ -47,10 +47,10 @@ public class CreateUserProfileCommandValidatorTests
     {
         //Arrange
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "invalidType", ["Student"], "test");
-        
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.LearningType)
             .WithErrorMessage(
@@ -63,10 +63,10 @@ public class CreateUserProfileCommandValidatorTests
     {
         //Arrange
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", userTypes, "test");
-        
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
             .WithErrorMessage("Cel putin un tip pentru user este necesar.");
@@ -76,11 +76,12 @@ public class CreateUserProfileCommandValidatorTests
     public void Validate_InvalidTypesCount_ShouldHaveError()
     {
         //Arrange
-        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual",  ["Student", "JobSearcher", "HobbyLearner","test"], "test");
-        
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual",
+            ["Student", "JobSearcher", "HobbyLearner", "test"], "test");
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
             .WithErrorMessage("Prea multe tipuri.");
@@ -91,24 +92,25 @@ public class CreateUserProfileCommandValidatorTests
     {
         //Arrange
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["test"], "test");
-        
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
-            .WithErrorMessage($"Fiecare tip de user trebuie sa fie unul dintre: {string.Join(", ", CreateUserProfileCommandValidator.ValidUserTypes)}.");
+            .WithErrorMessage(
+                $"Fiecare tip de user trebuie sa fie unul dintre: {string.Join(", ", CreateUserProfileCommandValidator.ValidUserTypes)}.");
     }
 
     [Fact]
     public void Validate_DuplicateUserType_ShouldHaveError()
     {
         //Arrange
-        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student","Student"], "test");
-        
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student", "Student"], "test");
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
             .WithErrorMessage("Tipul user nu trebuie sa contina duplicate");
@@ -118,18 +120,22 @@ public class CreateUserProfileCommandValidatorTests
     public void Validate_DomainLengthGreatherThan100_ShouldHaveError()
     {
         //Arrange
-        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student"], "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-        
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student"],
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
         //Act
         var result = _validator.TestValidate(command);
-        
+
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.Domain)
             .WithErrorMessage("Domeniul nu trebuie sa aiba mai mult de 100 caractere.");
     }
-    
-    public static IEnumerable<object[]> EmptyUserTypeData() =>
-    [
-        [new List<string>()]
-    ];
+
+    public static IEnumerable<object[]> EmptyUserTypeData()
+    {
+        return
+        [
+            [new List<string>()]
+        ];
+    }
 }

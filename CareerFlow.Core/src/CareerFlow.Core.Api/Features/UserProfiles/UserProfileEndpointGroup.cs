@@ -4,12 +4,13 @@ using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Wolverine;
 
-namespace CareerFlow.Core.Api.Endpoints;
+namespace CareerFlow.Core.Api.Features.UserProfiles;
 
 public class UserProfileEndpointGroup : EndpointGroup
 {
@@ -25,61 +26,73 @@ public class UserProfileEndpointGroup : EndpointGroup
     }
 
     [Authorize]
-    private static async Task<IResult> CreateUserProfile(IMessageBus messageBus, HttpContext httpContext,
+    private static async Task<Results<Ok<Guid>, UnauthorizedHttpResult>> CreateUserProfile(
+        IMessageBus messageBus,
+        HttpContext httpContext,
         CreateUserProfileRequest request,
         CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
-        if (accountId == Guid.Empty) return Results.Unauthorized();
+        if (accountId == Guid.Empty) return TypedResults.Unauthorized();
         var createUserProfileCommand = request.ToCreateUserProfileCommand(accountId);
         var userProfileId = await messageBus.InvokeAsync<Guid>(createUserProfileCommand, cancellationToken);
-        return Results.Ok(userProfileId);
+        return TypedResults.Ok(userProfileId);
     }
 
     [Authorize]
-    private static async Task<IResult> GetUserProfiles(IMessageBus messageBus, CancellationToken cancellationToken)
+    private static async Task<Ok<List<UserProfileDto>>> GetUserProfiles(
+        IMessageBus messageBus,
+        CancellationToken cancellationToken)
     {
         var query = new GetUserProfilesQuery();
         var result = await messageBus.InvokeAsync<List<UserProfileDto>>(query, cancellationToken);
-        return Results.Ok(result);
+        return TypedResults.Ok(result);
     }
 
     [Authorize]
-    private static async Task<IResult> GetUserProfile(IMessageBus messageBus, Guid id,
+    private static async Task<Ok<UserProfileDto>> GetUserProfile(
+        IMessageBus messageBus,
+        Guid id,
         CancellationToken cancellationToken)
     {
         var query = new GetUserProfileByIdQuery(id);
         var result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
-        return Results.Ok(result);
+        return TypedResults.Ok(result);
     }
 
     [Authorize]
-    private static async Task<IResult> GetCurrentUserProfile(IMessageBus messageBus, HttpContext httpContext,
+    private static async Task<Results<Ok<UserProfileDto>, UnauthorizedHttpResult>> GetCurrentUserProfile(
+        IMessageBus messageBus,
+        HttpContext httpContext,
         CancellationToken cancellationToken)
     {
         var accountId = httpContext.GetAccountId();
-        if (accountId == Guid.Empty) return Results.Unauthorized();
+        if (accountId == Guid.Empty) return TypedResults.Unauthorized();
         var query = new GetCurrentUserProfileQuery(accountId);
         var result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
-        return Results.Ok(result);
+        return TypedResults.Ok(result);
     }
 
     [Authorize]
-    private static async Task<IResult> UpdateUserProfile(IMessageBus messageBus, Guid id,
+    private static async Task<NoContent> UpdateUserProfile(
+        IMessageBus messageBus,
+        Guid id,
         UpdateUserProfileRequest request,
         CancellationToken cancellationToken)
     {
         var updateCommand = request.ToUpdateUserProfileCommand(id);
         await messageBus.InvokeAsync(updateCommand, cancellationToken);
-        return Results.NoContent();
+        return TypedResults.NoContent();
     }
 
     [Authorize]
-    private static async Task<IResult> DeleteUserProfile(IMessageBus messageBus, Guid id,
+    private static async Task<NoContent> DeleteUserProfile(
+        IMessageBus messageBus,
+        Guid id,
         CancellationToken cancellationToken)
     {
         var deleteCommand = new DeleteUserProfileCommand(id);
         await messageBus.InvokeAsync(deleteCommand, cancellationToken);
-        return Results.NoContent();
+        return TypedResults.NoContent();
     }
 }

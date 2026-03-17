@@ -26,7 +26,7 @@ public class UserType : ValueObject
 
     public static UserType FromString(string userType)
     {
-        return userType.ToLower() switch
+        return userType.Trim().ToLowerInvariant() switch
         {
             "student" => Student,
             "jobsearcher" => JobSearcher,

@@ -1,6 +1,7 @@
-﻿using CareerFlow.Core.Api.Endpoints;
+﻿using CareerFlow.Core.Api.Features.Account;
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Application.Messages;
+using CareerFlow.Core.Application.Serialization;
 using CareerFlow.Core.Application.Validators;
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -26,6 +27,11 @@ using Wolverine.RabbitMQ;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
+
+builder.Services.ConfigureHttpJsonOptions(options =>
+{
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, CareerFlowJsonContext.Default);
+});
 
 var infisicalClientId = configuration["Infisical:ClientId"];
 var infisicalClientSecret = configuration["Infisical:ClientSecret"];

@@ -9,7 +9,7 @@ using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Wolverine;
 
-namespace CareerFlow.Core.Api.Endpoints;
+namespace CareerFlow.Core.Api.Features.Account;
 
 public class AccountEndpointGroup : EndpointGroup
 {

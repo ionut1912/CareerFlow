@@ -1,12 +1,11 @@
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Persistance.Repositories;
 using CareerFlow.Core.Infrastructure.Test.Integration.Setup;
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Test.Integration.Repositories;
+namespace CareerFlow.Core.Infrastructure.Test.Integration;
 
 [Trait("Category", "Integration")]
 public sealed class UserProfileRepositoryTests : BaseRepositoryTest
@@ -55,7 +54,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
     {
         // Arrange
         var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, domain: "Engineering");
+        var profile = BuildProfile(account.Id, "Engineering");
 
         // Act
         await _sut.AddAsync(profile);
@@ -83,8 +82,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         await _sut.AddAsync(BuildProfile(account.Id)); // same AccountId — violates unique index
 
         // Act & Assert
-        await Should.ThrowAsync<Exception>(
-            async () => await Context.SaveChangesAsync());
+        await Should.ThrowAsync<Exception>(async () => await Context.SaveChangesAsync());
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -136,7 +134,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         // Assert
         result.ShouldNotBeNull();
         result.UserTypes.Count.ShouldBe(2);
-        result.UserTypes.Select(ut => ut.Value).ShouldBe(["JobSearcher", "Student"], ignoreOrder: true);
+        result.UserTypes.Select(ut => ut.Value).ShouldBe(["JobSearcher", "Student"], true);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -159,8 +157,8 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         // Arrange
         var account1 = await SeedAccountAsync("a1@test.com");
         var account2 = await SeedAccountAsync("a2@test.com");
-        await _sut.AddAsync(BuildProfile(account1.Id, domain: "Finance"));
-        await _sut.AddAsync(BuildProfile(account2.Id, domain: "Engineering"));
+        await _sut.AddAsync(BuildProfile(account1.Id, "Finance"));
+        await _sut.AddAsync(BuildProfile(account2.Id, "Engineering"));
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
@@ -169,7 +167,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
 
         // Assert
         result.Count.ShouldBe(2);
-        result.Select(p => p.Domain).ShouldBe(["Finance", "Engineering"], ignoreOrder: true);
+        result.Select(p => p.Domain).ShouldBe(["Finance", "Engineering"], true);
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -181,7 +179,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
     {
         // Arrange
         var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, domain: "Finance", learningType: "Visual", userTypes: ["JobSearcher"]);
+        var profile = BuildProfile(account.Id, "Finance", "Visual", ["JobSearcher"]);
         await _sut.AddAsync(profile);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
@@ -202,66 +200,6 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         updated.ShouldNotBeNull();
         updated.Domain.ShouldBe("Healthcare");
         updated.LearningType.Value.ShouldBe("Auditory");
-    }
-
-    [Fact]
-    public async Task Update_WithSameLearningType_ThrowsLearningTypeAlreadyExistsException()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, learningType: "Visual", userTypes: ["JobSearcher"]);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        var toUpdate = await Context.UserProfiles.FindAsync(profile.Id);
-
-        // Act & Assert
-        Should.Throw<LearningTypeAlreadyExistsException>(() =>
-            toUpdate!.Update(
-                LearningType.FromString("Visual"), // same — should throw
-                [UserType.FromString("Student")],
-                "Healthcare"));
-    }
-
-    [Fact]
-    public async Task Update_WithSameDomain_ThrowsDomainAlreadyExistsException()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, domain: "Finance", learningType: "Visual", userTypes: ["JobSearcher"]);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        var toUpdate = await Context.UserProfiles.FindAsync(profile.Id);
-
-        // Act & Assert
-        Should.Throw<DomainAlreadyExistsException>(() =>
-            toUpdate!.Update(
-                LearningType.FromString("Auditory"),
-                [UserType.FromString("Student")],
-                "Finance")); // same domain — should throw
-    }
-
-    [Fact]
-    public async Task Update_WithExistingUserType_ThrowsUserTypeAlreadyExistsException()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, learningType: "Visual", userTypes: ["JobSearcher"]);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        var toUpdate = await Context.UserProfiles.FindAsync(profile.Id);
-
-        // Act & Assert
-        Should.Throw<UserTypeAlreadyExistsException>(() =>
-            toUpdate!.Update(
-                LearningType.FromString("Auditory"),
-                [UserType.FromString("JobSearcher")], // already exists — should throw
-                "Healthcare"));
     }
 
     // ════════════════════════════════════════════════════════════════════════
@@ -300,9 +238,9 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         var account = await SeedAccountAsync("loaded@test.com");
         var profile = BuildProfile(
             account.Id,
-            domain: "Data Science",
-            learningType: "Auditory",
-            userTypes: ["JobSearcher", "Student"]);
+            "Data Science",
+            "Auditory",
+            ["JobSearcher", "Student"]);
 
         await _sut.AddAsync(profile);
         await Context.SaveChangesAsync();
@@ -320,7 +258,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         result.Account.Email.ShouldBe("loaded@test.com");
 
         result.UserTypes.Count.ShouldBe(2);
-        result.UserTypes.Select(ut => ut.Value).ShouldBe(["JobSearcher", "Student"], ignoreOrder: true);
+        result.UserTypes.Select(ut => ut.Value).ShouldBe(["JobSearcher", "Student"], true);
 
         result.LearningType.Value.ShouldBe("Auditory");
     }
@@ -342,8 +280,8 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         var account1 = await SeedAccountAsync("acc1@test.com");
         var account2 = await SeedAccountAsync("acc2@test.com");
 
-        await _sut.AddAsync(BuildProfile(account1.Id, domain: "Finance"));
-        await _sut.AddAsync(BuildProfile(account2.Id, domain: "Engineering"));
+        await _sut.AddAsync(BuildProfile(account1.Id, "Finance"));
+        await _sut.AddAsync(BuildProfile(account2.Id, "Engineering"));
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
@@ -364,7 +302,7 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         await cts.CancelAsync();
 
         // Act & Assert
-        await Should.ThrowAsync<OperationCanceledException>(
-            async () => await _sut.GetCurrentUserProfile(Guid.NewGuid(), cts.Token));
+        await Should.ThrowAsync<OperationCanceledException>(async () =>
+            await _sut.GetCurrentUserProfile(Guid.NewGuid(), cts.Token));
     }
 }

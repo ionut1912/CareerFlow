@@ -10,10 +10,10 @@ using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
 
-public class GetCurrentUserProfileQueryHandlerTests:BaseHandlerTest<GetCurrentUserProfileQueryHandler>
+public class GetCurrentUserProfileQueryHandlerTests : BaseHandlerTest<GetCurrentUserProfileQueryHandler>
 {
-    private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock;
     private readonly GetCurrentUserProfileQueryHandler _handler;
+    private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock;
 
     public GetCurrentUserProfileQueryHandlerTests()
     {
@@ -33,16 +33,15 @@ public class GetCurrentUserProfileQueryHandlerTests:BaseHandlerTest<GetCurrentUs
         _userProfileRepositoryMock
             .Setup(x => x.GetCurrentUserProfile(query.AccountId, Ct))
             .ReturnsAsync(userProfileToReturn);
-        
+
         //Act
-        var result=await _handler.Handle(query, Ct);
+        var result = await _handler.Handle(query, Ct);
         result.ShouldNotBeNull();
         result.AccountId.ShouldBe(query.AccountId);
         result.LearningType.ShouldBe(userProfileToReturn.LearningType.Value);
         result.UserTypes[0].ShouldBe(userProfileToReturn.UserTypes.ToList()[0].Value);
-        
     }
-    
+
     [Fact]
     public async Task Handle_UserProfileNotFound_ThrowsException()
     {
@@ -51,12 +50,12 @@ public class GetCurrentUserProfileQueryHandlerTests:BaseHandlerTest<GetCurrentUs
         _userProfileRepositoryMock
             .Setup(x => x.GetCurrentUserProfile(query.AccountId, Ct))
             .ReturnsAsync((UserProfile?)null);
-        
+
         //Act
-        var exception =await Should.ThrowAsync<UserProfileNotFoundException>(()=>_handler.Handle(query, Ct));
-        
+        var exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(query, Ct));
+
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {query.AccountId} nu a fost gasit");
-        _loggerMock.VerifyLogError(query.AccountId.ToString(),Times.Once());
+        _loggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
     }
 }

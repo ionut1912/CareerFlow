@@ -10,10 +10,10 @@ using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
 
-public class UpdateUserProfileCommandHandlerTests:BaseHandlerTest<UpdateUserProfileCommandHandler>
+public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserProfileCommandHandler>
 {
-    private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock;
     private readonly UpdateUserProfileCommandHandler _handler;
+    private readonly Mock<IUserProfileRepository> _userProfileRepositoryMock;
 
     public UpdateUserProfileCommandHandlerTests()
     {
@@ -32,40 +32,38 @@ public class UpdateUserProfileCommandHandlerTests:BaseHandlerTest<UpdateUserProf
         var existingUserProfile =
             UserProfile.Create(Guid.NewGuid(), LearningType.Auditory, [UserType.JobSearcher], "Chemistry");
         _userProfileRepositoryMock
-            .Setup(x=>x.GetByIdAsync(request.Id,Ct))
+            .Setup(x => x.GetByIdAsync(request.Id, Ct))
             .ReturnsAsync(existingUserProfile);
-        
+
         //Act
         await _handler.Handle(request, Ct);
-        
+
         //Assert
         _userProfileRepositoryMock
-            .Verify(x=>x.Update(It.IsAny<UserProfile>()), Times.Once);
-        _unitOfWorkMock.
-            Verify(x=>x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+            .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Once);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
-    
+
     [Fact]
     public async Task Handle_ProfileNotFound_ThrowsException()
     {
         //Arrange
         var request = new UpdateUserProfileCommand(Guid.NewGuid(), "visual", ["student"], "student");
         _userProfileRepositoryMock
-            .Setup(x=>x.GetByIdAsync(request.Id,Ct))
-            .ReturnsAsync((UserProfile?) null);
-        
+            .Setup(x => x.GetByIdAsync(request.Id, Ct))
+            .ReturnsAsync((UserProfile?)null);
+
         //Act
-        var exception=await Should.ThrowAsync<UserProfileNotFoundException>(()=>_handler.Handle(request, Ct));
-        
+        var exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
+
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {request.Id} nu a fost gasit");
         _userProfileRepositoryMock
-            .Verify(x=>x.Update(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock.
-            Verify(x=>x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-        _loggerMock.VerifyLogError(request.Id.ToString(),Times.Once());
+            .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        _loggerMock.VerifyLogError(request.Id.ToString(), Times.Once());
     }
-    
+
     [Fact]
     public async Task Handle_InvalidLearningType_ThrowsException()
     {
@@ -74,18 +72,17 @@ public class UpdateUserProfileCommandHandlerTests:BaseHandlerTest<UpdateUserProf
         var existingUserProfile =
             UserProfile.Create(Guid.NewGuid(), LearningType.Auditory, [UserType.JobSearcher], "Chemistry");
         _userProfileRepositoryMock
-            .Setup(x=>x.GetByIdAsync(request.Id,Ct))
+            .Setup(x => x.GetByIdAsync(request.Id, Ct))
             .ReturnsAsync(existingUserProfile);
-        
+
         //Act
-        var exception=await Should.ThrowAsync<InvalidLearningTypeException>(()=>_handler.Handle(request, Ct));
+        var exception = await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul de invatare {request.LearningType} e invalid");
         _userProfileRepositoryMock
-            .Verify(x=>x.Update(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock.
-            Verify(x=>x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -96,18 +93,16 @@ public class UpdateUserProfileCommandHandlerTests:BaseHandlerTest<UpdateUserProf
         var existingUserProfile =
             UserProfile.Create(Guid.NewGuid(), LearningType.Auditory, [UserType.JobSearcher], "Chemistry");
         _userProfileRepositoryMock
-            .Setup(x=>x.GetByIdAsync(request.Id,Ct))
+            .Setup(x => x.GetByIdAsync(request.Id, Ct))
             .ReturnsAsync(existingUserProfile);
-        
+
         //Act
-        var exception=await Should.ThrowAsync<InvalidUserTypeException>(()=>_handler.Handle(request, Ct));
-        
+        var exception = await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
+
         //Assert
         exception.Message.ShouldBe($"Tipul {request.UserTypes[0]} este invalid");
         _userProfileRepositoryMock
-            .Verify(x=>x.Update(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock.
-            Verify(x=>x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+            .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Never);
+        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
-    
 }

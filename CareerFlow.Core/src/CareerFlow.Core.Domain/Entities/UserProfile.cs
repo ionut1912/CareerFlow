@@ -8,22 +8,21 @@ public class UserProfile : Entity
 {
     private readonly List<UserType> _userTypes = [];
 
-    private UserProfile() //for EF core
+    private UserProfile()
     {
     }
 
     public UserProfile(Guid accountId, LearningType learningType, List<UserType> userTypes, string? domain = "Student")
     {
         if (accountId == Guid.Empty) throw new InvalidFieldException("User id este invalid");
-
-        if (string.IsNullOrWhiteSpace(learningType.Value))
-            throw new InvalidFieldException("User learning type este invalid");
-
+        if (learningType is null) throw new InvalidFieldException("Learning type nu poate fi null");
+        if (userTypes is null) throw new InvalidFieldException("User types nu poate fi null");
+        if (string.IsNullOrWhiteSpace(learningType.Value)) throw new InvalidFieldException("User learning type este invalid");
         if (userTypes.Count == 0) throw new InvalidFieldException("User types este invalid");
 
         AccountId = accountId;
         LearningType = learningType;
-        Domain = domain ?? "student";
+        Domain = domain ?? "Student";
         CorrectAnswersForQuiz = 0;
         IncorrectAnswersForQuiz = 0;
         Experience = 0;
@@ -47,14 +46,12 @@ public class UserProfile : Entity
 
     public void Update(LearningType newLearningType, List<UserType> newUserTypes, string newDomain)
     {
-        if (newLearningType == LearningType)
-            throw new LearningTypeAlreadyExistsException($"LearningType {newLearningType} is already in use");
+        if (newLearningType is null) throw new InvalidFieldException("Learning type nu poate fi null");
+        if (newUserTypes is null) throw new InvalidFieldException("User types nu poate fi null");
+        if (string.IsNullOrWhiteSpace(newLearningType.Value)) throw new InvalidFieldException("User learning type este invalid");
+        if (newUserTypes.Count == 0) throw new InvalidFieldException("User types este invalid");
+        if (string.IsNullOrWhiteSpace(newDomain)) throw new InvalidFieldException("Domain nu poate fi null");
 
-        var alreadyExists = newUserTypes.FirstOrDefault(t => _userTypes.Contains(t));
-        if (alreadyExists != null)
-            throw new UserTypeAlreadyExistsException($"UserType {alreadyExists} is already in use");
-        if (Domain == newDomain)
-            throw new DomainAlreadyExistsException($"Domain {Domain} is already in use");
         LearningType = newLearningType;
         _userTypes.Clear();
         _userTypes.AddRange(newUserTypes);

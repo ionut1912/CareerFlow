@@ -2,7 +2,7 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 
-namespace CareerFlow.Core.Api.Endpoints;
+namespace CareerFlow.Core.Api.Features.Account;
 
 public class SocialEndpointGroup : EndpointGroup
 {

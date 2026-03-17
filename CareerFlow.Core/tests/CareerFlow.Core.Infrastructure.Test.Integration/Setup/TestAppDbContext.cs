@@ -5,13 +5,9 @@ using Microsoft.EntityFrameworkCore;
 namespace CareerFlow.Core.Infrastructure.Test.Integration.Setup;
 
 /// <summary>
-/// Lightweight DbContext used exclusively by integration tests.
-/// Mirrors the production context but lives inside the test project so it
-/// never pollutes production code.
-/// </summary>
 public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options) : DbContext(options)
 {
-    public DbSet<Account>     Accounts     => Set<Account>();
+    public DbSet<Account> Accounts => Set<Account>();
     public DbSet<RefreshToken> RefreshTokens => Set<RefreshToken>();
     public DbSet<UserProfile> UserProfiles => Set<UserProfile>();
 

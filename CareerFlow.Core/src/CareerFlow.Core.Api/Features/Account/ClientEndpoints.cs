@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace CareerFlow.Core.Api.Endpoints;
+namespace CareerFlow.Core.Api.Features.Account;
 
 public static class ClientEndpoints
 {

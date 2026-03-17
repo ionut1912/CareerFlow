@@ -26,7 +26,7 @@ public class LearningType : ValueObject
 
     public static LearningType FromString(string learningType)
     {
-        return learningType.ToLower() switch
+        return learningType.Trim().ToLowerInvariant() switch
         {
             "visual" => Visual,
             "auditory" => Auditory,

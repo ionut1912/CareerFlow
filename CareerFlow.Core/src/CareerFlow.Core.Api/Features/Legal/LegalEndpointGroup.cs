@@ -4,7 +4,7 @@ using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 using Wolverine;
 
-namespace CareerFlow.Core.Api.Endpoints;
+namespace CareerFlow.Core.Api.Features.Legal;
 
 public class LegalEndpointGroup : EndpointGroup
 {
