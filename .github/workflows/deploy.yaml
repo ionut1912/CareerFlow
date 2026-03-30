@@ -22,7 +22,6 @@ jobs:
           script: |
             cd projects/CareerFlow
 
-            # Pull latest code
             git pull origin master
 
             # Stop AND remove containers first
