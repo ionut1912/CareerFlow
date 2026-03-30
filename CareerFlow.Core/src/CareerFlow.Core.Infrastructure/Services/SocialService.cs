@@ -17,14 +17,16 @@ public class SocialService(
     IUnitOfWork unitOfWork,
     IMemoryCache cache) : ISocialService
 {
-    private const string MobileAppDeepLinkFormat = "careerflowui://auth/callback?token={0}&refreshToken={1}";
     private readonly SocialAuthSettings _settings = options.Value;
 
-    public string GoogleMobileLogin()
+    // 1. Am adăugat parametrul returnUrl
+    public string GoogleMobileLogin(string? returnUrl = null)
     {
         var redirectUri = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/google/mobile/callback");
         var scope = Uri.EscapeDataString("openid email profile");
-        var state = GenerateAndStoreState();
+        
+        // 2. Pasăm adresa către funcția care o stochează
+        var state = GenerateAndStoreState(returnUrl);
 
         return
             $"https://accounts.google.com/o/oauth2/v2/auth?client_id={_settings.Google.ClientId}&redirect_uri={redirectUri}&response_type=code&scope={scope}&access_type=offline&state={state}";
@@ -32,19 +34,22 @@ public class SocialService(
 
     public async Task<string> GoogleMobileCallBack(string code, string state, CancellationToken cancellationToken)
     {
-        ValidateState(state);
+        // 3. Recuperăm adresa de la Expo Go din memorie
+        var savedReturnUrl = ValidateStateAndGetReturnUrl(state);
 
         var idToken = await authService.ExchangeGoogleCodeAsync(code, cancellationToken);
         var account = await authService.LoginWithGoogleAsync(idToken, cancellationToken);
 
-        return await ProcessAccountAndGenerateCallbackUriAsync(account, cancellationToken);
+        // 4. Folosim adresa recuperată pentru a genera link-ul final
+        return await ProcessAccountAndGenerateCallbackUriAsync(account, savedReturnUrl, cancellationToken);
     }
 
-    public string LinkedInMobileLogin()
+    // --- Identic pentru LinkedIn ---
+    public string LinkedInMobileLogin(string? returnUrl = null)
     {
         var redirectUri = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/linkedin/mobile/callback");
         var scope = Uri.EscapeDataString("openid profile email");
-        var state = GenerateAndStoreState();
+        var state = GenerateAndStoreState(returnUrl);
 
         return
             $"https://www.linkedin.com/oauth/v2/authorization?client_id={_settings.LinkedIn.ClientId}&redirect_uri={redirectUri}&response_type=code&scope={scope}&state={state}";
@@ -52,14 +57,14 @@ public class SocialService(
 
     public async Task<string> LinkedInCallBack(string code, string state, CancellationToken cancellationToken)
     {
-        ValidateState(state);
-
+        var savedReturnUrl = ValidateStateAndGetReturnUrl(state);
         var account = await authService.LoginWithLinkedInAsync(code, cancellationToken);
-
-        return await ProcessAccountAndGenerateCallbackUriAsync(account, cancellationToken);
+        return await ProcessAccountAndGenerateCallbackUriAsync(account, savedReturnUrl, cancellationToken);
     }
 
-    private async Task<string> ProcessAccountAndGenerateCallbackUriAsync(Account account,
+    // --- Metodele ajutătoare modificate ---
+
+    private async Task<string> ProcessAccountAndGenerateCallbackUriAsync(Account account, string returnUrl,
         CancellationToken cancellationToken)
     {
         var jwt = tokenService.GenerateToken(account);
@@ -68,28 +73,37 @@ public class SocialService(
         await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
-        return string.Format(MobileAppDeepLinkFormat, jwt.Token, refreshToken.TokenHash);
+        // Lipim dinamic tokenii la adresa primită
+        string separator = returnUrl.Contains("?") ? "&" : "?";
+        return $"{returnUrl}{separator}token={jwt.Token}&refreshToken={refreshToken.TokenHash}";
     }
 
-    private string GenerateAndStoreState()
+    private string GenerateAndStoreState(string? returnUrl)
     {
         var stateBytes = RandomNumberGenerator.GetBytes(32);
-
         var state = Convert.ToBase64String(stateBytes)
             .Replace("+", "-")
             .Replace("/", "_")
             .TrimEnd('=');
 
-        cache.Set(state, true, TimeSpan.FromMinutes(15));
+        // Dacă nu primim link (ex: din producție), folosim o adresă implicită sigură
+        var urlToSave = string.IsNullOrWhiteSpace(returnUrl) ? "careerflow://auth/callback" : returnUrl;
+
+        // Salvăm URL-ul în cache în loc de un simplu "true"
+        cache.Set(state, urlToSave, TimeSpan.FromMinutes(15));
 
         return state;
     }
 
-    private void ValidateState(string state)
+    private string ValidateStateAndGetReturnUrl(string state)
     {
-        if (string.IsNullOrWhiteSpace(state) || !cache.TryGetValue(state, out _))
+        // Verificăm state-ul și extragem direct adresa salvată
+        if (string.IsNullOrWhiteSpace(state) || !cache.TryGetValue(state, out string? returnUrl) || string.IsNullOrEmpty(returnUrl))
+        {
             throw new InvalidOperationException("Invalid or missing state parameter. CSRF validation failed.");
+        }
 
         cache.Remove(state);
+        return returnUrl;
     }
 }
