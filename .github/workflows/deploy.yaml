@@ -22,13 +22,18 @@ jobs:
           script: |
             cd projects/CareerFlow
 
-            git pull origin master
+            # 1. FORȚĂM sincronizarea absolută cu GitHub (șterge orice diferență locală)
+            git fetch --all
+            git reset --hard origin/master
 
-            # Stop AND remove containers first
+            # 2. Oprim și ștergem containerele vechi
             docker compose down --rmi all --volumes --remove-orphans
 
-            # Now safe to prune everything else
+            # 3. Curățăm sistemul
             docker system prune -af --volumes
 
-            # Rebuild and start
-            docker compose up -d --build
+            # 4. Construim FĂRĂ CACHE (Obligă Docker să citească noul cod C#)
+            docker compose build --no-cache
+
+            # 5. Pornim aplicația
+            docker compose up -d
