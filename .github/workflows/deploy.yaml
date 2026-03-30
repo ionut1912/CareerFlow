@@ -26,7 +26,7 @@ jobs:
           script: |
             cd projects/CareerFlow
 
-            git pull https://x-access-token:${GH_TOKEN}@github.com/ionut1912.git master
+            git pull https://x-access-token:${GH_TOKEN}@github.com/ionut1912/CareerFlow.git master
 
             # Stop AND remove containers first
             docker compose down --rmi all --volumes --remove-orphans
