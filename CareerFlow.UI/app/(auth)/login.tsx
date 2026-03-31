@@ -35,7 +35,7 @@ const LoginScreen = () => {
       await dispatch(
         loginThunk({email: form.email, password: form.password}),
       ).unwrap();
-      router.replace('/(tabs)');
+      router.replace('/(auth)/preferences');
     } catch (error) {
       showErrorToast('Eroare la autentificare', error);
     }

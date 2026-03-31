@@ -1,3 +1,7 @@
+import {MaterialIcons} from '@expo/vector-icons';
+
+type IconName = React.ComponentProps<typeof MaterialIcons>['name'];
+
 interface ApiErrorResponse {
   message: string;
 }
@@ -26,4 +30,17 @@ interface ErrorFields {
   username: string | null;
 }
 
-export type {ApiErrorResponse, RegisterForm, TouchedFields, ErrorFields};
+interface OptionType {
+  id: string;
+  title: string;
+  icon: IconName;
+  desc: string;
+}
+
+export type {
+  ApiErrorResponse,
+  RegisterForm,
+  TouchedFields,
+  ErrorFields,
+  OptionType,
+};

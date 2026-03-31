@@ -55,7 +55,6 @@
     "react-native": "0.81.5",
     "react-native-gesture-handler": "~2.28.0",
     "react-native-markdown-display": "^7.0.2",
-    "react-native-mmkv-storage": "^12.0.1",
     "react-native-reanimated": "~4.1.1",
     "react-native-render-html": "^6.3.4",
     "react-native-safe-area-context": "~5.6.0",
@@ -86,5 +85,9 @@
     "prettier": "^3.8.1",
     "react-test-renderer": "19.1.0",
     "typescript": "~5.9.2"
+  },
+  "overrides": {
+    "@tootallnate/once": "^3.0.1",
+    "markdown-it": "^12.3.2"
   }
 }
