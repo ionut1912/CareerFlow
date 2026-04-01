@@ -20,6 +20,7 @@ jest.mock('@/services/utils', () => ({
 
 jest.mock('expo-web-browser', () => ({
   openAuthSessionAsync: jest.fn(),
+  dismissBrowser: jest.fn(),
 }));
 
 const mockRemoveListener = jest.fn();
@@ -52,7 +53,7 @@ describe('useSocialAuth', () => {
   describe('Authentication Flows', () => {
     it('handles successful Google login and dispatches tokens', async () => {
       const mockRedirectUrl =
-        'careerflowui://auth/callback?token=123&refreshToken=abc';
+        'careerflow://auth/callback?token=123&refreshToken=abc';
       (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValueOnce({
         type: 'success',
         url: mockRedirectUrl,
@@ -71,7 +72,7 @@ describe('useSocialAuth', () => {
 
       expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
         'https://mock-api.com/social/auth/google/mobile',
-        'careerflowui://auth/callback',
+        'careerflow://auth/callback',
       );
       expect(Linking.parse).toHaveBeenCalledWith(mockRedirectUrl);
       expect(mockDispatch).toHaveBeenCalledWith(
@@ -81,7 +82,7 @@ describe('useSocialAuth', () => {
 
     it('handles successful LinkedIn login and dispatches tokens', async () => {
       const mockRedirectUrl =
-        'careerflowui://auth/callback?token=456&refreshToken=def';
+        'careerflow://auth/callback?token=456&refreshToken=def';
       (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValueOnce({
         type: 'success',
         url: mockRedirectUrl,
@@ -100,7 +101,7 @@ describe('useSocialAuth', () => {
 
       expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
         'https://mock-api.com/social/auth/linkedin/mobile',
-        'careerflowui://auth/callback',
+        'careerflow://auth/callback',
       );
       expect(mockDispatch).toHaveBeenCalledTimes(1);
     });
@@ -182,7 +183,7 @@ describe('useSocialAuth', () => {
 
       act(() => {
         registeredCallback({
-          url: 'careerflowui://auth/callback?token=android-token&refreshToken=android-refresh',
+          url: 'careerflow://auth/callback?token=android-token&refreshToken=android-refresh',
         });
       });
 

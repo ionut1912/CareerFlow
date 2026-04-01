@@ -10,8 +10,6 @@ module.exports = {
   ],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx'],
   clearMocks: true,
-
-  // ADD THIS BLOCK:
   moduleNameMapper: {
     '^@react-native-async-storage/async-storage$':
       '<rootDir>/node_modules/@react-native-async-storage/async-storage/jest/async-storage-mock',

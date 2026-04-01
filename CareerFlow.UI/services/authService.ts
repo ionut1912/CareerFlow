@@ -22,7 +22,7 @@ export function register(
 
 export function getCurrentAccount(): Promise<AxiosResponse<AccountDto>> {
   return api.get<AccountDto>(`${API_AUTH_URL}/current`, {
-    headers: {'requires-auth': true},
+    headers: {'requires-auth': ''},
   });
 }
 

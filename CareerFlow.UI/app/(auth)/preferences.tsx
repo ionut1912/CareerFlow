@@ -5,30 +5,33 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
 } from 'react-native';
 import {useRouter} from 'expo-router';
 import {COLORS} from '@/constants/theme';
+import {SafeAreaView} from 'react-native-safe-area-context';
 import {GradientButton} from '@/components/shared/GradientButton';
 import {OptionType} from '@/models/ui.models';
 import {OptionCard} from '@/components/shared/OptionCard';
+import {showErrorToast, showSuccessToast} from '@/utils/toast';
+import {useAppDispatch, useAppSelector} from '@/store/hook';
+import {CreateUserProfileRequest} from '@/models/userProfile.models';
+import {createUserProfileThunk} from '@/store/userProfile/thunks';
 
-// Configurarea opțiunilor cu tipare strictă
 const MOTIVATIONS: OptionType[] = [
   {
-    id: 'student',
+    id: 'Student',
     title: 'Student',
     icon: 'school',
     desc: 'Învăț pentru facultate sau școală',
   },
   {
-    id: 'job',
+    id: 'JobSearcher',
     title: 'Job / Carieră',
     icon: 'work',
     desc: 'Vreau să mă dezvolt profesional',
   },
   {
-    id: 'hobby',
+    id: 'HobbyLearner',
     title: 'Hobby / Pasiune',
     icon: 'favorite',
     desc: 'Învăț din curiozitate și plăcere',
@@ -37,28 +40,28 @@ const MOTIVATIONS: OptionType[] = [
 
 const LEARNING_STYLES: OptionType[] = [
   {
-    id: 'visual',
+    id: 'Visual',
     title: 'Vizual',
     icon: 'visibility',
     desc: 'Prefer imagini, diagrame și videoclipuri',
   },
   {
-    id: 'auditory',
+    id: 'Auditory',
     title: 'Auditiv',
     icon: 'hearing',
     desc: 'Rețin mai bine ascultând explicații',
   },
   {
-    id: 'kinesthetic',
-    title: 'Kinestezic',
-    icon: 'touch-app',
-    desc: 'Învăț cel mai bine făcând și practicând',
+    id: 'ReadWrite',
+    title: 'Citire/Scriere',
+    icon: 'menu-book',
+    desc: 'Prefer să citesc și să iau notițe detaliate',
   },
   {
-    id: 'unknown',
-    title: 'Nu știu încă',
-    icon: 'help-outline',
-    desc: 'Ajută-mă să descopăr pe parcurs',
+    id: 'Combined',
+    title: 'Combinat',
+    icon: 'layers',
+    desc: 'Nu am un stil preferat, mă adaptez în funcție de conținut',
   },
 ];
 
@@ -68,7 +71,9 @@ export default function PreferencesScreen() {
   const [step, setStep] = useState(1);
   const [selectedMotivations, setSelectedMotivations] = useState<string[]>([]);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+
+  const dispatch = useAppDispatch();
+  const {loading} = useAppSelector(state => state.userProfile);
 
   const toggleMotivation = (id: string) => {
     setSelectedMotivations(prev =>
@@ -85,14 +90,18 @@ export default function PreferencesScreen() {
   };
 
   const handleSavePreferences = async () => {
-    setIsLoading(true);
     try {
-      // await dispatch(updateUserPreferences({ motivations: selectedMotivations, style: selectedStyle })).unwrap();
+      const createUserProfileRequest: CreateUserProfileRequest = {
+        learningType: selectedStyle ?? '',
+        userTypes: selectedMotivations,
+      };
+      await dispatch(createUserProfileThunk(createUserProfileRequest)).unwrap();
+      // dispatch(yourReduxActionHere(createUserProfileRequest));
+
+      showSuccessToast('Preferințe salvate!', 'Bucură-te de învățare!');
       router.replace('/(tabs)');
     } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
+      showErrorToast('Eroare la salvarea preferințelor', error);
     }
   };
 
@@ -141,7 +150,7 @@ export default function PreferencesScreen() {
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => setStep(1)}
-            disabled={isLoading}>
+            disabled={loading}>
             <Text style={styles.backButtonText}>Înapoi</Text>
           </TouchableOpacity>
         )}
@@ -149,18 +158,18 @@ export default function PreferencesScreen() {
         <View style={styles.nextButtonWrapper}>
           <GradientButton
             text={
-              isLoading
+              loading
                 ? 'Se salvează...'
                 : step === 1
                   ? 'Continuă'
                   : 'Finalizare'
             }
-            icon={isLoading ? null : step === 1 ? 'arrow-forward' : 'check'}
+            icon={loading ? null : step === 1 ? 'arrow-forward' : 'check'}
             onPress={handleNext}
             disabled={
               (step === 1 && selectedMotivations.length === 0) ||
               (step === 2 && !selectedStyle) ||
-              isLoading
+              loading
             }
           />
         </View>

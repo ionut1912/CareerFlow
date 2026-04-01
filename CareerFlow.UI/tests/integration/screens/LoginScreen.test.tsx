@@ -12,12 +12,6 @@ import {showErrorToast} from '@/utils/toast';
 import {useRouter} from 'expo-router';
 import LoginScreen from '@/app/(auth)/login';
 
-// expo-router and other mocks remain at the top
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-  usePathname: jest.fn(() => '/login'),
-}));
-
 jest.mock('@/utils/toast', () => ({
   showErrorToast: jest.fn(),
 }));
@@ -53,7 +47,6 @@ describe('LoginScreen Integration', () => {
 
   it('renders initial UI elements correctly', () => {
     renderWithRedux(<LoginScreen />);
-
     expect(screen.getByText('Career Flow')).toBeTruthy();
     expect(screen.getByPlaceholderText('you@example.com')).toBeTruthy();
     expect(screen.getByPlaceholderText('••••••••')).toBeTruthy();
@@ -63,14 +56,12 @@ describe('LoginScreen Integration', () => {
 
   it('navigates to the register screen when footer action is pressed', () => {
     renderWithRedux(<LoginScreen />);
-
     fireEvent.press(screen.getByText('Inregistreaza-te'));
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/register');
   });
 
   it('navigates to forgot password screen when link is pressed', () => {
     renderWithRedux(<LoginScreen />);
-
     fireEvent.press(screen.getByText('Ai uitat parola?'));
     expect(mockPush).toHaveBeenCalledWith('/(auth)/forgot-password');
   });
@@ -81,10 +72,8 @@ describe('LoginScreen Integration', () => {
     }));
 
     renderWithRedux(<LoginScreen />);
-
     const emailInput = screen.getByPlaceholderText('you@example.com');
     const passwordInput = screen.getByPlaceholderText('••••••••');
-
     const authTexts = screen.getAllByText('Autentificare');
     const submitButton = authTexts[authTexts.length - 1];
 
@@ -100,22 +89,19 @@ describe('LoginScreen Integration', () => {
     });
 
     await waitFor(() => {
-      expect(mockReplace).toHaveBeenCalledWith('/(tabs)');
+      expect(mockReplace).toHaveBeenCalledWith('/(auth)/preferences');
     });
   });
 
   it('handles a failed login flow and shows an error toast', async () => {
     const mockError = new Error('Invalid credentials');
-
     (loginThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.reject(mockError),
     }));
 
     renderWithRedux(<LoginScreen />);
-
     const emailInput = screen.getByPlaceholderText('you@example.com');
     const passwordInput = screen.getByPlaceholderText('••••••••');
-
     const authTexts = screen.getAllByText('Autentificare');
     const submitButton = authTexts[authTexts.length - 1];
 
@@ -130,6 +116,6 @@ describe('LoginScreen Integration', () => {
       );
     });
 
-    expect(mockReplace).not.toHaveBeenCalledWith('/(tabs)');
+    expect(mockReplace).not.toHaveBeenCalledWith('/(auth)/preferences');
   });
 });
