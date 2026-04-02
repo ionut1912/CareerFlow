@@ -73,7 +73,8 @@ jest.mock('@/components/shared/GradientButton', () => {
       disabled?: boolean;
     }) => (
       <MockTouchableOpacity
-        onPress={onPress}
+        onPress={disabled ? undefined : onPress}
+        disabled={disabled}
         testID="gradient-button"
         accessibilityState={{disabled}}>
         <MockText>{text}</MockText>

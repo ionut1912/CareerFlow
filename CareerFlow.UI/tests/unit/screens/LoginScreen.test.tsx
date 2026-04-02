@@ -116,6 +116,6 @@ describe('LoginScreen Integration', () => {
       );
     });
 
-    expect(mockReplace).not.toHaveBeenCalledWith('/(auth)/preferences');
+    expect(mockReplace).not.toHaveBeenCalled();
   });
 });
