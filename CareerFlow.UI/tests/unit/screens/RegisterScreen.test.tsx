@@ -13,11 +13,6 @@ import {showErrorToast, showSuccessToast} from '@/utils/toast';
 import {useRouter} from 'expo-router';
 import RegisterScreen from '@/app/(auth)/register';
 
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-  usePathname: jest.fn(() => '/register'),
-}));
-
 jest.mock('@/utils/toast', () => ({
   showErrorToast: jest.fn(),
   showSuccessToast: jest.fn(),
@@ -59,7 +54,6 @@ describe('RegisterScreen Integration', () => {
 
   it('renders initial UI elements correctly', () => {
     renderWithRedux(<RegisterScreen />);
-
     expect(screen.getByText('Acceseaza Career Flow')).toBeTruthy();
     expect(screen.getByPlaceholderText('John Doe')).toBeTruthy();
     expect(screen.getByPlaceholderText('jdoe')).toBeTruthy();
@@ -71,22 +65,18 @@ describe('RegisterScreen Integration', () => {
 
   it('navigates to the login screen when footer action is pressed', () => {
     renderWithRedux(<RegisterScreen />);
-
     const authTexts = screen.getAllByText('Autentificare');
     fireEvent.press(authTexts[authTexts.length - 1]);
-
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
   });
 
   it('handles a successful registration flow', async () => {
     jest.useFakeTimers();
-
     (registerThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.resolve({id: 1, name: 'John Doe'}),
     }));
 
     renderWithRedux(<RegisterScreen />);
-
     fireEvent.changeText(screen.getByPlaceholderText('John Doe'), 'Test User');
     fireEvent.changeText(screen.getByPlaceholderText('jdoe'), 'testuser');
     fireEvent.changeText(
@@ -104,7 +94,6 @@ describe('RegisterScreen Integration', () => {
 
     const submitTexts = screen.getAllByText('Creare cont');
     const submitButton = submitTexts[submitTexts.length - 1];
-
     fireEvent.press(submitButton);
 
     expect(registerThunk).toHaveBeenCalledWith({
@@ -132,13 +121,11 @@ describe('RegisterScreen Integration', () => {
 
   it('handles a failed registration flow', async () => {
     const mockError = new Error('Email already exists');
-
     (registerThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.reject(mockError),
     }));
 
     renderWithRedux(<RegisterScreen />);
-
     fireEvent.changeText(screen.getByPlaceholderText('John Doe'), 'Test User');
     fireEvent.changeText(screen.getByPlaceholderText('jdoe'), 'testuser');
     fireEvent.changeText(
@@ -156,7 +143,6 @@ describe('RegisterScreen Integration', () => {
 
     const submitTexts = screen.getAllByText('Creare cont');
     const submitButton = submitTexts[submitTexts.length - 1];
-
     fireEvent.press(submitButton);
 
     await waitFor(() => {

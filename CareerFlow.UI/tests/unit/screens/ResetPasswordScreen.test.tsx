@@ -13,12 +13,6 @@ import {showErrorToast, showSuccessToast} from '@/utils/toast';
 import {useRouter, useLocalSearchParams} from 'expo-router';
 import ResetPasswordScreen from '@/app/(auth)/reset-password';
 
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-  usePathname: jest.fn(() => '/reset-password'),
-  useLocalSearchParams: jest.fn(),
-}));
-
 jest.mock('@/utils/toast', () => ({
   showErrorToast: jest.fn(),
   showSuccessToast: jest.fn(),
@@ -43,54 +37,49 @@ const renderWithRedux = (
 
 describe('ResetPasswordScreen Integration', () => {
   const mockReplace = jest.fn();
-  const mockToken = 'abc-123-secure-token';
 
   beforeEach(() => {
     jest.clearAllMocks();
     (useRouter as jest.Mock).mockReturnValue({replace: mockReplace});
-    (useLocalSearchParams as jest.Mock).mockReturnValue({token: mockToken});
+    (useLocalSearchParams as jest.Mock).mockReturnValue({
+      token: 'mock-token-123',
+    });
+  });
+
+  it('renders invalid link message when no token is present', () => {
+    (useLocalSearchParams as jest.Mock).mockReturnValue({});
+    renderWithRedux(<ResetPasswordScreen />);
+    expect(
+      screen.getByText('Link-ul de resetare este invalid sau a expirat.'),
+    ).toBeTruthy();
   });
 
   it('renders initial UI elements correctly', () => {
     renderWithRedux(<ResetPasswordScreen />);
-
     expect(screen.getByText('Resetare Parolă')).toBeTruthy();
     expect(screen.getByPlaceholderText('you@example.com')).toBeTruthy();
-
-    const passwordInputs = screen.getAllByPlaceholderText('••••••••');
-    expect(passwordInputs.length).toBe(2);
-
-    const submitTexts = screen.getAllByText('Resetează Parola');
-    expect(submitTexts[submitTexts.length - 1]).toBeTruthy();
   });
 
-  it('handles a successful password reset flow', async () => {
+  it('handles a successful reset password flow', async () => {
     jest.useFakeTimers();
-
     (resetPasswordThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.resolve(),
     }));
 
     renderWithRedux(<ResetPasswordScreen />);
-
     fireEvent.changeText(
       screen.getByPlaceholderText('you@example.com'),
       'test@example.com',
     );
-
     const passwordInputs = screen.getAllByPlaceholderText('••••••••');
-    fireEvent.changeText(passwordInputs[0], 'NewSecurePass123!');
-    fireEvent.changeText(passwordInputs[1], 'NewSecurePass123!');
-
-    const submitTexts = screen.getAllByText('Resetează Parola');
-    const submitButton = submitTexts[submitTexts.length - 1];
-
-    fireEvent.press(submitButton);
+    fireEvent.changeText(passwordInputs[0], 'NewPass123!');
+    fireEvent.changeText(passwordInputs[1], 'NewPass123!');
+    fireEvent.press(screen.getByText('Resetează Parola'));
 
     expect(resetPasswordThunk).toHaveBeenCalledWith({
       email: 'test@example.com',
-      newPassword: 'NewSecurePass123!',
-      token: mockToken,
+      newPassword: 'NewPass123!',
+      token: 'mock-token-123',
     });
 
     await waitFor(() => {
@@ -105,28 +94,21 @@ describe('ResetPasswordScreen Integration', () => {
     jest.useRealTimers();
   });
 
-  it('handles a failed password reset flow', async () => {
-    const mockError = new Error('Token expired');
-
+  it('handles a failed reset password flow', async () => {
+    const mockError = new Error('Token expirat');
     (resetPasswordThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.reject(mockError),
     }));
 
     renderWithRedux(<ResetPasswordScreen />);
-
     fireEvent.changeText(
       screen.getByPlaceholderText('you@example.com'),
       'test@example.com',
     );
-
     const passwordInputs = screen.getAllByPlaceholderText('••••••••');
-    fireEvent.changeText(passwordInputs[0], 'NewSecurePass123!');
-    fireEvent.changeText(passwordInputs[1], 'NewSecurePass123!');
-
-    const submitTexts = screen.getAllByText('Resetează Parola');
-    const submitButton = submitTexts[submitTexts.length - 1];
-
-    fireEvent.press(submitButton);
+    fireEvent.changeText(passwordInputs[0], 'NewPass123!');
+    fireEvent.changeText(passwordInputs[1], 'NewPass123!');
+    fireEvent.press(screen.getByText('Resetează Parola'));
 
     await waitFor(() => {
       expect(showErrorToast).toHaveBeenCalledWith(

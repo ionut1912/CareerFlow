@@ -13,12 +13,6 @@ import {showSuccessToast, showErrorToast} from '@/utils/toast';
 import {useRouter} from 'expo-router';
 import ForgotPasswordScreen from '@/app/(auth)/forgot-password';
 
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-  usePathname: jest.fn(() => '/forgot-password'),
-  useLocalSearchParams: () => ({}),
-}));
-
 jest.mock('@/utils/toast', () => ({
   showSuccessToast: jest.fn(),
   showErrorToast: jest.fn(),
@@ -51,7 +45,6 @@ describe('ForgotPasswordScreen Integration', () => {
 
   it('renders correctly with initial UI elements', () => {
     renderWithRedux(<ForgotPasswordScreen />);
-
     expect(screen.getByText('Ai uitat parola?')).toBeTruthy();
     expect(screen.getByPlaceholderText('you@example.com')).toBeTruthy();
     expect(screen.getByText('Trimite link de resetare')).toBeTruthy();
@@ -59,20 +52,17 @@ describe('ForgotPasswordScreen Integration', () => {
 
   it('navigates back to login when footer action is pressed', () => {
     renderWithRedux(<ForgotPasswordScreen />);
-
     fireEvent.press(screen.getByText('Înapoi la Login'));
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
   });
 
   it('handles successful password reset flow', async () => {
     jest.useFakeTimers();
-
     (requestPasswordResetThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.resolve(),
     }));
 
     renderWithRedux(<ForgotPasswordScreen />);
-
     const emailInput = screen.getByPlaceholderText('you@example.com');
     const submitButton = screen.getByText('Trimite link de resetare');
 
@@ -95,19 +85,16 @@ describe('ForgotPasswordScreen Integration', () => {
     });
 
     expect(mockReplace).toHaveBeenCalledWith('/(auth)/login');
-
     jest.useRealTimers();
   });
 
   it('handles rejected password reset flow', async () => {
     const mockError = new Error('Network Error');
-
     (requestPasswordResetThunk as unknown as jest.Mock).mockReturnValue(() => ({
       unwrap: () => Promise.reject(mockError),
     }));
 
     renderWithRedux(<ForgotPasswordScreen />);
-
     const emailInput = screen.getByPlaceholderText('you@example.com');
     const submitButton = screen.getByText('Trimite link de resetare');
 

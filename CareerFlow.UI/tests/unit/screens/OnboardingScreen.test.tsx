@@ -6,17 +6,8 @@ import {useAppDispatch} from '@/store/hook';
 import {completeOnboardingThunk} from '@/store/app/thunks';
 import OnboardingScreen from '@/app/(onboarding)';
 
-jest.mock('expo-router', () => ({
-  useRouter: jest.fn(),
-}));
-
 jest.mock('@/store/hook', () => ({
   useAppDispatch: jest.fn(),
-}));
-
-jest.mock('@expo/vector-icons', () => ({
-  MaterialIcons: 'MaterialIcons',
-  Ionicons: 'Ionicons',
 }));
 
 jest.mock('@/store/app/thunks', () => ({
@@ -85,7 +76,6 @@ describe('OnboardingScreen Integration', () => {
 
   it('renders the first slide correctly on mount', () => {
     const {getByText, queryByTestId} = render(<OnboardingScreen />);
-
     expect(getByText('Step 1 Title')).toBeTruthy();
     expect(getByText('Step 1 Subtitle')).toBeTruthy();
     expect(getByText('Gliseaza pentru a continua')).toBeTruthy();
