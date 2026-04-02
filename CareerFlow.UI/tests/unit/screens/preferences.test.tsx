@@ -1,6 +1,6 @@
 import React from 'react';
 import {render, fireEvent, waitFor} from '@testing-library/react-native';
-import {TouchableOpacity, Text} from 'react-native';
+import {TouchableOpacity, Text, View as MockView} from 'react-native';
 import {useRouter} from 'expo-router';
 import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {createUserProfileThunk} from '@/store/userProfile/thunks';
@@ -22,6 +22,27 @@ jest.mock('@/store/userProfile/thunks', () => ({
 jest.mock('@/utils/toast', () => ({
   showSuccessToast: jest.fn(),
   showErrorToast: jest.fn(),
+}));
+
+interface MockFlashListProps<T> {
+  data?: T[];
+  renderItem: (info: {item: T; index: number}) => React.ReactNode;
+  ListHeaderComponent?: React.ReactNode;
+}
+
+jest.mock('@shopify/flash-list', () => ({
+  FlashList: <T extends {id?: string}>({
+    data,
+    renderItem,
+    ListHeaderComponent,
+  }: MockFlashListProps<T>) => (
+    <MockView>
+      {ListHeaderComponent}
+      {data?.map((item, index) => (
+        <MockView key={item?.id || index}>{renderItem({item, index})}</MockView>
+      ))}
+    </MockView>
+  ),
 }));
 
 jest.mock('@/components/shared/OptionCard', () => {
@@ -74,8 +95,12 @@ describe('PreferencesScreen', () => {
 
   it('renders Step 1 correctly and keeps "Continuă" disabled initially', () => {
     const {getByText, getByTestId} = render(<PreferencesScreen />);
-    expect(getByText('Care este obiectivul tău?')).toBeTruthy();
-    expect(getByText('Pasul 1 din 2')).toBeTruthy();
+    expect(
+      getByText('Care este obiectivul tău?', {includeHiddenElements: true}),
+    ).toBeTruthy();
+    expect(
+      getByText('Pasul 1 din 2', {includeHiddenElements: true}),
+    ).toBeTruthy();
 
     const nextButton = getByTestId('gradient-button');
     expect(nextButton.props.accessibilityState.disabled).toBe(true);
@@ -90,8 +115,12 @@ describe('PreferencesScreen', () => {
     expect(nextButton.props.accessibilityState.disabled).toBe(false);
 
     fireEvent.press(nextButton);
-    expect(getByText('Cum preferi să înveți?')).toBeTruthy();
-    expect(getByText('Pasul 2 din 2')).toBeTruthy();
+    expect(
+      getByText('Cum preferi să înveți?', {includeHiddenElements: true}),
+    ).toBeTruthy();
+    expect(
+      getByText('Pasul 2 din 2', {includeHiddenElements: true}),
+    ).toBeTruthy();
   });
 
   it('allows going back from Step 2 to Step 1', () => {
@@ -99,9 +128,11 @@ describe('PreferencesScreen', () => {
     fireEvent.press(getByTestId('option-Student'));
     fireEvent.press(getByTestId('gradient-button'));
 
-    const backButton = getByText('Înapoi');
+    const backButton = getByText('Înapoi', {includeHiddenElements: true});
     fireEvent.press(backButton);
-    expect(getByText('Care este obiectivul tău?')).toBeTruthy();
+    expect(
+      getByText('Care este obiectivul tău?', {includeHiddenElements: true}),
+    ).toBeTruthy();
   });
 
   it('submits the form successfully, dispatches thunk, shows toast, and navigates', async () => {

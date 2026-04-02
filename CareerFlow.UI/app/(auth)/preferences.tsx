@@ -1,11 +1,5 @@
-import React, {useState} from 'react';
-import {
-  StyleSheet,
-  Text,
-  View,
-  TouchableOpacity,
-  ScrollView,
-} from 'react-native';
+import React, {useState, useCallback} from 'react';
+import {StyleSheet, Text, View, TouchableOpacity} from 'react-native';
 import {useRouter} from 'expo-router';
 import {COLORS} from '@/constants/theme';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -16,6 +10,7 @@ import {showErrorToast, showSuccessToast} from '@/utils/toast';
 import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {CreateUserProfileRequest} from '@/models/userProfile.models';
 import {createUserProfileThunk} from '@/store/userProfile/thunks';
+import {FlashList} from '@shopify/flash-list'; // Import FlashList
 
 const MOTIVATIONS: OptionType[] = [
   {
@@ -65,6 +60,13 @@ const LEARNING_STYLES: OptionType[] = [
   },
 ];
 
+const STEP_TITLES = ['Care este obiectivul tău?', 'Cum preferi să înveți?'];
+
+const STEP_SUBTITLES = [
+  'Poți selecta mai multe opțiuni care ți se potrivesc.',
+  'Adaptează formatul cursurilor pentru un randament maxim.',
+];
+
 export default function PreferencesScreen() {
   const router = useRouter();
 
@@ -75,75 +77,101 @@ export default function PreferencesScreen() {
   const dispatch = useAppDispatch();
   const {loading} = useAppSelector(state => state.userProfile);
 
-  const toggleMotivation = (id: string) => {
+  const handleToggleMotivation = useCallback((id: string) => {
     setSelectedMotivations(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id],
     );
-  };
+  }, []);
 
-  const handleNext = () => {
-    if (step === 1 && selectedMotivations.length > 0) {
-      setStep(2);
-    } else if (step === 2 && selectedStyle) {
-      handleSavePreferences();
-    }
-  };
+  const handleSelectStyle = useCallback((id: string) => {
+    setSelectedStyle(id);
+  }, []);
 
-  const handleSavePreferences = async () => {
+  const handleSavePreferences = useCallback(async () => {
     try {
       const createUserProfileRequest: CreateUserProfileRequest = {
         learningType: selectedStyle ?? '',
         userTypes: selectedMotivations,
       };
       await dispatch(createUserProfileThunk(createUserProfileRequest)).unwrap();
-      // dispatch(yourReduxActionHere(createUserProfileRequest));
 
       showSuccessToast('Preferințe salvate!', 'Bucură-te de învățare!');
       router.replace('/(tabs)');
     } catch (error) {
       showErrorToast('Eroare la salvarea preferințelor', error);
     }
-  };
+  }, [selectedStyle, selectedMotivations, dispatch, router]);
+
+  const handleNext = useCallback(() => {
+    if (step === 1 && selectedMotivations.length > 0) {
+      setStep(2);
+    } else if (step === 2 && selectedStyle) {
+      handleSavePreferences();
+    }
+  }, [step, selectedMotivations.length, selectedStyle, handleSavePreferences]);
+
+  // Memoized renderItem for FlashList performance
+  const renderOptionCard = useCallback(
+    ({item}: {item: OptionType}) => {
+      const isMulti = step === 1;
+      const isSelected = isMulti
+        ? selectedMotivations.includes(item.id)
+        : selectedStyle === item.id;
+
+      return (
+        <OptionCard
+          item={item}
+          isMulti={isMulti}
+          isSelected={isSelected}
+          onPress={() =>
+            isMulti
+              ? handleToggleMotivation(item.id)
+              : handleSelectStyle(item.id)
+          }
+        />
+      );
+    },
+    [
+      step,
+      selectedMotivations,
+      selectedStyle,
+      handleToggleMotivation,
+      handleSelectStyle,
+    ],
+  );
+
+  const headerA11yLabel = `Pasul ${step} din 2. ${STEP_TITLES[step - 1]}. ${STEP_SUBTITLES[step - 1]}`;
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.stepIndicator}>Pasul {step} din 2</Text>
-          <Text style={styles.title}>
-            {step === 1
-              ? 'Care este obiectivul tău?'
-              : 'Cum preferi să înveți?'}
-          </Text>
-          <Text style={styles.subtitle}>
-            {step === 1
-              ? 'Poți selecta mai multe opțiuni care ți se potrivesc.'
-              : 'Adaptează formatul cursurilor pentru un randament maxim.'}
-          </Text>
-        </View>
-
-        <View style={styles.optionsContainer}>
-          {step === 1
-            ? MOTIVATIONS.map(item => (
-                <OptionCard
-                  key={item.id}
-                  item={item}
-                  isMulti={true}
-                  isSelected={selectedMotivations.includes(item.id)}
-                  onPress={() => toggleMotivation(item.id)}
-                />
-              ))
-            : LEARNING_STYLES.map(item => (
-                <OptionCard
-                  key={item.id}
-                  item={item}
-                  isMulti={false}
-                  isSelected={selectedStyle === item.id}
-                  onPress={() => setSelectedStyle(item.id)}
-                />
-              ))}
-        </View>
-      </ScrollView>
+      <FlashList
+        data={step === 1 ? MOTIVATIONS : LEARNING_STYLES}
+        renderItem={renderOptionCard}
+        keyExtractor={item => item.id}
+        estimatedItemSize={84} // Estimated height of OptionCard + marginBottom
+        contentContainerStyle={styles.scrollContent}
+        // extraData tells FlashList to re-render items when these state values change
+        extraData={{step, selectedMotivations, selectedStyle}}
+        ListHeaderComponent={
+          <View
+            style={styles.header}
+            accessibilityLiveRegion="polite"
+            accessible={true}
+            accessibilityLabel={headerA11yLabel}>
+            <Text
+              style={styles.stepIndicator}
+              accessibilityElementsHidden={true}>
+              Pasul {step} din 2
+            </Text>
+            <Text style={styles.title} accessibilityElementsHidden={true}>
+              {STEP_TITLES[step - 1]}
+            </Text>
+            <Text style={styles.subtitle} accessibilityElementsHidden={true}>
+              {STEP_SUBTITLES[step - 1]}
+            </Text>
+          </View>
+        }
+      />
 
       <View style={styles.footer}>
         {step === 2 && (
@@ -197,7 +225,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   subtitle: {color: COLORS.textSecondary, fontSize: 15, lineHeight: 22},
-  optionsContainer: {gap: 16},
   footer: {
     flexDirection: 'row',
     padding: 24,

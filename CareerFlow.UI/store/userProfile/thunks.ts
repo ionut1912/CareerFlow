@@ -12,10 +12,13 @@ export const createUserProfileThunk = createAsyncThunk(
     } catch (error: unknown) {
       if (isAxiosError(error)) {
         return rejectWithValue(
-          error.response?.data?.message || 'Failed to create user profile',
+          error.response?.data?.detail || 'Failed to create user profile',
         );
       }
-      console.error('Error creating user profile:', error);
+      console.error(
+        'Error creating user profile:',
+        error?.response?.data?.detail || 'Unknown error',
+      );
       return rejectWithValue('Failed to create user profile');
     }
   },

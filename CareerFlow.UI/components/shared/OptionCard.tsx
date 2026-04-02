@@ -2,7 +2,7 @@ import React from 'react';
 import {TouchableOpacity, View, Text, StyleSheet} from 'react-native';
 import {MaterialIcons} from '@expo/vector-icons';
 import {OptionType} from '@/models/ui.models';
-import {COLORS} from '@/constants/theme'; // Asigură-te că calea este corectă
+import {COLORS} from '@/constants/theme';
 
 interface OptionCardProps {
   item: OptionType;
@@ -11,13 +11,12 @@ interface OptionCardProps {
   isMulti: boolean;
 }
 
-// Extragem culorile cu opacitate pentru a respecta regula linter-ului (no-color-literals)
 const OPACITY_COLORS = {
   iconBgDefault: 'rgba(255,255,255,0.05)',
   iconBgSelected: 'rgba(175, 37, 244, 0.15)',
 };
 
-export const OptionCard = ({
+const OptionCardComponent = ({
   item,
   isSelected,
   onPress,
@@ -26,25 +25,35 @@ export const OptionCard = ({
   <TouchableOpacity
     style={[styles.card, isSelected && styles.cardSelected]}
     onPress={onPress}
-    activeOpacity={0.7}>
+    activeOpacity={0.7}
+    accessibilityRole={isMulti ? 'checkbox' : 'radio'}
+    accessibilityState={{checked: isSelected}}
+    accessibilityLabel={`${item.title}: ${item.desc}`}
+    accessibilityHint={
+      isMulti
+        ? isSelected
+          ? 'Deselectează această opțiune'
+          : 'Selectează această opțiune'
+        : 'Alege acest stil de învățare'
+    }
+    importantForAccessibility="yes">
     <View
-      style={[
-        styles.iconContainer,
-        isSelected && styles.iconContainerSelected,
-      ]}>
+      style={[styles.iconContainer, isSelected && styles.iconContainerSelected]}
+      importantForAccessibility="no-hide-descendants">
       <MaterialIcons
         name={item.icon}
         size={28}
         color={isSelected ? COLORS.primary : COLORS.textMuted}
       />
     </View>
-    <View style={styles.cardContent}>
+    <View
+      style={styles.cardContent}
+      importantForAccessibility="no-hide-descendants">
       <Text style={[styles.cardTitle, isSelected && styles.textSelected]}>
         {item.title}
       </Text>
       <Text style={styles.cardDesc}>{item.desc}</Text>
     </View>
-
     <MaterialIcons
       name={
         isMulti
@@ -58,9 +67,17 @@ export const OptionCard = ({
       size={24}
       color={isSelected ? COLORS.primary : COLORS.border}
       style={styles.checkIcon}
+      importantForAccessibility="no"
     />
   </TouchableOpacity>
 );
+
+const areEqual = (prev: OptionCardProps, next: OptionCardProps): boolean =>
+  prev.isSelected === next.isSelected &&
+  prev.isMulti === next.isMulti &&
+  prev.item.id === next.item.id;
+
+export const OptionCard = React.memo(OptionCardComponent, areEqual);
 
 const styles = StyleSheet.create({
   card: {
@@ -71,7 +88,7 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16, // Adăugat pentru spațiere între carduri, deoarece gap din optionsContainer nu mai se aplică direct în interior
+    marginBottom: 16,
   },
   cardSelected: {
     backgroundColor: COLORS.primaryWash,
@@ -86,26 +103,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: 16,
   },
-  iconContainerSelected: {
-    backgroundColor: OPACITY_COLORS.iconBgSelected,
-  },
-  cardContent: {
-    flex: 1,
-  },
+  iconContainerSelected: {backgroundColor: OPACITY_COLORS.iconBgSelected},
+  cardContent: {flex: 1},
   cardTitle: {
     color: COLORS.text,
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
   },
-  textSelected: {
-    color: COLORS.primary,
-  },
-  cardDesc: {
-    color: COLORS.textMuted,
-    fontSize: 13,
-  },
-  checkIcon: {
-    marginLeft: 10,
-  },
+  textSelected: {color: COLORS.primary},
+  cardDesc: {color: COLORS.textMuted, fontSize: 13},
+  checkIcon: {marginLeft: 10},
 });

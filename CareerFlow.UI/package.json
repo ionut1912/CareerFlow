@@ -14,7 +14,6 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:unit": "jest tests/unit",
-    "test:integration": "jest tests/integration",
     "test:coverage": "jest --coverage"
   },
   "lint-staged": {
@@ -32,6 +31,7 @@
     "@react-navigation/native": "^7.1.8",
     "@react-navigation/stack": "^7.7.1",
     "@reduxjs/toolkit": "^2.11.2",
+    "@shopify/flash-list": "2.0.2",
     "axios": "^1.13.5",
     "expo": "~54.0.33",
     "expo-auth-session": "~7.0.10",

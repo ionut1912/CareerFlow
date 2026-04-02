@@ -19,9 +19,9 @@ describe('User Profile API Service', () => {
   describe('saveUserProfile', () => {
     it('should call api.post with the correct URL, payload, and auth header', async () => {
       const mockPayload: CreateUserProfileRequest = {
-        fullName: 'John Doe',
-        bio: 'Software Engineer',
-        skills: ['React', 'TypeScript'],
+        learningType: 'Visual',
+        userTypes: ['Student'],
+        domain: 'Software Engineering',
       };
 
       const mockResponse = {data: 'Profile saved successfully'};

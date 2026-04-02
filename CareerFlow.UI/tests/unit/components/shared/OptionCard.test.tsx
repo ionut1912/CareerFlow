@@ -2,12 +2,10 @@ import React from 'react';
 import {render, fireEvent} from '@testing-library/react-native';
 import {OptionCard} from '@/components/shared/OptionCard';
 
-// 1. Mock the vector icons to prevent native rendering errors in Jest
 jest.mock('@expo/vector-icons', () => ({
   MaterialIcons: 'MaterialIcons',
 }));
 
-// 2. Mock the theme colors (Optional, but good if your theme object is complex)
 jest.mock('@/constants/theme', () => ({
   COLORS: {
     primary: '#primary',
@@ -21,9 +19,8 @@ jest.mock('@/constants/theme', () => ({
 }));
 
 describe('OptionCard Component', () => {
-  // Setup a standard mock item to use across tests
   const mockItem = {
-    id: '1', // Assuming your OptionType has an ID
+    id: '1',
     title: 'Notification Settings',
     desc: 'Manage your daily alerts',
     icon: 'notifications',
@@ -31,7 +28,6 @@ describe('OptionCard Component', () => {
 
   const mockOnPress = jest.fn();
 
-  // Reset the mock function before every test so counts don't bleed over
   beforeEach(() => {
     mockOnPress.mockClear();
   });
@@ -46,12 +42,16 @@ describe('OptionCard Component', () => {
       />,
     );
 
-    expect(getByText('Notification Settings')).toBeTruthy();
-    expect(getByText('Manage your daily alerts')).toBeTruthy();
+    expect(
+      getByText('Notification Settings', {includeHiddenElements: true}),
+    ).toBeTruthy();
+    expect(
+      getByText('Manage your daily alerts', {includeHiddenElements: true}),
+    ).toBeTruthy();
   });
 
   it('calls onPress when the card is tapped', () => {
-    const {getByText} = render(
+    const {getByLabelText} = render(
       <OptionCard
         item={mockItem}
         isSelected={false}
@@ -60,7 +60,9 @@ describe('OptionCard Component', () => {
       />,
     );
 
-    const cardElement = getByText('Notification Settings').parent; // Get the TouchableOpacity wrapper
+    const cardElement = getByLabelText(
+      'Notification Settings: Manage your daily alerts',
+    );
     fireEvent.press(cardElement);
 
     expect(mockOnPress).toHaveBeenCalledTimes(1);
@@ -77,7 +79,6 @@ describe('OptionCard Component', () => {
         />,
       );
 
-      // Find the specific MaterialIcon used for the checkmark
       const checkIcon = root.findAllByType('MaterialIcons')[1];
       expect(checkIcon.props.name).toBe('radio-button-unchecked');
     });
