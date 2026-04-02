@@ -90,7 +90,7 @@ jobs:
   docker-build:
     name: Docker Build
     runs-on: ubuntu-latest
-    needs: [core-integration-tests, ui-integration-tests]
+    needs: core-integration-tests
 
     steps:
       - name: Checkout code
