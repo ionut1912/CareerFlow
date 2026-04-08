@@ -1,4 +1,3 @@
-using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
@@ -59,5 +58,15 @@ public class UserProfileConfiguration : IEntityTypeConfiguration<UserProfile>
                 ut.HasKey("UserProfileId", "Value");
             })
             .UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.HasMany(up => up.Courses)
+            .WithMany(c => c.UserProfiles)
+            .UsingEntity(j => j.ToTable("course_user_profiles"));
+
+        builder.Navigation(up => up.Courses)
+            .UsePropertyAccessMode(PropertyAccessMode.Field);
+        builder.Property<List<string>>("_finishedChapters")
+            .HasColumnName("finished_chapters")
+            .HasColumnType("jsonb")
+            .IsRequired();
     }
 }

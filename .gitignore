@@ -26,3 +26,15 @@ CareerFlow.UI/.vscode/settings.json
 *.exe.config
 *.deps.json
 *.runtimeconfig.json
+CareerFlow.AI/app/__pycache__/*
+CareerFlow.AI/careerflow_ai.egg-info/*
+CareerFlow.AI/tests/__pycache__/*
+CareerFlow.AI/__pycache__/*
+CareerFlow.AI/app/courses/__pycache__/*
+CareerFlow.AI/app/document_reader/__pycache__/*
+CareerFlow.AI/tests/integration/__pycache__/*
+CareerFlow.AI/tests/integration/course/__pycache__/*
+CareerFlow.AI/tests/integration/document_reader/__pycache__/*
+CareerFlow.AI/tests/unit/__pycache__/*
+CareerFlow.AI/tests/unit/course/__pycache__/*
+CareerFlow.AI/tests/unit/document_reader/__pycache__/*

@@ -25,7 +25,7 @@ reviews:
         - SECURITY: Block endpoints missing Rate Limiting policies or Prometheus mirrors.
         - STRUCTURE: Enforce Vertical Slices; MapEndpoint logic must stay in the feature folder.
 
-    - path: "CareerFlow.AI/**/*.py"
+    - path: "CareerFlow.AI/app/**/*.py"
       instructions: |
         ASSERTIVE PYTHON 3.14 STANDARDS:
         - HARD FAIL: Any dynamic prompt formatting not using t-strings.

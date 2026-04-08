@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
 using Moq;
-using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Application.Tests.Common;
 

@@ -7,7 +7,6 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using Microsoft.Extensions.DependencyInjection;
-using Shared.Domain.Interfaces;
 using Shouldly;
 using Xunit;
 

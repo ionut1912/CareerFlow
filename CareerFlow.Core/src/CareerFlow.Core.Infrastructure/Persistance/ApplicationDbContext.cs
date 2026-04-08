@@ -15,6 +15,13 @@ public class ApplicationDbContext : DbContext
 
     public DbSet<UserProfile> UserProfiles { get; set; }
 
+    public DbSet<Course> Courses { get; set; }
+    public DbSet<Chapter> Chapters { get; set; }
+    public DbSet<SubChapter> SubChapters { get; set; }
+    public DbSet<QuizQuestion> QuizQuestions { get; set; }
+    public DbSet<CourseUpload> CourseUploads { get; set; }
+    public DbSet<CourseJob> CourseJobs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

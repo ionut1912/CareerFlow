@@ -3,7 +3,6 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Persistance;
 using Microsoft.EntityFrameworkCore;
-using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Infrastructure.HangfireJobs;
 

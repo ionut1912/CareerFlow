@@ -4,7 +4,6 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
-using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
 
