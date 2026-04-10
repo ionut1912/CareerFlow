@@ -37,7 +37,7 @@ public class GenericRepositoryTests : IDisposable
     public async Task AddAsync_ValidEntity_EntityIsPersisted()
     {
         // Arrange
-        var entity = new TestEntity { Id = Guid.NewGuid(), Name = "Test" };
+        var entity = new TestEntity { Name = "Test" };
 
         // Act
         await _sut.AddAsync(entity);
@@ -53,7 +53,7 @@ public class GenericRepositoryTests : IDisposable
     public async Task AddAsync_WithCancellationToken_CompletesSuccessfully()
     {
         // Arrange
-        var entity = new TestEntity { Id = Guid.NewGuid(), Name = "Token Test" };
+        var entity = new TestEntity { Name = "Token Test" };
         using var cts = new CancellationTokenSource();
 
         // Act
@@ -69,7 +69,7 @@ public class GenericRepositoryTests : IDisposable
     public async Task Delete_ExistingEntity_EntityIsRemovedAfterSave()
     {
         // Arrange
-        var entity = new TestEntity { Id = Guid.NewGuid(), Name = "To Delete" };
+        var entity = new TestEntity { Name = "To Delete" };
         _context.Entities.Add(entity);
         await _context.SaveChangesAsync();
 
@@ -86,7 +86,7 @@ public class GenericRepositoryTests : IDisposable
     public async Task Update_ExistingEntity_ChangesArePersistedAfterSave()
     {
         // Arrange
-        var entity = new TestEntity { Id = Guid.NewGuid(), Name = "Original" };
+        var entity = new TestEntity {  Name = "Original" };
         _context.Entities.Add(entity);
         await _context.SaveChangesAsync();
         _context.ChangeTracker.Clear();
@@ -109,8 +109,8 @@ public class GenericRepositoryTests : IDisposable
     {
         // Arrange
         _context.Entities.AddRange(
-            new TestEntity { Id = Guid.NewGuid(), Name = "A" },
-            new TestEntity { Id = Guid.NewGuid(), Name = "B" });
+            new TestEntity {  Name = "A" },
+            new TestEntity { Name = "B" });
         await _context.SaveChangesAsync();
 
         // Act
@@ -135,7 +135,7 @@ public class GenericRepositoryTests : IDisposable
     public async Task GetAllAsync_NullIncludes_ReturnsAllEntitiesWithoutThrowing()
     {
         // Arrange
-        _context.Entities.Add(new TestEntity { Id = Guid.NewGuid(), Name = "X" });
+        _context.Entities.Add(new TestEntity { Name = "X" });
         await _context.SaveChangesAsync();
 
         // Act
