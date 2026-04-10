@@ -1,5 +1,5 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Command;
-using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Domain.Entities;

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Shared.Domain.Common;
 using Shared.Infra.Services;
 using Shouldly;
 using Xunit;
@@ -144,9 +145,8 @@ public class GenericRepositoryTests : IDisposable
         result.Count().ShouldBe(1);
     }
 
-    public class TestEntity
+    public class TestEntity:Entity
     {
-        public Guid Id { get; set; }
         public string Name { get; set; } = string.Empty;
     }
 

@@ -1,3 +1,3 @@
-namespace CareerFlow.Core.Application.CQRS.Accounts.Command;
+namespace CareerFlow.Core.Application.CQRS.Accounts.Commands;
 
 public record ForgotPasswordCommand(string Email, string ResetPasswordLink, string Token);

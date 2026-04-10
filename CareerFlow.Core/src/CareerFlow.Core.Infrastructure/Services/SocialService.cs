@@ -24,7 +24,7 @@ public class SocialService(
     {
         var redirectUri = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/google/mobile/callback");
         var scope = Uri.EscapeDataString("openid email profile");
-        
+
         // 2. Pasăm adresa către funcția care o stochează
         var state = GenerateAndStoreState(returnUrl);
 
@@ -74,7 +74,7 @@ public class SocialService(
         await unitOfWork.SaveChangesAsync(cancellationToken);
 
         // Lipim dinamic tokenii la adresa primită
-        string separator = returnUrl.Contains("?") ? "&" : "?";
+        var separator = returnUrl.Contains("?") ? "&" : "?";
         return $"{returnUrl}{separator}token={jwt.Token}&refreshToken={refreshToken.TokenHash}";
     }
 
@@ -98,10 +98,9 @@ public class SocialService(
     private string ValidateStateAndGetReturnUrl(string state)
     {
         // Verificăm state-ul și extragem direct adresa salvată
-        if (string.IsNullOrWhiteSpace(state) || !cache.TryGetValue(state, out string? returnUrl) || string.IsNullOrEmpty(returnUrl))
-        {
+        if (string.IsNullOrWhiteSpace(state) || !cache.TryGetValue(state, out string? returnUrl) ||
+            string.IsNullOrEmpty(returnUrl))
             throw new InvalidOperationException("Invalid or missing state parameter. CSRF validation failed.");
-        }
 
         cache.Remove(state);
         return returnUrl;
