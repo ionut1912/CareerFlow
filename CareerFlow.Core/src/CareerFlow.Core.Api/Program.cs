@@ -21,7 +21,9 @@ using InfisicalConfiguration;
 using Microsoft.AspNetCore.HttpOverrides;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+using Shared.Application.Extensions;
 using Shared.Domain.Interfaces;
+using Shared.Infra.Extensions;
 using Shared.Infra.Services;
 using Wolverine.RabbitMQ;
 
@@ -68,20 +70,20 @@ builder.Services.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSe
 builder.Services.AddMemoryCache();
 builder.Services.AddScoped<LegalDocumentCheckerJob>();
 builder.Services
-    .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
+    .AddDatabase<ApplicationDbContext>(builder.Configuration)
     .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
     .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
     .AddRepository<UserProfile, UserProfileRepository, IUserProfileRepository, ApplicationDbContext>()
-    .AddRepositoriesConfig<ITokenService, TokenService>()
-    .AddRepositoriesConfig<IPasswordService, PasswordService>()
-    .AddRepositoriesConfig<IAuthService, AuthService>()
-    .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
-    .AddRepositoriesConfig<IEmailService, EmailService>()
-    .AddRepositoriesConfig<IGoogleTokenValidator, GoogleTokenValidator>()
-    .AddRepositoriesConfig<IMailClient, PostmarkMailClient>()
-    .AddRepositoriesConfig<ISocialService, SocialService>()
-    .AddRepositoriesConfig<ILegalService, LegalService>()
-    .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
+    .AddRepos<ITokenService, TokenService>()
+    .AddRepos<IPasswordService, PasswordService>()
+    .AddRepos<IAuthService, AuthService>()
+    .AddRepos<IUnitOfWork, UnitOfWork>()
+    .AddRepos<IEmailService, EmailService>()
+    .AddRepos<IGoogleTokenValidator, GoogleTokenValidator>()
+    .AddRepos<IMailClient, PostmarkMailClient>()
+    .AddRepos<ISocialService, SocialService>()
+    .AddRepos<ILegalService, LegalService>()
+    .AddApplicationServices(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
 
 builder.Services.AddAuthorization(options =>
@@ -100,7 +102,7 @@ builder.Services.AddHangfireServer();
 
 var app = builder.Build();
 
-app.MigrateDatabaseConfig<ApplicationDbContext>();
+app.MigrateServiceDatabase<ApplicationDbContext>();
 
 app.UseGlobalExceptionHandler<CareerFlow.Core.Api.Program>()
     .UseRequestDurationLogging<CareerFlow.Core.Api.Program>()

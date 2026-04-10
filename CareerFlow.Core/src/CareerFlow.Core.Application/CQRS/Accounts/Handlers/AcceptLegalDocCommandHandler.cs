@@ -1,10 +1,10 @@
-using CareerFlow.Core.Application.CQRS.Accounts.Command;
+using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 
-namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 
 public class AcceptLegalDocCommandHandler
 {

@@ -21,15 +21,13 @@
         </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1"/>
     </ItemGroup>
-
+<ItemGroup>
+        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
+    </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Shouldly" Version="4.3.0"/>
     </ItemGroup>
 
-    <ItemGroup>
-        <PackageReference Include="Microsoft.EntityFrameworkCore" Version="10.0.4"/>
-        <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.4"/>
-    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="BCrypt.Net-Next" Version="4.1.0"/>
@@ -49,11 +47,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.4"/>
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="10.0.4"/>
         <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.4"/>
-        <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.4"/>
-        <PackageReference Include="Microsoft.Extensions.Caching.Abstractions" Version="10.0.4"/>
     </ItemGroup>
 
     <ItemGroup>

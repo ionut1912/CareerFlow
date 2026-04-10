@@ -1,4 +1,4 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Validators.Account;
 using FluentValidation.TestHelper;
 

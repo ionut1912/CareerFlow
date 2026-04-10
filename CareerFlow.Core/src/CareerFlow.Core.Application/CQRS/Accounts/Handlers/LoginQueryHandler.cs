@@ -1,4 +1,4 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -7,7 +7,7 @@ using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 using Shared.Domain.Interfaces;
 
-namespace CareerFlow.Core.Application.CQRS.Accounts.Handler;
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 
 public class LoginQueryHandler
 {

@@ -1,9 +1,6 @@
 using CareerFlow.Core.Domain.Abstractions.Services;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Routing;
 
 namespace CareerFlow.Core.Api.Features.Account;
 

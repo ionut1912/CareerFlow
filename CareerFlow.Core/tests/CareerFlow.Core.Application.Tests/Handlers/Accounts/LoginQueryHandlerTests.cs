@@ -1,5 +1,5 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Handler;
-using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;

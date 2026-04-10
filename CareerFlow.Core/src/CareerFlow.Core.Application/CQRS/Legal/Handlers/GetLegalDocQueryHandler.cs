@@ -1,10 +1,10 @@
-using CareerFlow.Core.Application.CQRS.Legal.Query;
+using CareerFlow.Core.Application.CQRS.Legal.Queries;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.Legal;
 using Microsoft.Extensions.Logging;
 
-namespace CareerFlow.Core.Application.CQRS.Legal.Handler;
+namespace CareerFlow.Core.Application.CQRS.Legal.Handlers;
 
 public class GetLegalDocQueryHandler
 {
