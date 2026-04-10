@@ -93,7 +93,7 @@ class TestUnitCacheHelpers:
         with _cache_lock:
             _content_cache["stale"] = (sample_content, 0.0)
 
-        with patch("time.time", return_value=1000000.0):
+        with patch("app.document_reader.extractor.time.time", return_value=1000000.0):
             assert get_cached_content("stale") is None
 
     def test_overwrite_updates_value(self, sample_content: DocumentContent) -> None:
@@ -331,5 +331,5 @@ class TestIntegrationExtractor:
         with _cache_lock:
             _content_cache["ttl_test"] = (sample_content, 0.0)
 
-        with patch("time.time", return_value=1000000.0):
+        with patch("app.document_reader.extractor.time.time", return_value=1000000.0):
             assert get_cached_content("ttl_test") is None
