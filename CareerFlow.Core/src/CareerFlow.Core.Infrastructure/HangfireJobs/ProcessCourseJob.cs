@@ -1,9 +1,12 @@
+using System.Collections.Concurrent;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Exceptions;
-using CareerFlow.Core.Domain.Models.AI;
+using CareerFlow.Core.Domain.Models.AI.Dto;
+using CareerFlow.Core.Domain.Models.AI.Requests;
+using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.ValueObjects;
+using CareerFlow.Core.Infrastructure.Mappers;
 using Hangfire;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -16,12 +19,10 @@ public sealed class ProcessCourseJob
     private readonly IDocumentAnalyzerService _analyzer;
     private readonly ICacheService _cache;
     private readonly ICourseJobRepository _courseJobRepository;
-    private readonly ICourseRepository _courseRepository;
+    private readonly ICoursePersistenceService _coursePersistenceService;
     private readonly ILogger<ProcessCourseJob> _logger;
-    private readonly IQuizRepository _quizRepository;
     private readonly IStorageService _storage;
     private readonly IUnitOfWork _uow;
-    private readonly IUserProfileRepository _userProfileRepository;
 
     public ProcessCourseJob(
         IUnitOfWork uow,
@@ -29,9 +30,7 @@ public sealed class ProcessCourseJob
         IDocumentAnalyzerService analyzer,
         ILogger<ProcessCourseJob> logger,
         ICourseJobRepository courseJobRepository,
-        ICourseRepository courseRepository,
-        IQuizRepository quizRepository,
-        IUserProfileRepository userProfileRepository,
+        ICoursePersistenceService coursePersistenceService,
         ICacheService cache)
     {
         ArgumentNullException.ThrowIfNull(uow);
@@ -39,9 +38,7 @@ public sealed class ProcessCourseJob
         ArgumentNullException.ThrowIfNull(analyzer);
         ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(courseJobRepository);
-        ArgumentNullException.ThrowIfNull(courseRepository);
-        ArgumentNullException.ThrowIfNull(quizRepository);
-        ArgumentNullException.ThrowIfNull(userProfileRepository);
+        ArgumentNullException.ThrowIfNull(coursePersistenceService);
         ArgumentNullException.ThrowIfNull(cache);
 
         _uow = uow;
@@ -49,9 +46,7 @@ public sealed class ProcessCourseJob
         _analyzer = analyzer;
         _logger = logger;
         _courseJobRepository = courseJobRepository;
-        _courseRepository = courseRepository;
-        _userProfileRepository = userProfileRepository;
-        _quizRepository = quizRepository;
+        _coursePersistenceService = coursePersistenceService;
         _cache = cache;
     }
 
@@ -65,123 +60,84 @@ public sealed class ProcessCourseJob
             return;
         }
 
-        await UpdateStatusAsync(job, JobStatus.Processing, ct);
+        await UpdateJobStatusAsync(job, JobStatus.Processing, ct);
 
         try
         {
-            var cacheKey = $"course:full:{job.Upload!.FileKey}";
-            var cached = await _cache.GetAsync<FullCourseResponse>(cacheKey, ct);
+            var documentResponse = await GetOrCacheDocumentAnalysisAsync(job.Upload!, ct);
+            var expandedChapters = await GetOrCacheExpandedChaptersAsync(job.Upload!, documentResponse, ct);
 
-            FullCourseResponse fullResult;
-            if (cached is not null)
-            {
-                _logger.LogInformation("Cache hit for {FileKey}", job.Upload.FileKey);
-                fullResult = cached;
-            }
-            else
-            {
-                var fileBytes = await DownloadFileBytesAsync(job.Upload!.FileKey, ct);
-                var fileName = job.Upload!.FileName;
+            var courseId = await _coursePersistenceService.PersistAsync(
+                userId, job.Upload!.Title, expandedChapters.ToAssemblyModels(), ct);
 
-                var formFile = CreateFormFile(fileBytes, fileName);
-                fullResult = await _analyzer.GenerateFullCourseAsync(formFile, 7, ct);
+            job.SetCourseId(courseId);
+            await UpdateJobStatusAsync(job, JobStatus.Done, ct);
 
-                await _cache.SetAsync(cacheKey, fullResult, TimeSpan.FromHours(2), ct);
-            }
-
-            var topic = job.Upload!.Title;
-            var chapters = BuildChaptersFromResponse(fullResult);
-            var course = Course.Create(T(topic), chapters);
-
-            foreach (var chapter in course.Chapters) chapter.SetCourseId(course.Id);
-            var userProfile = await _userProfileRepository.GetCurrentUserProfile(userId, ct) ??
-                              throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
-            userProfile.EnrollInCourse(course);
-            await _uow.BeginTransactionAsync(ct);
-
-            try
-            {
-                await _courseRepository.AddAsync(course, ct);
-                _userProfileRepository.Update(userProfile);
-                await _uow.SaveChangesAsync(ct);
-
-                var quizQuestions = BuildQuizQuestions(fullResult, course);
-
-                foreach (var question in quizQuestions) await _quizRepository.AddAsync(question, ct);
-
-                job.SetCourseId(course.Id);
-                await UpdateStatusAsync(job, JobStatus.Done, ct);
-
-                await _uow.CommitAsync(ct);
-
-                _logger.LogInformation("Job {JobId} done. Course {CourseId}", jobId, course.Id);
-            }
-            catch
-            {
-                await _uow.RollbackAsync(ct);
-                throw;
-            }
+            _logger.LogInformation("Job {JobId} done. Course {CourseId}", jobId, courseId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Job {JobId} failed", jobId);
             job.SetErrorMessage(ex.Message);
-            await UpdateStatusAsync(job, JobStatus.Failed, ct);
+            await UpdateJobStatusAsync(job, JobStatus.Failed, ct);
             throw;
         }
     }
 
-    private static List<Chapter> BuildChaptersFromResponse(FullCourseResponse fullResult)
+    private async Task<DocumentProcessingResponse> GetOrCacheDocumentAnalysisAsync(
+        CourseUpload upload, CancellationToken ct)
     {
-        return fullResult.Chapters.Select(ch =>
+        var cacheKey = $"course:analyze:{upload.FileName}";
+        var cached = await _cache.GetAsync<DocumentProcessingResponse>(cacheKey, ct);
+
+        if (cached is not null)
         {
-            var subChapterEntities = ch.Subchapters
-                .Select(s => SubChapter.Create(T(s.Title), T(s.Sumary), s.TheoryHtml))
-                .ToList();
-
-            return Chapter.Create(
-                ch.Day,
-                T(ch.ChapterTitle),
-                T(ch.CoreConcept),
-                subChapterEntities);
-        }).ToList();
-    }
-
-    private static List<QuizQuestion> BuildQuizQuestions(FullCourseResponse fullResult, Course course)
-    {
-        var questions = new List<QuizQuestion>();
-
-        foreach (var (chData, chapter) in fullResult.Chapters.Zip(course.Chapters))
-        {
-            questions.AddRange(chData.Quiz.Quiz.Select(q =>
-                QuizQuestion.Create(
-                    T(q.Question, 500),
-                    q.Options.Select(o => T(o)).ToList(),
-                    T(q.CorrectAnswer),
-                    chapter.Id,
-                    null)));
-
-            foreach (var (subContent, subChapter) in chData.Subchapters.Zip(chapter.SubChapters))
-                questions.AddRange(subContent.MiniQuiz.Select(q =>
-                    QuizQuestion.Create(
-                        T(q.Question, 500),
-                        q.Options.Select(o => T(o)).ToList(),
-                        T(q.CorrectAnswer),
-                        null,
-                        subChapter.Id)));
+            _logger.LogInformation("Cache hit for analysis of {FileName}", upload.FileName);
+            return cached;
         }
 
-        return questions;
+        var fileBytes = await DownloadFileBytesAsync(upload.FileKey, ct);
+        var formFile = CreateFormFile(fileBytes, upload.FileName);
+        var response = await _analyzer.AnalyzeDocumentAsync(formFile, ct);
+
+        await _cache.SetAsync(cacheKey, response, TimeSpan.FromHours(2), ct);
+        return response;
     }
 
-    private static string T(string? value, int max = 200)
+    private async Task<List<ExpandedChapterDataDto>> GetOrCacheExpandedChaptersAsync(
+        CourseUpload upload, DocumentProcessingResponse documentResponse, CancellationToken ct)
     {
-        if (string.IsNullOrEmpty(value) || value.Length <= max)
-            return value ?? "";
+        var cacheKey = $"course:chapters:{upload.FileName}";
+        var cached = await _cache.GetAsync<List<ExpandedChapterDataDto>>(cacheKey, ct);
 
-        var truncated = value[..max];
-        var lastSpace = truncated.LastIndexOf(' ');
-        return lastSpace > 0 ? truncated[..lastSpace] : truncated;
+        if (cached is not null)
+        {
+            _logger.LogInformation("Cache hit for chapters of {FileName}", upload.FileName);
+            return cached;
+        }
+
+        var concurrentChapters = new ConcurrentBag<ExpandedChapterDataDto>();
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 6, CancellationToken = ct };
+
+        await Parallel.ForEachAsync(documentResponse.Skeleton.Chapters, parallelOptions, async (chapterSkeleton, token) =>
+        {
+            var request = new DocumentChapterRequest(
+                chapterSkeleton.Title,
+                chapterSkeleton.CoreConcept,
+                documentResponse.DocumentId);
+
+            var detail = await _analyzer.ExpandAnalyzedDocument(request, token);
+
+            concurrentChapters.Add(new ExpandedChapterDataDto(
+                chapterSkeleton.Day,
+                chapterSkeleton.Title,
+                chapterSkeleton.CoreConcept,
+                detail));
+        });
+
+        var result = concurrentChapters.OrderBy(c => c.Day).ToList();
+        await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(2), ct);
+        return result;
     }
 
     private async Task<byte[]> DownloadFileBytesAsync(string fileKey, CancellationToken ct)
@@ -202,7 +158,7 @@ public sealed class ProcessCourseJob
         };
     }
 
-    private async Task UpdateStatusAsync(CourseJob job, JobStatus status, CancellationToken ct)
+    private async Task UpdateJobStatusAsync(CourseJob job, JobStatus status, CancellationToken ct)
     {
         job.Update(status);
         await _uow.SaveChangesAsync(ct);

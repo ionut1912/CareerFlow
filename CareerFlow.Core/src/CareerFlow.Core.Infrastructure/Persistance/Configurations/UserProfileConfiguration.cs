@@ -1,3 +1,4 @@
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;

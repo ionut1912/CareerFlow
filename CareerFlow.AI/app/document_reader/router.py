@@ -22,7 +22,6 @@ from app.document_reader.schemas import DocumentChapterRequest
 
 router = APIRouter(prefix="/document-courses", tags=["Document Course Generation"])
 
-
 def _save_and_extract(upload: UploadFile) -> tuple[Path, DocumentContent, str]:
     filename = upload.filename or ""
     ext = Path(filename).suffix.lower()
@@ -35,13 +34,11 @@ def _save_and_extract(upload: UploadFile) -> tuple[Path, DocumentContent, str]:
     doc_id = file_hash(tmp)
     return tmp, content, doc_id
 
-
 @router.post("/upload-and-analyze")
 async def upload_and_analyze(
     file: UploadFile = File(...),
     client: AsyncOpenAI = Depends(get_openai_client),
 ) -> dict[str, Any]:
-    """Upload document, extract text, return analysis + skeleton + document_id."""
     tmp, content, doc_id = await asyncio.to_thread(_save_and_extract, file)
     try:
         if not content.text.strip():
@@ -56,18 +53,17 @@ async def upload_and_analyze(
     finally:
         tmp.unlink(missing_ok=True)
 
-
 @router.post("/chapters/expand")
 async def expand_chapter(
     request: DocumentChapterRequest,
     client: AsyncOpenAI = Depends(get_openai_client),
 ) -> dict[str, Any]:
-    """Generate full content for one chapter. Requires document_id from /upload-and-analyze."""
     cached = get_cached_content(request.document_id)
     if cached is None:
         raise HTTPException(404, "Document not found in cache. Re-upload the file.")
 
-    chunks = chunk_text(cached.text, max_chars=3000)
+    chunks = await asyncio.to_thread(chunk_text, cached.text, 3000)
+    
     chapter = ChapterSkeleton(
         title=request.chapter_title,
         core_concept=request.core_concept,

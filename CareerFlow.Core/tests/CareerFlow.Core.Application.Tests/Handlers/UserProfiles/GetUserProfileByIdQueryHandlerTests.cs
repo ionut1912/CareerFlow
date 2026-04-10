@@ -2,6 +2,7 @@ using CareerFlow.Core.Application.CQRS.UserProfiles.Handlers;
 using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
 using Moq;
@@ -24,18 +25,27 @@ public class GetUserProfileByIdQueryHandlerTests : BaseHandlerTest<GetUserProfil
     [Fact]
     public async Task Handle_UserProfileFound_ReturnsUserProfile()
     {
-        //Arrange
-        var query = new GetUserProfileByIdQuery(Guid.NewGuid());
-        var userProfileToReturn =
-            UserProfile.Create(Guid.NewGuid(), LearningType.Auditory, [UserType.HobbyLearner], "testDomain");
+        // Arrange
+        var userProfileToReturn = UserProfile.Create(
+            Guid.NewGuid(), 
+            LearningType.Auditory, 
+            [UserType.HobbyLearner], 
+            "testDomain");
+
+        var query = new GetUserProfileByIdQuery(userProfileToReturn.Id);
+
+        // Use It.IsAny to match the params/expressions argument used in the handler
         _userProfileRepositoryMock
-            .Setup(x => x.GetByIdAsync(query.Id, Ct))
+            .Setup(x => x.GetByIdAsync(
+                query.Id, 
+                Ct, 
+                It.IsAny<System.Linq.Expressions.Expression<Func<UserProfile, object>>[]>()))
             .ReturnsAsync(userProfileToReturn);
 
-        //Act
+        // Act
         var result = await _handler.Handle(query, Ct);
 
-        //Assert
+        // Assert
         result.ShouldNotBeNull();
         result.AccountId.ShouldBe(userProfileToReturn.AccountId);
         result.LearningType.ShouldBe(userProfileToReturn.LearningType.Value);

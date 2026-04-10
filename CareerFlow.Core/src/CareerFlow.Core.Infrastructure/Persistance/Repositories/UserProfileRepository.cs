@@ -1,4 +1,5 @@
 using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
 using Shared.Infra.Services;
 
@@ -12,5 +13,16 @@ public class UserProfileRepository(DbSet<UserProfile> dbSet)
         return await dbSet
             .Include(x => x.Account)
             .FirstOrDefaultAsync(x => x.AccountId == accountId, cancellationToken);
+    }
+
+    public async Task<UserProfile?> GetUserCourses(Guid accountId, CancellationToken cancellationToken)
+    {
+        return await
+            dbSet
+                .Include(x => x.Account)
+                .Include(x=>x.Courses)
+                .ThenInclude(x=>x.Chapters)
+                .ThenInclude(x=>x.SubChapters)
+                .FirstOrDefaultAsync(x => x.AccountId == accountId,cancellationToken);
     }
 }

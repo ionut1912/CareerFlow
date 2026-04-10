@@ -1,7 +1,8 @@
-using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
 using Shared.Domain.Common;
+
+namespace CareerFlow.Core.Domain.Entities;
 
 public class UserProfile : Entity
 {

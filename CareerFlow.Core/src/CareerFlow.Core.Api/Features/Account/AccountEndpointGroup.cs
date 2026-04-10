@@ -1,8 +1,10 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Command;
-using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Application.Requests.Account;
+using CareerFlow.Core.Application.Requests.LegalDoc;
 using Microsoft.AspNetCore.Authorization;
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;

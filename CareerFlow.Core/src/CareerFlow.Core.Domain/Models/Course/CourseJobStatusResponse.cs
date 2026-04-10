@@ -1,4 +1,4 @@
-namespace CareerFlow.Core.Application.Responses;
+namespace CareerFlow.Core.Domain.Models.Course;
 
 public sealed record CourseJobStatusResponse(
     Guid JobId,

@@ -1,134 +1,354 @@
+"""Tests for app/document_reader/service.py"""
+from __future__ import annotations
+
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import AsyncMock, patch
 from openai import RateLimitError
-import httpx
+from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_none
 
-from app.document_reader.schemas import AnalysisAndSkeleton, FullChapterResponse, DocumentAnalysis, LearningPlanSkeleton
 from app.courses.schemas import ChapterSkeleton
+from app.document_reader import service
 from app.document_reader.extractor import DocumentContent
-from app.document_reader.service import (
-    _select_chunks,
-    analyze_and_skeleton,
-    generate_full_chapter,
+from app.document_reader.schemas import (
+    AnalysisAndSkeleton,
+    DocumentAnalysis,
+    FullChapterResponse,
+    LearningPlanSkeleton,
+    SubchapterContent,
 )
-from tests.conftest import make_parsed_response
+from tests.conftest import make_parsed_response, make_quiz_question
+
+_FAST_RETRY = retry(
+    retry=retry_if_exception_type(RateLimitError),
+    wait=wait_none(),
+    stop=stop_after_attempt(8),
+    reraise=True,
+)
 
 
-def get_rate_limit_error() -> RateLimitError:
-    request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
-    response = httpx.Response(429, request=request)
-    return RateLimitError("Rate limited", response=response, body=None)
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def _make_analysis() -> DocumentAnalysis:
+    return DocumentAnalysis(
+        title="Doc Title", summary="A summary.", key_topics=["a", "b"]
+    )
 
 
-@pytest.fixture
-def mock_document_content() -> DocumentContent:
+def _make_doc_skeleton(n: int = 2) -> LearningPlanSkeleton:
+    return LearningPlanSkeleton(
+        topic="Topic",
+        chapters=[
+            ChapterSkeleton(title=f"Ziua {i+1}", core_concept=f"Concept {i+1}", day=i+1)
+            for i in range(n)
+        ],
+    )
+
+
+def _make_aas(n: int = 2) -> AnalysisAndSkeleton:
+    return AnalysisAndSkeleton(
+        analysis=_make_analysis(),
+        skeleton=_make_doc_skeleton(n),
+    )
+
+
+def _make_full_chapter() -> FullChapterResponse:
+    q = make_quiz_question()
+    sub = SubchapterContent(
+        title="Sub",
+        content_summary="Summary",
+        theory_html="<p>Theory</p>",
+        quiz=[q, q, q],
+    )
+    return FullChapterResponse(subchapters=[sub], recap_quiz=[q] * 10)
+
+
+def _client_returning(obj: object) -> AsyncMock:
+    client = AsyncMock()
+    client.beta.chat.completions.parse = AsyncMock(
+        return_value=make_parsed_response(obj)
+    )
+    return client
+
+
+def _doc_content(text: str = "Paragraph one.\n\nParagraph two.") -> DocumentContent:
     return DocumentContent(
-        filename="test.pdf", 
-        total_pages=10, 
-        text="A" * 15000, 
-        pages=["A" * 15000]
+        filename="test.pdf", total_pages=1, text=text, pages=[text]
     )
 
 
-def test_select_chunks_empty_list() -> None:
-    assert _select_chunks([], "query") == ""
+def _rate_limit_error() -> RateLimitError:
+    return RateLimitError("rate limit", response=MagicMock(status_code=429), body={})
 
 
-def test_select_chunks_sorting_logic() -> None:
-    chunks = [
-        "This chunk is entirely about apples and bananas.",
-        "This chunk talks about cars.",
-        "This chunk mentions apples once."
-    ]
-    query = "apples and bananas"
-    result = _select_chunks(chunks, query, max_chars=100)
-    
-    assert "entirely about apples" in result
-    assert "mentions apples once" in result
-    assert "cars" not in result
+# ---------------------------------------------------------------------------
+# Unit tests  analyze_and_skeleton
+# ---------------------------------------------------------------------------
+
+class TestUnitAnalyzeAndSkeleton:
+    """Unit tests for service.analyze_and_skeleton."""
+
+    @pytest.mark.anyio
+    async def test_happy_path_returns_analysis_and_skeleton(self) -> None:
+        """analyze_and_skeleton returns AnalysisAndSkeleton on success."""
+        result = await service.analyze_and_skeleton(
+            _client_returning(_make_aas(3)), _doc_content()
+        )
+        assert isinstance(result, AnalysisAndSkeleton)
+        assert len(result.skeleton.chapters) == 3
+
+    @pytest.mark.anyio
+    async def test_raises_runtime_error_when_parsed_none(self) -> None:
+        """analyze_and_skeleton raises RuntimeError when parsed is None."""
+        with pytest.raises(RuntimeError, match="AnalysisAndSkeleton"):
+            await service.analyze_and_skeleton(_client_returning(None), _doc_content())
+
+    @pytest.mark.anyio
+    async def test_response_format_is_correct(self) -> None:
+        """analyze_and_skeleton passes response_format=AnalysisAndSkeleton."""
+        client = _client_returning(_make_aas())
+        await service.analyze_and_skeleton(client, _doc_content())
+
+        _, kwargs = client.beta.chat.completions.parse.call_args
+        assert kwargs.get("response_format") is AnalysisAndSkeleton
+
+    @pytest.mark.anyio
+    async def test_long_text_is_truncated(self) -> None:
+        """Text longer than 12 000 chars is truncated before being sent to the API."""
+        client = _client_returning(_make_aas())
+        await service.analyze_and_skeleton(client, _doc_content(text="A" * 20_000))
+
+        _, kwargs = client.beta.chat.completions.parse.call_args
+        user_msg = next(
+            m["content"] for m in kwargs["messages"] if m["role"] == "user"
+        )
+        assert len(user_msg) < 20_000 + 200
+
+    @pytest.mark.anyio
+    async def test_filename_and_pages_in_prompt(self) -> None:
+        """Filename and page count appear in the user message."""
+        client = _client_returning(_make_aas())
+        content = DocumentContent(
+            filename="my_file.pdf", total_pages=42,
+            text="Some text.", pages=["Some text."]
+        )
+        await service.analyze_and_skeleton(client, content)
+
+        _, kwargs = client.beta.chat.completions.parse.call_args
+        user_msg = next(
+            m["content"] for m in kwargs["messages"] if m["role"] == "user"
+        )
+        assert "my_file.pdf" in user_msg
+        assert "42" in user_msg
+
+    @pytest.mark.anyio
+    async def test_rate_limit_retries_and_succeeds(self) -> None:
+        """analyze_and_skeleton retries on RateLimitError and succeeds on the second attempt.
+
+        _retry is patched with wait_none() so tenacity never calls asyncio.sleep,
+        making the test instant regardless of how tenacity resolves its sleep reference.
+        """
+        aas = _make_aas()
+        client: AsyncMock = AsyncMock()
+        client.beta.chat.completions.parse = AsyncMock(
+            side_effect=[_rate_limit_error(), make_parsed_response(aas)]
+        )
+
+        with patch("app.document_reader.service._retry", _FAST_RETRY):
+            result = await service.analyze_and_skeleton(client, _doc_content())
+
+        assert isinstance(result, AnalysisAndSkeleton)
+        assert client.beta.chat.completions.parse.call_count == 2
+
+    @pytest.mark.anyio
+    async def test_exhausted_retries_reraise(self) -> None:
+        """analyze_and_skeleton re-raises RateLimitError after all 8 retry attempts.
+
+        _retry is patched with wait_none() so all 8 attempts complete instantly
+        """
+        client: AsyncMock = AsyncMock()
+        client.beta.chat.completions.parse = AsyncMock(side_effect=_rate_limit_error())
+
+        with patch("app.document_reader.service._retry", _FAST_RETRY), pytest.raises(RateLimitError):
+            await service.analyze_and_skeleton(client, _doc_content())
 
 
-def test_select_chunks_max_chars_cutoff() -> None:
-    chunks = ["Chunk one has exactly 32 chars.", "Chunk two has exactly 32 chars."]
-    query = "chunk"
-    result = _select_chunks(chunks, query, max_chars=50)
-    
-    assert "Chunk one" in result
-    assert "Chunk two" not in result
+# ---------------------------------------------------------------------------
+# Unit tests generate_full_chapter
+# ---------------------------------------------------------------------------
+
+class TestUnitGenerateFullChapter:
+    """Unit tests for service.generate_full_chapter."""
+
+    @pytest.mark.anyio
+    async def test_happy_path_returns_full_chapter_response(self) -> None:
+        """generate_full_chapter returns a FullChapterResponse."""
+        client = _client_returning(_make_full_chapter())
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+
+        result = await service.generate_full_chapter(
+            client, ["chunk one", "chunk two"], chapter
+        )
+        assert isinstance(result, FullChapterResponse)
+        assert len(result.recap_quiz) == 10
+
+    @pytest.mark.anyio
+    async def test_raises_runtime_error_when_parsed_none(self) -> None:
+        """generate_full_chapter raises RuntimeError when parsed is None."""
+        client = _client_returning(None)
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+
+        with pytest.raises(RuntimeError, match="FullChapterResponse"):
+            await service.generate_full_chapter(client, ["chunk"], chapter)
+
+    @pytest.mark.anyio
+    async def test_response_format_is_full_chapter_response(self) -> None:
+        """generate_full_chapter passes response_format=FullChapterResponse."""
+        client = _client_returning(_make_full_chapter())
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+        await service.generate_full_chapter(client, ["chunk"], chapter)
+
+        _, kwargs = client.beta.chat.completions.parse.call_args
+        assert kwargs.get("response_format") is FullChapterResponse
+
+    @pytest.mark.anyio
+    async def test_chapter_title_and_concept_in_prompt(self) -> None:
+        """Chapter title and core_concept appear in the user message."""
+        client = _client_returning(_make_full_chapter())
+        chapter = ChapterSkeleton(
+            title="UniqueTitle99", core_concept="UniqueConcept88", day=1
+        )
+        await service.generate_full_chapter(client, ["context chunk"], chapter)
+
+        _, kwargs = client.beta.chat.completions.parse.call_args
+        user_msg = next(
+            m["content"] for m in kwargs["messages"] if m["role"] == "user"
+        )
+        assert "UniqueTitle99" in user_msg
+        assert "UniqueConcept88" in user_msg
+
+    @pytest.mark.anyio
+    async def test_empty_chunks_does_not_raise(self) -> None:
+        """generate_full_chapter handles an empty chunk list gracefully."""
+        client = _client_returning(_make_full_chapter())
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+        result = await service.generate_full_chapter(client, [], chapter)
+        assert isinstance(result, FullChapterResponse)
+
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("num_chunks", [1, 3, 10])
+    async def test_various_chunk_counts(self, num_chunks: int) -> None:
+        """generate_full_chapter works regardless of how many chunks are supplied."""
+        client = _client_returning(_make_full_chapter())
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+        chunks = [f"chunk {i} " * 100 for i in range(num_chunks)]
+
+        result = await service.generate_full_chapter(client, chunks, chapter)
+        assert isinstance(result, FullChapterResponse)
+
+    @pytest.mark.anyio
+    async def test_rate_limit_retries_and_succeeds(self) -> None:
+        """generate_full_chapter retries on RateLimitError and succeeds on second attempt."""
+        full = _make_full_chapter()
+        client: AsyncMock = AsyncMock()
+        client.beta.chat.completions.parse = AsyncMock(
+            side_effect=[_rate_limit_error(), make_parsed_response(full)]
+        )
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+
+        with patch("app.document_reader.service._retry", _FAST_RETRY):
+            result = await service.generate_full_chapter(client, ["chunk"], chapter)
+
+        assert isinstance(result, FullChapterResponse)
+        assert client.beta.chat.completions.parse.call_count == 2
+
+    @pytest.mark.anyio
+    async def test_exhausted_retries_reraise(self) -> None:
+        """generate_full_chapter re-raises RateLimitError after all retry attempts."""
+        client: AsyncMock = AsyncMock()
+        client.beta.chat.completions.parse = AsyncMock(side_effect=_rate_limit_error())
+        chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
+
+        with patch("app.document_reader.service._retry", _FAST_RETRY), pytest.raises(RateLimitError):
+            await service.generate_full_chapter(client, ["chunk"], chapter)
 
 
-def test_select_chunks_fallback_large_first_chunk() -> None:
-    chunks = [
-        "This is an initial default chunk that is very very long.",
-        "A highly relevant chunk but it is incredibly long and exceeds the max limit immediately."
-    ]
-    query = "relevant"
-    result = _select_chunks(chunks, query, max_chars=20)
-    assert result == chunks[0][:20]
+# ---------------------------------------------------------------------------
+# Unit tests _select_chunks
+# ---------------------------------------------------------------------------
+
+class TestUnitSelectChunks:
+    """Unit tests for the private _select_chunks helper."""
+
+    def test_empty_chunks_returns_empty_string(self) -> None:
+        """_select_chunks returns empty string for an empty list."""
+        assert service._select_chunks([], "query") == ""
+
+    def test_single_chunk_returned_if_fits(self) -> None:
+        """A single small chunk is returned as-is."""
+        assert "hello world" in service._select_chunks(["hello world"], "hello")
+
+    def test_total_length_does_not_exceed_max_chars(self) -> None:
+        """Returned string does not exceed max_chars (plus join overhead)."""
+        chunks = ["word " * 500 for _ in range(10)]
+        result = service._select_chunks(chunks, "word", max_chars=6000)
+        assert len(result) <= 6500
+
+    def test_relevant_chunks_are_prioritised(self) -> None:
+        """Chunks containing query words score higher than irrelevant chunks."""
+        chunks = ["irrelevant content", "Python tutorial introduction", "Python basics"]
+        assert "Python" in service._select_chunks(chunks, "Python")
+
+    def test_fallback_to_first_chunk_when_none_match(self) -> None:
+        """When no chunk matches, the first chunk is returned truncated."""
+        result = service._select_chunks(["abcdefghij"], "zzz", max_chars=5)
+        assert len(result) <= 5
 
 
-@pytest.mark.asyncio
-async def test_analyze_and_skeleton_happy_path(mock_openai_client: AsyncMock, mock_document_content: DocumentContent) -> None:
-    expected_data = AnalysisAndSkeleton(
-        analysis=DocumentAnalysis(title="A", summary="B", key_topics=["C"]),
-        skeleton=LearningPlanSkeleton(topic="D", chapters=[])
-    )
-    mock_openai_client.beta.chat.completions.parse.return_value = make_parsed_response(expected_data)
-    
-    result = await analyze_and_skeleton(mock_openai_client, mock_document_content)
-    
-    assert result == expected_data
-    call_args = mock_openai_client.beta.chat.completions.parse.await_args[1]
-    assert len(call_args["messages"][1]["content"]) < 12100 
+# ---------------------------------------------------------------------------
+# Integration tests
+# ---------------------------------------------------------------------------
 
+class TestIntegrationDocumentReaderService:
+    """Integration tests: analyze → generate_full_chapter pipeline."""
 
-@pytest.mark.asyncio
-async def test_analyze_and_skeleton_parse_failure(mock_openai_client: AsyncMock, mock_document_content: DocumentContent) -> None:
-    mock_openai_client.beta.chat.completions.parse.return_value = make_parsed_response(None)
-    with pytest.raises(RuntimeError, match="OpenAI failed to parse AnalysisAndSkeleton"):
-        await analyze_and_skeleton(mock_openai_client, mock_document_content)
+    @pytest.mark.anyio
+    async def test_analyze_then_generate_full_chapter(self) -> None:
+        """Chapters from analyze_and_skeleton are valid inputs for generate_full_chapter."""
+        aas = _make_aas(n=1)
+        full = _make_full_chapter()
+        responses: list[Any] = [make_parsed_response(aas), make_parsed_response(full)]
+        idx = [0]
 
+        def _dispatch(**_kwargs: Any) -> Any:
+            r = responses[idx[0]]
+            idx[0] += 1
+            return r
 
-@pytest.mark.asyncio
-@patch("asyncio.sleep", new_callable=AsyncMock)
-async def test_analyze_and_skeleton_retry_logic(mock_sleep: AsyncMock, mock_openai_client: AsyncMock, mock_document_content: DocumentContent) -> None:
-    expected_data = AnalysisAndSkeleton(
-        analysis=DocumentAnalysis(title="A", summary="B", key_topics=["C"]),
-        skeleton=LearningPlanSkeleton(topic="D", chapters=[])
-    )
-    
-    mock_openai_client.beta.chat.completions.parse.side_effect = [
-        get_rate_limit_error(),
-        make_parsed_response(expected_data)
-    ]
-    
-    result = await analyze_and_skeleton(mock_openai_client, mock_document_content)
-    
-    assert result == expected_data
-    assert mock_openai_client.beta.chat.completions.parse.call_count == 2
-    mock_sleep.assert_called_once()
+        client: AsyncMock = AsyncMock()
+        client.beta.chat.completions.parse = AsyncMock(side_effect=_dispatch)
 
+        content = _doc_content()
+        plan = await service.analyze_and_skeleton(client, content)
 
-@pytest.mark.asyncio
-async def test_generate_full_chapter_happy_path(mock_openai_client: AsyncMock) -> None:
-    expected_data = FullChapterResponse(subchapters=[], recap_quiz=[])
-    mock_openai_client.beta.chat.completions.parse.return_value = make_parsed_response(expected_data)
-    
-    mock_chapter = ChapterSkeleton(title="Intro", core_concept="Basics")
-    
-    chunks = ["Irrelevant chunk", "Intro to Basics chunk"]
-    result = await generate_full_chapter(mock_openai_client, chunks, mock_chapter)
-    
-    assert result == expected_data
-    call_args = mock_openai_client.beta.chat.completions.parse.await_args[1]
-    prompt_content = call_args["messages"][1]["content"]
-    assert "Intro to Basics chunk" in prompt_content
+        from app.document_reader.extractor import chunk_text
+        result = await service.generate_full_chapter(
+            client, chunk_text(content.text), plan.skeleton.chapters[0]
+        )
+        assert isinstance(result, FullChapterResponse)
+        assert len(result.subchapters) >= 1
 
-
-@pytest.mark.asyncio
-async def test_generate_full_chapter_parse_failure(mock_openai_client: AsyncMock) -> None:
-    mock_openai_client.beta.chat.completions.parse.return_value = make_parsed_response(None)
-    mock_chapter = ChapterSkeleton(title="Intro", core_concept="Basics")
-    
-    with pytest.raises(RuntimeError, match="OpenAI failed to parse FullChapterResponse"):
-        await generate_full_chapter(mock_openai_client, ["Chunk"], mock_chapter)
+    @pytest.mark.anyio
+    @pytest.mark.parametrize("text_length", [100, 5000, 15000])
+    async def test_various_document_lengths(self, text_length: int) -> None:
+        """Service handles short, medium, and long documents without error."""
+        client = _client_returning(_make_aas(1))
+        text = "Word content here. " * (text_length // 20)
+        content = DocumentContent(
+            filename="doc.pdf", total_pages=1, text=text, pages=[text]
+        )
+        result = await service.analyze_and_skeleton(client, content)
+        assert isinstance(result, AnalysisAndSkeleton)

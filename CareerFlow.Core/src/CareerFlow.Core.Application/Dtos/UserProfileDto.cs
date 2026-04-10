@@ -11,4 +11,5 @@ public record UserProfileDto(
     int IncorrectAnswersForQuiz,
     int Experience,
     string LearningType,
-    List<string> UserTypes);
+    List<string> UserTypes,
+    List<CourseDto> Courses);

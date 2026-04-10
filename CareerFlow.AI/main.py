@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-
+import os
 from app.courses.router import router as courses_router
 from app.document_reader.router import router as document_router
 
@@ -11,7 +11,7 @@ tags_metadata = [
 app = FastAPI(
     title="CareerFlow AI Service",
     version="1.0.0",
-    root_path="/ai",
+    root_path="/ai" if os.getenv("ENVIRONMENT") == "production" else "",
     docs_url="/swagger",
     redoc_url=None,
     openapi_tags=tags_metadata

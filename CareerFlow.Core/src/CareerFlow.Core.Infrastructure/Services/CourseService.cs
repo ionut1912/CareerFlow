@@ -1,43 +1,58 @@
-using CareerFlow.Core.Application.Dtos;
-using CareerFlow.Core.Application.Requests;
-using CareerFlow.Core.Application.Responses;
+using System.Collections.Concurrent;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Domain.Models.AI.Requests;
+using CareerFlow.Core.Domain.Models.AI.Responses;
+using CareerFlow.Core.Domain.Models.Course;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
+using CareerFlow.Core.Infrastructure.Mappers;
 using Hangfire;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
 public sealed class CourseService : ICourseService
 {
     private readonly IChapterRepository _chapterRepository;
+    private readonly ICacheService _cacheService;
+    private readonly ILogger<CourseService> _logger;
     private readonly ICourseJobRepository _courseJobRepository;
     private readonly ICourseUploadsRepository _courseUploadsRepository;
     private readonly IBackgroundJobClient _jobClient;
     private readonly IStorageService _storage;
+    private readonly IAnalyzerService _analyzer;
     private readonly IUnitOfWork _uow;
     private readonly IUserProfileRepository _userProfileRepository;
+    private readonly ICoursePersistenceService _coursePersistenceService;
 
     public CourseService(
         IStorageService storage,
         IBackgroundJobClient jobClient,
+        ILogger<CourseService> logger,
         IUnitOfWork uow,
+        ICacheService cacheService,
         ICourseUploadsRepository courseUploadsRepository,
         ICourseJobRepository courseJobRepository,
         IUserProfileRepository userProfileRepository,
-        IChapterRepository chapterRepository)
+        IChapterRepository chapterRepository,
+        IAnalyzerService analyzer,
+        ICoursePersistenceService coursePersistenceService)
     {
         ArgumentNullException.ThrowIfNull(storage);
         ArgumentNullException.ThrowIfNull(jobClient);
         ArgumentNullException.ThrowIfNull(uow);
+        ArgumentNullException.ThrowIfNull(logger);
         ArgumentNullException.ThrowIfNull(courseUploadsRepository);
         ArgumentNullException.ThrowIfNull(courseJobRepository);
         ArgumentNullException.ThrowIfNull(userProfileRepository);
         ArgumentNullException.ThrowIfNull(chapterRepository);
+        ArgumentNullException.ThrowIfNull(analyzer);
+        ArgumentNullException.ThrowIfNull(cacheService);
+        ArgumentNullException.ThrowIfNull(coursePersistenceService);
 
         _storage = storage;
         _jobClient = jobClient;
@@ -46,15 +61,118 @@ public sealed class CourseService : ICourseService
         _courseJobRepository = courseJobRepository;
         _userProfileRepository = userProfileRepository;
         _chapterRepository = chapterRepository;
+        _analyzer = analyzer;
+        _cacheService = cacheService;
+        _logger = logger;
+        _coursePersistenceService = coursePersistenceService;
     }
 
     public async Task<UploadCoursesResponse> UploadManyAsync(
-        Guid userId, UploadCoursesRequest request, CancellationToken ct = default)
+        Guid userId, IFormFileCollection files, string title, CancellationToken ct = default)
+    {
+        var (valid, errors) = ValidateFiles(files);
+
+        if (valid.Count == 0)
+            return new UploadCoursesResponse([], files.Count, 0, files.Count, errors);
+
+        var uploads = new List<CourseUpload>();
+        var jobs = new List<CourseJob>();
+
+        foreach (var file in valid)
+        {
+            var (fileName, fileKey, extension) = await UploadSingleAsync(file, ct);
+            var upload = CourseUpload.Create(userId, title, fileName, fileKey, extension);
+            var job = CourseJob.Create(upload.Id, "pending");
+
+            uploads.Add(upload);
+            jobs.Add(job);
+        }
+
+        await _courseUploadsRepository.AddRangeAsync(uploads, ct);
+        await _courseJobRepository.AddRangeAsync(jobs, ct);
+        await _uow.SaveChangesAsync(ct);
+
+        foreach (var job in jobs)
+            _jobClient.Enqueue<ProcessCourseJob>(p => p.ExecuteAsync(job.Id, userId, CancellationToken.None));
+
+        var summaries = jobs
+            .Zip(uploads, (job, upload) => new CourseJobSummaryDto(job.Id, upload.FileName, "Pending"))
+            .ToList();
+
+        return new UploadCoursesResponse(summaries, files.Count, valid.Count, errors.Count, errors);
+    }
+
+    public async Task FinishChapterAsync(Guid userId, Guid courseId, Guid chapterId, CancellationToken ct = default)
+    {
+        var profile = await _userProfileRepository.GetCurrentUserProfile(userId, ct)
+                      ?? throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
+
+        if (!await _chapterRepository.ExistsAsync(chapterId, courseId, ct))
+            throw new ChapterNotFoundException($"Capitolul {chapterId} nu a fost gasit in cursul {courseId}");
+
+        if (!profile.Courses.Any(c => c.Id == courseId))
+            throw new InvalidFieldException("Nu esti inscris in acest curs.");
+
+        profile.FinishChapter(chapterId.ToString());
+        await _uow.SaveChangesAsync(ct);
+    }
+
+    public async Task<CourseSkeletonResponse> GetCourseSkeletonAsync(
+        CourseSkeletonRequest request, CancellationToken ct = default)
+    {
+        var cacheKey = $"course:skeleton:{request.Topic}";
+        var cached = await _cacheService.GetAsync<CourseSkeletonResponse>(cacheKey, ct);
+
+        if (cached is not null)
+        {
+            _logger.LogInformation("Cache hit for skeleton of {Topic}", request.Topic);
+            return cached;
+        }
+
+        var response = await _analyzer.GetCourseSkeletonAsync(request, ct);
+        await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(2), ct);
+        return response;
+    }
+
+    public async Task<Guid> SaveCourseContentAsync(
+        Guid userId, string topic, CourseSkeletonResponse response, CancellationToken ct = default)
+    {
+        var expandedChapters = await GetOrCacheExpandedChaptersAsync(topic, response, ct);
+        return await _coursePersistenceService.PersistAsync(userId, topic, expandedChapters.ToAssemblyModels(), ct);
+    }
+
+    private async Task<List<ChapterExpandResponse>> GetOrCacheExpandedChaptersAsync(
+        string topic, CourseSkeletonResponse response, CancellationToken ct)
+    {
+        var cacheKey = $"course:expand:{topic}";
+        var cached = await _cacheService.GetAsync<List<ChapterExpandResponse>>(cacheKey, ct);
+
+        if (cached is not null)
+        {
+            _logger.LogInformation("Cache hit for chapter expand of {Topic}", topic);
+            return cached;
+        }
+
+        var concurrentChapters = new ConcurrentBag<ChapterExpandResponse>();
+        var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 6, CancellationToken = ct };
+
+        await Parallel.ForEachAsync(response.Skeleton.Chapters, parallelOptions, async (chapterSkeleton, token) =>
+        {
+            var request = new ChapterRequest(topic, chapterSkeleton.Title, chapterSkeleton.CoreConcept);
+            concurrentChapters.Add(await _analyzer.GetExpandedChapterAsync(request, token));
+        });
+
+        var result = concurrentChapters.ToList();
+        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromHours(2), ct);
+        return result;
+    }
+
+    private static (List<IFormFile> Valid, List<string> Errors) ValidateFiles(IFormFileCollection files)
     {
         var valid = new List<IFormFile>();
         var errors = new List<string>();
 
-        foreach (var file in request.Files)
+        foreach (var file in files)
         {
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
@@ -70,57 +188,7 @@ public sealed class CourseService : ICourseService
                 valid.Add(file);
         }
 
-        if (valid.Count == 0)
-            return new UploadCoursesResponse([], request.Files.Count, 0, request.Files.Count, errors);
-
-        var uploads = new List<CourseUpload>();
-        var jobs = new List<CourseJob>();
-
-        foreach (var file in valid)
-        {
-            var (fileName, fileKey, extension) = await UploadSingleAsync(file, ct);
-            var upload = CourseUpload.Create(userId, request.Title, fileName, fileKey, extension);
-            var job = CourseJob.Create(upload.Id, "pending");
-
-            uploads.Add(upload);
-            jobs.Add(job);
-        }
-
-        await _courseUploadsRepository.AddRangeAsync(uploads, ct);
-        await _courseJobRepository.AddRangeAsync(jobs, ct);
-        await _uow.SaveChangesAsync(ct);
-
-        foreach (var job in jobs)
-            _jobClient.Enqueue<ProcessCourseJob>(p => p.ExecuteAsync(job.Id, userId, CancellationToken.None));
-
-        var summaries = jobs.Zip(uploads, (job, upload) =>
-                new CourseJobSummaryDto(job.Id, upload.FileName, "Pending"))
-            .ToList();
-
-        return new UploadCoursesResponse(summaries, request.Files.Count, valid.Count, errors.Count, errors);
-    }
-
-    public async Task<IEnumerable<CourseJobStatusResponse>> GetJobStatusesAsync(
-        Guid[] jobIds, CancellationToken ct = default)
-    {
-        return await _courseJobRepository.GetJobStatusesAsync(jobIds, ct);
-    }
-
-    public async Task FinishChapterAsync(Guid userId, Guid courseId, Guid chapterId, CancellationToken ct = default)
-    {
-        var profile = await _userProfileRepository.GetCurrentUserProfile(userId, ct)
-                      ?? throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
-
-        var chapterExists = await _chapterRepository.ExistsAsync(chapterId, courseId, ct);
-        if (!chapterExists)
-            throw new ChapterNotFoundException($"Capitolul {chapterId} nu a fost gasit in cursul {courseId}");
-
-        var isEnrolled = profile.Courses.Any(c => c.Id == courseId);
-        if (!isEnrolled)
-            throw new InvalidFieldException("Nu esti inscris in acest curs.");
-
-        profile.FinishChapter(chapterId.ToString());
-        await _uow.SaveChangesAsync(ct);
+        return (valid, errors);
     }
 
     private async Task<(string FileName, string FileKey, string Extension)> UploadSingleAsync(

@@ -31,7 +31,7 @@ public class SocialService(
             $"https://accounts.google.com/o/oauth2/v2/auth?client_id={_settings.Google.ClientId}&redirect_uri={redirectUri}&response_type=code&scope={scope}&access_type=offline&state={state}";
     }
 
-    public async Task<string> GoogleMobileCallBack(string code, string state, CancellationToken cancellationToken)
+    public async Task<string> GoogleMobileCallBackAsync(string code, string state, CancellationToken cancellationToken)
     {
         // 3. Recuperăm adresa de la Expo Go din memorie
         var savedReturnUrl = ValidateStateAndGetReturnUrl(state);
@@ -54,7 +54,7 @@ public class SocialService(
             $"https://www.linkedin.com/oauth/v2/authorization?client_id={_settings.LinkedIn.ClientId}&redirect_uri={redirectUri}&response_type=code&scope={scope}&state={state}";
     }
 
-    public async Task<string> LinkedInCallBack(string code, string state, CancellationToken cancellationToken)
+    public async Task<string> LinkedInCallBackAsync(string code, string state, CancellationToken cancellationToken)
     {
         var savedReturnUrl = ValidateStateAndGetReturnUrl(state);
         var account = await authService.LoginWithLinkedInAsync(code, cancellationToken);

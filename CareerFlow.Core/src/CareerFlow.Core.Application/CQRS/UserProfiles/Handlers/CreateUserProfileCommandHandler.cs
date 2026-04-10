@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
 using Microsoft.Extensions.Logging;

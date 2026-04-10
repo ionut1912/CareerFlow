@@ -2,13 +2,13 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable
-from typing import Any, TypeVar
+from typing import TypeVar
 
 from openai import AsyncOpenAI, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
 from app.courses.schemas import ChapterSkeleton
-from app.document_reader.extractor import DocumentContent, chunk_text
+from app.document_reader.extractor import DocumentContent
 from app.document_reader.schemas import AnalysisAndSkeleton, FullChapterResponse
 
 _ai_semaphore = asyncio.Semaphore(12)
@@ -31,18 +31,22 @@ async def _throttled(coro: Awaitable[T]) -> T:
 def _select_chunks(chunks: list[str], query: str, max_chars: int = 6000) -> str:
     if not chunks:
         return ""
+
     query_words = set(query.lower().split())
+
     scored = sorted(
         chunks,
-        key=lambda c: len(query_words & set(c.lower().split()[:200])),
+        key=lambda c: len(query_words.intersection(c.lower().split()[:200])),
         reverse=True,
     )
+
     selected, length = [], 0
     for c in scored:
         if length + len(c) > max_chars:
             break
         selected.append(c)
         length += len(c)
+
     return "\n\n".join(selected) or chunks[0][:max_chars]
 
 
@@ -71,7 +75,9 @@ async def analyze_and_skeleton(
                 },
                 {
                     "role": "user",
-                    "content": f"Document ({content.filename}, {content.total_pages} pag):\n\n{truncated}",
+                    "content": (
+                        f"Document ({content.filename}, {content.total_pages} pag):\n\n{truncated}"
+                    ),
                 },
             ],
             response_format=AnalysisAndSkeleton,
@@ -89,7 +95,9 @@ async def generate_full_chapter(
     chunks: list[str],
     chapter: ChapterSkeleton,
 ) -> FullChapterResponse:
-    context = _select_chunks(chunks, f"{chapter.title} {chapter.core_concept}")
+    context = await asyncio.to_thread(
+        _select_chunks, chunks, f"{chapter.title} {chapter.core_concept}"
+    )
     _parse = client.beta.chat.completions.parse
 
     @_retry
@@ -104,8 +112,25 @@ async def generate_full_chapter(
                         "1. Împarte capitolul în 2-4 subcapitole\n"
                         "2. Pentru fiecare subcapitol generează teorie HTML (h2,h3,p,ul,li,b,i) "
                         "și mini quiz cu 3 întrebări (4 opțiuni)\n"
-                        "3. Generează un quiz recapitulativ cu 10 întrebări (4 opțiuni)\n"
-                        "REGULI: Titluri sub 100 car. Întrebări sub 300 car. Răspunsuri sub 100 car.\n"
+                        "3. Generează un quiz recapitulativ cu 10 întrebări (4 opțiuni)\n\n"
+                        "REGULI STRICTE PENTRU ÎNTREBĂRI:\n"
+                        "- Titluri sub 100 car. Întrebări sub 300 car. Răspunsuri sub 100 car.\n"
+                        "- INTERZIS: întrebări care conțin răspunsul în enunț, întrebări de tipul "
+                        "'Care este definiția lui X?' când definiția e citată textual, întrebări "
+                        "cu ani/date deja menționate în întrebare, sau întrebări la care se poate "
+                        "răspunde fără a fi citit materialul.\n"
+                        "- OBLIGATORIU: întrebări care testează relații cauză-efect, comparații "
+                        "între concepte, aplicarea cunoștințelor în scenarii noi, sau analiza "
+                        "consecințelor. Cel puțin 50% din întrebări trebuie să înceapă cu "
+                        "'De ce…', 'Ce s-ar întâmpla dacă…', 'Care este diferența dintre…', "
+                        "'În ce situație…'.\n"
+                        "- RANDOMIZARE RĂSPUNSURI: Pentru fiecare întrebare, alege ALEATORIU "
+                        "indexul răspunsului corect (0, 1, 2 sau 3). Urmează strict acest tipar "
+                        "pentru cele 10 întrebări recapitulative: pozițiile corecte să fie "
+                        "aproximativ: 3,1,0,2,1,3,0,2,0,1. Pentru mini quiz-uri de 3 întrebări "
+                        "folosește tiparul: 2,0,1. NU pune răspunsul corect mereu pe prima poziție.\n"
+                        "- Distractorii (răspunsurile greșite) trebuie să fie plauzibili, "
+                        "nu absurzi — să reflecte greșeli tipice de înțelegere.\n"
                         "TOTUL ÎN ROMÂNĂ."
                     ),
                 },
@@ -116,7 +141,8 @@ async def generate_full_chapter(
                         f"Ziua: {chapter.day}\n"
                         f"Capitol: {chapter.title}\n"
                         f"Concept: {chapter.core_concept}\n\n"
-                        "Generează capitolul complet."
+                        "Generează capitolul complet respectând"
+                        " cu strictețe regulile de calitate și randomizare a testelor."
                     ),
                 },
             ],

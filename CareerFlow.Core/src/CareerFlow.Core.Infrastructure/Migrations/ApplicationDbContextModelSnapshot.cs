@@ -375,22 +375,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.ToTable("SystemDocuments", (string)null);
                 });
 
-            modelBuilder.Entity("CourseUserProfile", b =>
-                {
-                    b.Property<Guid>("CoursesId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("UserProfilesId")
-                        .HasColumnType("uuid");
-
-                    b.HasKey("CoursesId", "UserProfilesId");
-
-                    b.HasIndex("UserProfilesId");
-
-                    b.ToTable("course_user_profiles", (string)null);
-                });
-
-            modelBuilder.Entity("UserProfile", b =>
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.UserProfile", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -442,6 +427,21 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("UserProfiles");
+                });
+
+            modelBuilder.Entity("CourseUserProfile", b =>
+                {
+                    b.Property<Guid>("CoursesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserProfilesId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("CoursesId", "UserProfilesId");
+
+                    b.HasIndex("UserProfilesId");
+
+                    b.ToTable("course_user_profiles", (string)null);
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Chapter", b =>
@@ -513,26 +513,11 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Navigation("Chapter");
                 });
 
-            modelBuilder.Entity("CourseUserProfile", b =>
-                {
-                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", null)
-                        .WithMany()
-                        .HasForeignKey("CoursesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("UserProfile", null)
-                        .WithMany()
-                        .HasForeignKey("UserProfilesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("UserProfile", b =>
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.UserProfile", b =>
                 {
                     b.HasOne("CareerFlow.Core.Domain.Entities.Account", "Account")
                         .WithOne("UserProfile")
-                        .HasForeignKey("UserProfile", "AccountId")
+                        .HasForeignKey("CareerFlow.Core.Domain.Entities.UserProfile", "AccountId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -557,6 +542,21 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Navigation("Account");
 
                     b.Navigation("UserTypes");
+                });
+
+            modelBuilder.Entity("CourseUserProfile", b =>
+                {
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CoursesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CareerFlow.Core.Domain.Entities.UserProfile", null)
+                        .WithMany()
+                        .HasForeignKey("UserProfilesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Account", b =>

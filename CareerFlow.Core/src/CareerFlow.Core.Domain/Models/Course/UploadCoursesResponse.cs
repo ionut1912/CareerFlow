@@ -1,6 +1,4 @@
-using CareerFlow.Core.Application.Dtos;
-
-namespace CareerFlow.Core.Application.Responses;
+namespace CareerFlow.Core.Domain.Models.Course;
 
 public sealed record UploadCoursesResponse(
     IReadOnlyList<CourseJobSummaryDto> Jobs,

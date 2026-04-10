@@ -7,4 +7,8 @@ namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
 public class QuizRepository(DbSet<QuizQuestion> dbSet) : GenericRepository<QuizQuestion>(dbSet), IQuizRepository
 {
+    public async Task AddRangeAsync(List<QuizQuestion> quizQuestions,CancellationToken cancellationToken)
+    {
+        await dbSet.AddRangeAsync(quizQuestions,cancellationToken);
+    }
 }

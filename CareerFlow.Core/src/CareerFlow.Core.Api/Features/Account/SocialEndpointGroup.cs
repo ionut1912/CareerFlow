@@ -1,6 +1,9 @@
+using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
+using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Account;
 
@@ -9,43 +12,45 @@ public class SocialEndpointGroup : EndpointGroup
     public override void Map(IEndpointRouteBuilder endpoints)
     {
         var group = endpoints.MapGroup(this);
-        group.MapGet(GoogleMobileLogin, "/auth/google/mobile");
-        group.MapGet(GoogleMobileCallback, "/auth/google/mobile/callback");
-        group.MapGet(LinkedInMobileLogin, "/auth/linkedin/mobile");
-        group.MapGet(LinkedInMobileCallback, "/auth/linkedin/mobile/callback");
+        group.MapGet("/auth/google/mobile", GoogleMobileLogin);
+        group.MapGet("/auth/google/mobile/callback", GoogleMobileCallback);
+        group.MapGet("/auth/linkedin/mobile", LinkedInMobileLogin);
+        group.MapGet("/auth/linkedin/mobile/callback", LinkedInMobileCallback);
     }
 
-    // Am adăugat parametrul returnUrl pe care îl primește de la aplicația ta Expo
-    private static IResult GoogleMobileLogin(ISocialService service, string? returnUrl = null)
+    private static async Task<IResult> GoogleMobileLogin(
+        [AsParameters] GoogleMobileLoginQuery request,
+        IMessageBus messageBus,
+        CancellationToken ct)
     {
-        var url = service.GoogleMobileLogin(returnUrl);
+        var url = await messageBus.InvokeAsync<string>(request, ct);
         return Results.Redirect(url);
     }
 
     private static async Task<IResult> GoogleMobileCallback(
-        string code,
-        string state,
-        ISocialService service,
+        [AsParameters] GoogleMobileCallbackQuery query,
+        IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        var url = await service.GoogleMobileCallBack(code, state, cancellationToken);
+        var url = await messageBus.InvokeAsync<string>(query, cancellationToken);
         return Results.Redirect(url);
     }
 
-    // Am adăugat parametrul returnUrl și aici
-    private static IResult LinkedInMobileLogin(ISocialService service, string? returnUrl = null)
+    private static async Task<IResult> LinkedInMobileLogin(
+        [AsParameters] LinkedinMobileLoginQuery query,
+        IMessageBus messageBus,
+        CancellationToken ct)
     {
-        var url = service.LinkedInMobileLogin(returnUrl);
+        var url = await messageBus.InvokeAsync<string>(query, ct);
         return Results.Redirect(url);
     }
 
     private static async Task<IResult> LinkedInMobileCallback(
-        string code,
-        string state,
-        ISocialService service,
+        [AsParameters]  LinkedInMobileCallbackQuery query,
+        IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        var url = await service.LinkedInCallBack(code, state, cancellationToken);
+        var url = await messageBus.InvokeAsync<string>(query, cancellationToken);
         return Results.Redirect(url);
     }
 }

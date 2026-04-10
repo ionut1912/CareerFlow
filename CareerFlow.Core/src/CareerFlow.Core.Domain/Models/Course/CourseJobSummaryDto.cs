@@ -1,4 +1,4 @@
-namespace CareerFlow.Core.Application.Dtos;
+namespace CareerFlow.Core.Domain.Models.Course;
 
 public record CourseJobSummaryDto(
     Guid JobId,

@@ -23,76 +23,74 @@ namespace CareerFlow.Core.Infrastructure.Extensions;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddRedisCache(
-        this IServiceCollection services,
-        IConfiguration configuration)
+    extension(IServiceCollection services)
     {
-        var options = configuration
-                          .GetSection(CacheSettings.SectionName)
-                          .Get<CacheSettings>()
-                      ?? throw new InvalidOperationException("Redis configuration is missing.");
+        private IServiceCollection AddRedisCache(IConfiguration configuration)
+        {
+            var options = configuration
+                              .GetSection(CacheSettings.SectionName)
+                              .Get<CacheSettings>()
+                          ?? throw new InvalidOperationException("Redis configuration is missing.");
 
-        services.Configure<CacheSettings>(
-            configuration.GetSection(CacheSettings.SectionName));
+            services.Configure<CacheSettings>(
+                configuration.GetSection(CacheSettings.SectionName));
 
-        services.AddSingleton<IConnectionMultiplexer>(_ =>
-            ConnectionMultiplexer.Connect(new ConfigurationOptions
-            {
-                EndPoints = { options.ConnectionString },
-                AbortOnConnectFail = options.AbortOnConnectFail,
-                ConnectRetry = 3,
-                ReconnectRetryPolicy = new ExponentialRetry(5000)
-            }));
+            services.AddSingleton<IConnectionMultiplexer>(_ =>
+                ConnectionMultiplexer.Connect(new ConfigurationOptions
+                {
+                    EndPoints = { options.ConnectionString },
+                    AbortOnConnectFail = options.AbortOnConnectFail,
+                    ConnectRetry = 3,
+                    ReconnectRetryPolicy = new ExponentialRetry(5000)
+                }));
 
-        services.AddSingleton<ICacheService, RedisCacheService>();
+            services.AddSingleton<ICacheService, RedisCacheService>();
 
-        return services;
-    }
+            return services;
+        }
 
-    public static IServiceCollection AddDatabaseConfiguration(this IServiceCollection services,
-        IConfiguration configuration)
-    {
-        services.AddDatabase<ApplicationDbContext>(configuration);
-        return services;
-    }
+        private IServiceCollection AddDatabaseConfiguration(IConfiguration configuration)
+        {
+            services.AddDatabase<ApplicationDbContext>(configuration);
+            return services;
+        }
 
-    public static IServiceCollection AddRepositories(this IServiceCollection services)
-    {
-        services
-            .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
-            .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
-            .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
-            .AddRepository<UserProfile, UserProfileRepository, IUserProfileRepository, ApplicationDbContext>()
-            .AddRepository<CourseUpload, CourseUploadsRepository, ICourseUploadsRepository, ApplicationDbContext>()
-            .AddRepository<CourseJob, CourseJobRepository, ICourseJobRepository, ApplicationDbContext>()
-            .AddRepository<Chapter, ChapterRepository, IChapterRepository, ApplicationDbContext>()
-            .AddRepository<Course, CourseRepository, ICourseRepository, ApplicationDbContext>()
-            .AddRepository<QuizQuestion, QuizRepository, IQuizRepository, ApplicationDbContext>()
-            .AddRepos<ITokenService, TokenService>()
-            .AddRepos<IPasswordService, PasswordService>()
-            .AddRepos<IAuthService, AuthService>()
-            .AddRepos<IUnitOfWork, UnitOfWork>()
-            .AddRepos<IEmailService, EmailService>()
-            .AddRepos<IGoogleTokenValidator, GoogleTokenValidator>()
-            .AddRepos<IMailClient, PostmarkMailClient>()
-            .AddRepos<ISocialService, SocialService>()
-            .AddRepos<ILegalService, LegalService>()
-            .AddRepos<ICourseService, CourseService>();
-        return services;
-    }
+        private IServiceCollection AddRepositories()
+        {
+            services
+                .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
+                .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
+                .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
+                .AddRepository<UserProfile, UserProfileRepository, IUserProfileRepository, ApplicationDbContext>()
+                .AddRepository<CourseUpload, CourseUploadsRepository, ICourseUploadsRepository, ApplicationDbContext>()
+                .AddRepository<CourseJob, CourseJobRepository, ICourseJobRepository, ApplicationDbContext>()
+                .AddRepository<Chapter, ChapterRepository, IChapterRepository, ApplicationDbContext>()
+                .AddRepository<Course, CourseRepository, ICourseRepository, ApplicationDbContext>()
+                .AddRepository<QuizQuestion, QuizRepository, IQuizRepository, ApplicationDbContext>()
+                .AddRepos<ITokenService, TokenService>()
+                .AddRepos<IPasswordService, PasswordService>()
+                .AddRepos<IAuthService, AuthService>()
+                .AddRepos<IUnitOfWork, UnitOfWork>()
+                .AddRepos<IEmailService, EmailService>()
+                .AddRepos<IGoogleTokenValidator, GoogleTokenValidator>()
+                .AddRepos<IMailClient, PostmarkMailClient>()
+                .AddRepos<ISocialService, SocialService>()
+                .AddRepos<ILegalService, LegalService>()
+                .AddRepos<ICourseService, CourseService>()
+                .AddRepos<ICoursePersistenceService,CoursePersistenceService>();
+            return services;
+        }
 
-    public static IServiceCollection AddInfisical(
-        this IServiceCollection serviceCollection,
-        IConfiguration configuration,
-        string environment)
-    {
-        var infisicalClientId = configuration["Infisical:ClientId"];
-        var infisicalClientSecret = configuration["Infisical:ClientSecret"];
-        var infisicalProjectId = configuration["Infisical:ProjectId"];
+        private IServiceCollection AddInfisical(IConfiguration configuration,
+            string environment)
+        {
+            var infisicalClientId = configuration["Infisical:ClientId"];
+            var infisicalClientSecret = configuration["Infisical:ClientSecret"];
+            var infisicalProjectId = configuration["Infisical:ProjectId"];
 
-        if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
-            !string.IsNullOrWhiteSpace(infisicalProjectId) &&
-            !string.IsNullOrWhiteSpace(infisicalClientSecret))
+            if (string.IsNullOrWhiteSpace(infisicalClientId) ||
+                string.IsNullOrWhiteSpace(infisicalProjectId) ||
+                string.IsNullOrWhiteSpace(infisicalClientSecret)) return services;
             if (configuration is IConfigurationManager configManager)
                 configManager.AddInfisical(new InfisicalConfigBuilder()
                     .SetProjectId(infisicalProjectId)
@@ -102,98 +100,94 @@ public static class DependencyInjection
                         .Build())
                     .Build());
 
-        return serviceCollection;
-    }
+            return services;
+        }
 
-    public static IServiceCollection AddSettings(this IServiceCollection serviceCollection,
-        IConfiguration configuration)
-    {
-        serviceCollection.AddMemoryCache()
-            .Configure<SocialAuthSettings>(configuration.GetSection(SocialAuthSettings.SectionName))
-            .Configure<SocialAuthSettings>(configuration.GetSection(SocialAuthSettings.SectionName))
-            .Configure<PostmarkSettings>(configuration.GetSection(PostmarkSettings.SectionName))
-            .Configure<LegalDocSettings>(configuration.GetSection(LegalDocSettings.SectionName))
-            .AddHttpClient<IAuthService, AuthService>();
-
-        serviceCollection.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSender>();
-        return serviceCollection;
-    }
-
-
-    public static IServiceCollection AddStorageConfiguration(
-        this IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<R2Settings>(configuration.GetSection(R2Settings.SectionName));
-
-        services.AddSingleton<IAmazonS3>(sp =>
+        private IServiceCollection AddSettings(IConfiguration configuration)
         {
-            var settings = sp.GetRequiredService<IOptions<R2Settings>>().Value;
+            services.AddMemoryCache()
+                .Configure<SocialAuthSettings>(configuration.GetSection(SocialAuthSettings.SectionName))
+                .Configure<SocialAuthSettings>(configuration.GetSection(SocialAuthSettings.SectionName))
+                .Configure<PostmarkSettings>(configuration.GetSection(PostmarkSettings.SectionName))
+                .Configure<LegalDocSettings>(configuration.GetSection(LegalDocSettings.SectionName))
+                .AddHttpClient<IAuthService, AuthService>();
 
-            var config = new AmazonS3Config
+            services.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSender>();
+            services.AddHttpClient<IDocumentAnalyzerService, DocsAnalyzerService>();
+            services.AddHttpClient<IAnalyzerService, CourseGenerationService>();
+            return services;
+        }
+
+        private IServiceCollection AddStorageConfiguration(IConfiguration configuration)
+        {
+            services.Configure<R2Settings>(configuration.GetSection(R2Settings.SectionName));
+
+            services.AddSingleton<IAmazonS3>(sp =>
             {
-                ServiceURL = settings.Endpoint,
-                ForcePathStyle = true // required for R2
-            };
+                var settings = sp.GetRequiredService<IOptions<R2Settings>>().Value;
 
-            var credentials = new BasicAWSCredentials(settings.AccessKey, settings.SecretKey);
-            return new AmazonS3Client(credentials, config);
-        });
+                var config = new AmazonS3Config
+                {
+                    ServiceURL = settings.Endpoint,
+                    ForcePathStyle = true // required for R2
+                };
 
-        services.AddScoped<IStorageService, R2StorageService>();
-        return services;
-    }
+                var credentials = new BasicAWSCredentials(settings.AccessKey, settings.SecretKey);
+                return new AmazonS3Client(credentials, config);
+            });
 
-    private static IServiceCollection AddHangfireConfiguration(
-        this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddHangfire(config => config
-            .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
-            .UseSimpleAssemblyNameTypeSerializer()
-            .UseRecommendedSerializerSettings()
-            .UsePostgreSqlStorage(opts =>
-                opts.UseNpgsqlConnection(
-                    configuration.GetConnectionString("DefaultConnection"))));
+            services.AddScoped<IStorageService, R2StorageService>();
+            return services;
+        }
 
-        services.AddHangfireServer(opts =>
+        private IServiceCollection AddHangfireConfiguration(IConfiguration configuration)
         {
-            opts.WorkerCount = 4;
-            opts.Queues = ["default"];
-        });
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(opts =>
+                    opts.UseNpgsqlConnection(
+                        configuration.GetConnectionString("DefaultConnection"))));
 
-        services.AddScoped<LegalDocumentCheckerJob>();
-        services.AddScoped<ProcessCourseJob>();
-        return services;
-    }
+            services.AddHangfireServer(opts =>
+            {
+                opts.WorkerCount = 4;
+                opts.Queues = ["default"];
+            });
 
-    private static IServiceCollection AddAnalyzerService(
-        this IServiceCollection services, IConfiguration configuration)
-    {
-        services.Configure<AnalyzerSettings>(
-            configuration.GetSection(AnalyzerSettings.SectionName));
+            services.AddScoped<LegalDocumentCheckerJob>();
+            services.AddScoped<ProcessCourseJob>();
+            return services;
+        }
 
-        services.AddHttpClient<IDocumentAnalyzerService, DocsAnalizerService>((sp, client) =>
+        private IServiceCollection AddAnalyzerService(IConfiguration configuration)
         {
-            var settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
-            client.BaseAddress = new Uri(settings.BaseUrl);
-            client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSec);
-        });
+            services.Configure<AnalyzerSettings>(
+                configuration.GetSection(AnalyzerSettings.SectionName));
 
-        return services;
-    }
+            services.AddHttpClient<IDocumentAnalyzerService, DocsAnalyzerService>((sp, client) =>
+            {
+                var settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
+                client.BaseAddress = new Uri(settings.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSec);
+            });
 
+            return services;
+        }
 
-    public static IServiceCollection AddInfrastructure(this IServiceCollection serviceCollection,
-        IConfiguration configuration, string environment)
-    {
-        serviceCollection
-            .AddHangfireConfiguration(configuration)
-            .AddInfisical(configuration, environment)
-            .AddSettings(configuration)
-            .AddDatabaseConfiguration(configuration)
-            .AddRepositories()
-            .AddRedisCache(configuration)
-            .AddStorageConfiguration(configuration)
-            .AddAnalyzerService(configuration);
-        return serviceCollection;
+        public IServiceCollection AddInfrastructure(IConfiguration configuration, string environment)
+        {
+            services
+                .AddHangfireConfiguration(configuration)
+                .AddInfisical(configuration, environment)
+                .AddSettings(configuration)
+                .AddDatabaseConfiguration(configuration)
+                .AddRepositories()
+                .AddRedisCache(configuration)
+                .AddStorageConfiguration(configuration)
+                .AddAnalyzerService(configuration);
+            return services;
+        }
     }
 }

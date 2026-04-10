@@ -8,19 +8,20 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-# Adjust 'main' to match where your FastAPI 'app' instance actually lives
-from main import app 
-from app.dependencies import get_openai_client
 from app.courses.schemas import (
     ChapterQuizResponse,
     ChapterSkeleton,
     ExpandedDay,
     LearningPlanSkeleton,
-    QuizQuestion,
     QuizOption,
+    QuizQuestion,
     SubchapterContentResponse,
     SubchapterSkeleton,
 )
+from app.dependencies import get_openai_client
+
+# Adjust 'main' to match where your FastAPI 'app' instance actually lives
+from main import app
 
 
 def make_parsed_response(parsed_object: object) -> MagicMock:

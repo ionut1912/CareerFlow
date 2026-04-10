@@ -1,9 +1,13 @@
+using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Application.Requests.Course;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Models.Course;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Course;
 
@@ -15,43 +19,43 @@ public class CourseEndpointGroup : EndpointGroup
             .RequireAuthorization();
 
         group.MapPost("/upload", UploadAsync).DisableAntiforgery();
-        group.MapGet("/jobs", GetJobStatusesAsync);
         group.MapPost("/{courseId:guid}/chapters/{chapterId:guid}/finish", FinishChapterAsync);
+        group.MapPost("/gemerate", GenerateCourseAsync);
     }
 
     private static async Task<IResult> UploadAsync(
-        [FromForm] string title,
-        [FromForm] IFormFileCollection files, // 👈 add [FromForm]
-        ICourseService service,
+        IMessageBus messageBus,
+        [FromForm]UploadCourseDocumentRequest request,
         HttpContext httpContext,
         CancellationToken ct)
     {
         var userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return Results.Unauthorized();
-        var request = new UploadCoursesRequest { Files = files, Title = title };
-        var response = await service.UploadManyAsync(userId, request, ct);
+        var command = request.ToUploadCourseDocumentCommand(userId);
+        var response = await messageBus.InvokeAsync<UploadCoursesResponse>(command, ct);
         return Results.Accepted(value: response);
     }
 
-    private static async Task<IResult> GetJobStatusesAsync(
-        [FromQuery] Guid[] jobIds,
-        ICourseService service,
-        CancellationToken ct)
-    {
-        var result = await service.GetJobStatusesAsync(jobIds, ct);
-        return Results.Ok(result);
-    }
-
     private static async Task<IResult> FinishChapterAsync(
-        Guid courseId,
-        Guid chapterId,
-        ICourseService service,
+        IMessageBus messageBus,
+        [AsParameters]FinishChapterRequest request,
         HttpContext httpContext,
         CancellationToken ct)
     {
         var userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return Results.Unauthorized();
-        await service.FinishChapterAsync(userId, courseId, chapterId, ct);
+        var command=request.ToFinishChapterCommand(userId);
+        await messageBus.InvokeAsync(command, ct);
         return Results.NoContent();
+    }
+
+    private async Task<IResult> GenerateCourseAsync(IMessageBus messageBus, CourseRequest courseRequest,
+        HttpContext httpContext, CancellationToken ct)
+    {
+        var userId = httpContext.GetAccountId();
+        if (userId == Guid.Empty) return Results.Unauthorized();
+        var command=courseRequest.ToGenerateCourseCommand(userId);
+        var result=await  messageBus.InvokeAsync<Guid>(command, ct);
+        return Results.Ok(result);
     }
 }
