@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import threading
 from collections.abc import Generator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
 import pytest
-import time
 
 from app.document_reader.extractor import (
     DocumentContent,
