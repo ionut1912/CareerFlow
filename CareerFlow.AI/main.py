@@ -1,5 +1,7 @@
-from fastapi import FastAPI
 import os
+
+from fastapi import FastAPI
+
 from app.courses.router import router as courses_router
 from app.document_reader.router import router as document_router
 
