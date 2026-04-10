@@ -29,9 +29,12 @@ jobs:
           PACKAGE_TOKEN: ${{ secrets.PACKAGE_TOKEN }}
 
       - name: Build
+        # Building the solution here ensures all project dependencies 
+        # (like Castle.Core) are copied to their respective bin folders.
         run: dotnet build --no-restore --configuration Release
 
       - name: Run unit tests
+        # Now safe to use --no-build as the previous step populated the bins
         run: dotnet test --no-build --configuration Release --filter "Category!=Integration"
 
   core-integration-tests:
