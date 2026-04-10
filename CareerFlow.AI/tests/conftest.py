@@ -37,9 +37,7 @@ def make_parsed_response(parsed_object: object) -> MagicMock:
 def make_format_dispatcher(
     responses_by_format: dict[type, list[Any]],
 ) -> Callable[..., MagicMock]:
-    queues: dict[type, deque[Any]] = {
-        fmt: deque(items) for fmt, items in responses_by_format.items()
-    }
+    queues: dict[type, deque[Any]] = {fmt: deque(items) for fmt, items in responses_by_format.items()}
 
     def _dispatch(**kwargs: Any) -> MagicMock:
         rf = kwargs.get("response_format")
@@ -63,7 +61,8 @@ def make_quiz_question(
 ) -> QuizQuestion:
     return QuizQuestion(
         question=question,
-        options=options or [
+        options=options
+        or [
             make_quiz_option(),
             make_quiz_option(label="Un sarpe", is_correct=False),
             make_quiz_option(label="Un editor", is_correct=False),
@@ -93,19 +92,13 @@ def make_learning_plan_skeleton(
     topic: str = "Python",
     num_chapters: int = 2,
 ) -> LearningPlanSkeleton:
-    chapters = [
-        make_chapter_skeleton(title=f"Ziua {i + 1}")
-        for i in range(num_chapters)
-    ]
+    chapters = [make_chapter_skeleton(title=f"Ziua {i + 1}") for i in range(num_chapters)]
     return LearningPlanSkeleton(topic=topic, chapters=chapters)
 
 
 def make_expanded_day(num_subchapters: int = 2) -> ExpandedDay:
     return ExpandedDay(
-        subchapters=[
-            make_subchapter_skeleton(title=f"Subcapitol {i + 1}")
-            for i in range(num_subchapters)
-        ],
+        subchapters=[make_subchapter_skeleton(title=f"Subcapitol {i + 1}") for i in range(num_subchapters)],
     )
 
 
@@ -131,14 +124,8 @@ def wire_course(
     mock_client.beta.chat.completions.parse.side_effect = make_format_dispatcher(
         {
             LearningPlanSkeleton: [skeleton],
-            ExpandedDay: [
-                make_expanded_day(num_subchapters=num_subchapters)
-                for _ in range(num_days)
-            ],
-            SubchapterContentResponse: [
-                make_subchapter_content_response()
-                for _ in range(num_days * num_subchapters)
-            ],
+            ExpandedDay: [make_expanded_day(num_subchapters=num_subchapters) for _ in range(num_days)],
+            SubchapterContentResponse: [make_subchapter_content_response() for _ in range(num_days * num_subchapters)],
             ChapterQuizResponse: [make_chapter_quiz_response() for _ in range(num_days)],
         }
     )

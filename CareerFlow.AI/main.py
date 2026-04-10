@@ -16,11 +16,12 @@ app = FastAPI(
     root_path="/ai" if os.getenv("ENVIRONMENT") == "production" else "",
     docs_url="/swagger",
     redoc_url=None,
-    openapi_tags=tags_metadata
+    openapi_tags=tags_metadata,
 )
 
 app.include_router(courses_router)
 app.include_router(document_router)
+
 
 @app.get("/", tags=["Sistem"])
 def read_root() -> dict[str, str]:

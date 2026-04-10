@@ -1,4 +1,5 @@
 """Tests for app/courses/router.py"""
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock
@@ -13,9 +14,7 @@ class TestUnitCoursesRouter:
     """Unit tests: router delegates correctly to service and shapes the response."""
 
     @pytest.mark.anyio
-    async def test_create_skeleton_happy_path(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_create_skeleton_happy_path(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """POST /courses/skeleton returns skeleton dict and correct estimated_days."""
         wire_course(mock_openai_client, num_days=2, num_subchapters=1)
         response = await api_client.post("/courses/skeleton", json={"topic": "Python"})
@@ -28,9 +27,7 @@ class TestUnitCoursesRouter:
         assert body["skeleton"]["topic"] == "Python"
 
     @pytest.mark.anyio
-    async def test_create_skeleton_single_day(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_create_skeleton_single_day(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """POST /courses/skeleton with a one-day plan returns estimated_days=1."""
         wire_course(mock_openai_client, num_days=1, num_subchapters=1)
         response = await api_client.post("/courses/skeleton", json={"topic": "Git"})
@@ -39,26 +36,20 @@ class TestUnitCoursesRouter:
         assert response.json()["estimated_days"] == 1
 
     @pytest.mark.anyio
-    async def test_create_skeleton_missing_topic(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_create_skeleton_missing_topic(self, api_client: AsyncClient) -> None:
         """POST /courses/skeleton without topic returns 422 validation error."""
         response = await api_client.post("/courses/skeleton", json={})
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_create_skeleton_empty_topic(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_create_skeleton_empty_topic(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """POST /courses/skeleton with an empty string topic still calls service."""
         wire_course(mock_openai_client, num_days=1, num_subchapters=1)
         response = await api_client.post("/courses/skeleton", json={"topic": ""})
         assert response.status_code == 200
 
     @pytest.mark.anyio
-    async def test_expand_chapter_happy_path(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_expand_chapter_happy_path(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """POST /courses/chapters/expand returns chapter, expanded, subchapter_contents and quiz."""
         wire_course(mock_openai_client, num_days=1, num_subchapters=2)
         payload = {
@@ -77,19 +68,13 @@ class TestUnitCoursesRouter:
         assert len(body["subchapter_contents"]) == 2
 
     @pytest.mark.anyio
-    async def test_expand_chapter_missing_fields(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_expand_chapter_missing_fields(self, api_client: AsyncClient) -> None:
         """POST /courses/chapters/expand without required fields returns 422."""
-        response = await api_client.post(
-            "/courses/chapters/expand", json={"topic": "Python"}
-        )
+        response = await api_client.post("/courses/chapters/expand", json={"topic": "Python"})
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_expand_chapter_quiz_structure(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_expand_chapter_quiz_structure(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """Expanded chapter quiz has 10 questions each with 4 options."""
         wire_course(mock_openai_client, num_days=1, num_subchapters=1)
         payload = {
@@ -134,9 +119,7 @@ class TestIntegrationCoursesRouter:
     """Integration tests: full request/response cycle with wired mocks."""
 
     @pytest.mark.anyio
-    async def test_skeleton_then_expand_workflow(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_skeleton_then_expand_workflow(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """A skeleton response's chapter data is valid input for the expand endpoint."""
         wire_course(mock_openai_client, num_days=1, num_subchapters=1)
         skel_resp = await api_client.post("/courses/skeleton", json={"topic": "FastAPI"})

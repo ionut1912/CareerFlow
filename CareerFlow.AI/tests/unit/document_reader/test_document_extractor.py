@@ -1,4 +1,5 @@
 """Tests for app/document_reader/extractor.py"""
+
 from __future__ import annotations
 
 import threading
@@ -25,6 +26,7 @@ from app.document_reader.extractor import (
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture(autouse=True)
 def clear_cache() -> Generator[None, None, None]:
@@ -69,6 +71,7 @@ def sample_content() -> DocumentContent:
 # Unit tests  file_hash
 # ---------------------------------------------------------------------------
 
+
 class TestUnitFileHash:
     """Unit tests for file_hash."""
 
@@ -105,6 +108,7 @@ class TestUnitFileHash:
 # Unit tests  cache helpers
 # ---------------------------------------------------------------------------
 
+
 class TestUnitCacheHelpers:
     """Unit tests for get_cached_content / set_cached_content."""
 
@@ -125,9 +129,7 @@ class TestUnitCacheHelpers:
 
     def test_overwrite_updates_value(self, sample_content: DocumentContent) -> None:
         """Setting the same key twice returns the most recent value."""
-        other = DocumentContent(
-            filename="other.pdf", total_pages=1, text="other", pages=["other"]
-        )
+        other = DocumentContent(filename="other.pdf", total_pages=1, text="other", pages=["other"])
         set_cached_content("k", sample_content)
         set_cached_content("k", other)
         assert get_cached_content("k") is other
@@ -154,6 +156,7 @@ class TestUnitCacheHelpers:
 # ---------------------------------------------------------------------------
 # Unit tests  chunk_text
 # ---------------------------------------------------------------------------
+
 
 class TestUnitChunkText:
     """Unit tests for chunk_text."""
@@ -194,6 +197,7 @@ class TestUnitChunkText:
 # ---------------------------------------------------------------------------
 # Unit tests  extract_text_from_pdf
 # ---------------------------------------------------------------------------
+
 
 class TestUnitExtractTextFromPdf:
     """Unit tests for extract_text_from_pdf (pdfplumber mocked)."""
@@ -245,6 +249,7 @@ class TestUnitExtractTextFromPdf:
 # ---------------------------------------------------------------------------
 # Unit tests  extract_text_from_docx
 # ---------------------------------------------------------------------------
+
 
 class TestUnitExtractTextFromDocx:
     """Unit tests for extract_text_from_docx (python-docx mocked)."""
@@ -310,6 +315,7 @@ class TestUnitExtractTextFromDocx:
 # Unit tests  extract_text_from_document (dispatcher)
 # ---------------------------------------------------------------------------
 
+
 class TestUnitExtractTextFromDocument:
     """Unit tests for the high-level extract_text_from_document dispatcher."""
 
@@ -327,36 +333,24 @@ class TestUnitExtractTextFromDocument:
 
     def test_pdf_dispatches_to_pdf_extractor(self, tmp_pdf: Path) -> None:
         """Calls extract_text_from_pdf for .pdf files."""
-        expected = DocumentContent(
-            filename="test.pdf", total_pages=1, text="text", pages=["text"]
-        )
-        with patch(
-            "app.document_reader.extractor.extract_text_from_pdf", return_value=expected
-        ) as mock_fn:
+        expected = DocumentContent(filename="test.pdf", total_pages=1, text="text", pages=["text"])
+        with patch("app.document_reader.extractor.extract_text_from_pdf", return_value=expected) as mock_fn:
             result = extract_text_from_document(tmp_pdf)
         mock_fn.assert_called_once_with(tmp_pdf)
         assert result is expected
 
     def test_docx_dispatches_to_docx_extractor(self, tmp_docx: Path) -> None:
         """Calls extract_text_from_docx for .docx files."""
-        expected = DocumentContent(
-            filename="test.docx", total_pages=1, text="text", pages=["text"]
-        )
-        with patch(
-            "app.document_reader.extractor.extract_text_from_docx", return_value=expected
-        ) as mock_fn:
+        expected = DocumentContent(filename="test.docx", total_pages=1, text="text", pages=["text"])
+        with patch("app.document_reader.extractor.extract_text_from_docx", return_value=expected) as mock_fn:
             result = extract_text_from_document(tmp_docx)
         mock_fn.assert_called_once_with(tmp_docx)
         assert result is expected
 
     def test_result_is_cached_after_first_call(self, tmp_pdf: Path) -> None:
         """The second call with the same file uses the cache and skips re-parsing."""
-        expected = DocumentContent(
-            filename="test.pdf", total_pages=1, text="text", pages=["text"]
-        )
-        with patch(
-            "app.document_reader.extractor.extract_text_from_pdf", return_value=expected
-        ) as mock_fn:
+        expected = DocumentContent(filename="test.pdf", total_pages=1, text="text", pages=["text"])
+        with patch("app.document_reader.extractor.extract_text_from_pdf", return_value=expected) as mock_fn:
             extract_text_from_document(tmp_pdf)
             extract_text_from_document(tmp_pdf)
         mock_fn.assert_called_once()
@@ -367,9 +361,7 @@ class TestUnitExtractTextFromDocument:
         doc_file.write_bytes(b"legacy doc")
         converted = tmp_path / "file.docx"
         converted.write_bytes(b"PK fake")
-        expected = DocumentContent(
-            filename="file.docx", total_pages=1, text="converted", pages=["converted"]
-        )
+        expected = DocumentContent(filename="file.docx", total_pages=1, text="converted", pages=["converted"])
         with (
             patch("app.document_reader.extractor.convert_doc_to_docx", return_value=converted),
             patch("app.document_reader.extractor.extract_text_from_docx", return_value=expected),
@@ -383,6 +375,7 @@ class TestUnitExtractTextFromDocument:
 # Unit tests  convert_doc_to_docx
 # ---------------------------------------------------------------------------
 
+
 class TestUnitConvertDocToDocx:
     """Unit tests for convert_doc_to_docx."""
 
@@ -395,7 +388,8 @@ class TestUnitConvertDocToDocx:
 
         with (
             patch("subprocess.run"),
-            patch("tempfile.mkdtemp", return_value=str(out_dir)),pytest.raises(RuntimeError, match="LibreOffice")
+            patch("tempfile.mkdtemp", return_value=str(out_dir)),
+            pytest.raises(RuntimeError, match="LibreOffice"),
         ):
             convert_doc_to_docx(doc)
 
@@ -420,6 +414,7 @@ class TestUnitConvertDocToDocx:
 # Integration tests
 # ---------------------------------------------------------------------------
 
+
 class TestIntegrationExtractor:
     """Integration tests for the extractor pipeline with real in-process I/O."""
 
@@ -436,14 +431,15 @@ class TestIntegrationExtractor:
         f.write_bytes(b"stable content")
         assert file_hash(f) == file_hash(f)
 
-    @pytest.mark.parametrize(("text", "max_chars", "expected_min_chunks"), [
-        ("a\n\nb\n\nc", 3, 2),
-        ("short", 100, 1),
-        ("\n\n".join(["x" * 100] * 20), 250, 5),
-    ])
-    def test_chunk_text_parametrized(
-        self, text: str, max_chars: int, expected_min_chunks: int
-    ) -> None:
+    @pytest.mark.parametrize(
+        ("text", "max_chars", "expected_min_chunks"),
+        [
+            ("a\n\nb\n\nc", 3, 2),
+            ("short", 100, 1),
+            ("\n\n".join(["x" * 100] * 20), 250, 5),
+        ],
+    )
+    def test_chunk_text_parametrized(self, text: str, max_chars: int, expected_min_chunks: int) -> None:
         """chunk_text produces at least the expected minimum number of chunks."""
         assert len(chunk_text(text, max_chars=max_chars)) >= expected_min_chunks
 

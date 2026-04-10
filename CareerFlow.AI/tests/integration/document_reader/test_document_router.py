@@ -1,4 +1,5 @@
 """Tests for app/document_reader/router.py"""
+
 from __future__ import annotations
 
 import io
@@ -22,6 +23,7 @@ from tests.conftest import make_quiz_question
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_analysis() -> DocumentAnalysis:
     return DocumentAnalysis(
         title="Test Doc",
@@ -32,8 +34,7 @@ def _make_analysis() -> DocumentAnalysis:
 
 def _make_doc_skeleton(num_chapters: int = 2) -> LearningPlanSkeleton:
     chapters = [
-        ChapterSkeleton(title=f"Ziua {i + 1}", core_concept=f"Concept {i + 1}", day=i + 1)
-        for i in range(num_chapters)
+        ChapterSkeleton(title=f"Ziua {i + 1}", core_concept=f"Concept {i + 1}", day=i + 1) for i in range(num_chapters)
     ]
     return LearningPlanSkeleton(topic="Test", chapters=chapters)
 
@@ -70,13 +71,12 @@ def _parsed_response(obj: object) -> MagicMock:
 # Unit tests
 # ---------------------------------------------------------------------------
 
+
 class TestUnitDocumentReaderRouter:
     """Unit tests for /document-courses endpoints."""
 
     @pytest.mark.anyio
-    async def test_upload_unsupported_extension(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_upload_unsupported_extension(self, api_client: AsyncClient) -> None:
         """Uploading a .txt file returns 400 unsupported type."""
         response = await api_client.post(
             "/document-courses/upload-and-analyze",
@@ -86,13 +86,9 @@ class TestUnitDocumentReaderRouter:
         assert "Unsupported" in response.json()["detail"]
 
     @pytest.mark.anyio
-    async def test_upload_empty_text_returns_422(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_upload_empty_text_returns_422(self, api_client: AsyncClient) -> None:
         """If extracted text is blank the endpoint returns 422."""
-        empty_content = DocumentContent(
-            filename="empty.pdf", total_pages=1, text="   ", pages=["   "]
-        )
+        empty_content = DocumentContent(filename="empty.pdf", total_pages=1, text="   ", pages=["   "])
         with patch(
             "app.document_reader.router._save_and_extract",
             return_value=(MagicMock(), empty_content, "abc123"),
@@ -104,13 +100,10 @@ class TestUnitDocumentReaderRouter:
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_upload_and_analyze_happy_path(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_upload_and_analyze_happy_path(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """upload-and-analyze returns document_id, analysis, skeleton, estimated_days."""
         doc_content = DocumentContent(
-            filename="doc.pdf", total_pages=3,
-            text="Some content here.", pages=["Some content here."]
+            filename="doc.pdf", total_pages=3, text="Some content here.", pages=["Some content here."]
         )
         aas = _make_analysis_and_skeleton(num_chapters=3)
         mock_openai_client.beta.chat.completions.parse.return_value = _parsed_response(aas)
@@ -132,9 +125,7 @@ class TestUnitDocumentReaderRouter:
         assert "skeleton" in body
 
     @pytest.mark.anyio
-    async def test_expand_chapter_document_not_found(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_expand_chapter_document_not_found(self, api_client: AsyncClient) -> None:
         """expand_chapter returns 404 when document_id is not in cache."""
         with patch("app.document_reader.router.get_cached_content", return_value=None):
             response = await api_client.post(
@@ -149,14 +140,9 @@ class TestUnitDocumentReaderRouter:
         assert "not found" in response.json()["detail"].lower()
 
     @pytest.mark.anyio
-    async def test_expand_chapter_happy_path(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_expand_chapter_happy_path(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """expand_chapter returns FullChapterResponse when document is cached."""
-        cached = DocumentContent(
-            filename="doc.pdf", total_pages=2,
-            text="Paragraph one.\n\nParagraph two.", pages=[]
-        )
+        cached = DocumentContent(filename="doc.pdf", total_pages=2, text="Paragraph one.\n\nParagraph two.", pages=[])
         full = _make_full_chapter_response()
         mock_openai_client.beta.chat.completions.parse.return_value = _parsed_response(full)
 
@@ -177,9 +163,7 @@ class TestUnitDocumentReaderRouter:
         assert len(body["recap_quiz"]) == 10
 
     @pytest.mark.anyio
-    async def test_expand_chapter_missing_fields(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_expand_chapter_missing_fields(self, api_client: AsyncClient) -> None:
         """expand_chapter without required body fields returns 422."""
         response = await api_client.post(
             "/document-courses/chapters/expand",
@@ -188,9 +172,7 @@ class TestUnitDocumentReaderRouter:
         assert response.status_code == 422
 
     @pytest.mark.anyio
-    async def test_upload_no_filename(
-        self, api_client: AsyncClient
-    ) -> None:
+    async def test_upload_no_filename(self, api_client: AsyncClient) -> None:
         """File upload without a filename is rejected.
 
         FastAPI's multipart parser rejects an empty filename at the framework
@@ -204,14 +186,9 @@ class TestUnitDocumentReaderRouter:
         assert response.status_code in (400, 422)
 
     @pytest.mark.anyio
-    async def test_upload_docx_extension_accepted(
-        self, api_client: AsyncClient, mock_openai_client: AsyncMock
-    ) -> None:
+    async def test_upload_docx_extension_accepted(self, api_client: AsyncClient, mock_openai_client: AsyncMock) -> None:
         """A .docx file passes extension validation and reaches the service layer."""
-        doc_content = DocumentContent(
-            filename="doc.docx", total_pages=1,
-            text="Hello world.", pages=["Hello world."]
-        )
+        doc_content = DocumentContent(filename="doc.docx", total_pages=1, text="Hello world.", pages=["Hello world."])
         aas = _make_analysis_and_skeleton(1)
         mock_openai_client.beta.chat.completions.parse.return_value = _parsed_response(aas)
 
@@ -236,6 +213,7 @@ class TestUnitDocumentReaderRouter:
 # Integration tests
 # ---------------------------------------------------------------------------
 
+
 class TestIntegrationDocumentReaderRouter:
     """Integration tests: upload → expand workflow."""
 
@@ -258,12 +236,15 @@ class TestIntegrationDocumentReaderRouter:
             _parsed_response(full),
         ]
 
-        with patch(
-            "app.document_reader.router._save_and_extract",
-            return_value=(MagicMock(unlink=MagicMock()), doc_content, "real_id"),
-        ), patch(
-            "app.document_reader.router.get_cached_content",
-            return_value=doc_content,
+        with (
+            patch(
+                "app.document_reader.router._save_and_extract",
+                return_value=(MagicMock(unlink=MagicMock()), doc_content, "real_id"),
+            ),
+            patch(
+                "app.document_reader.router.get_cached_content",
+                return_value=doc_content,
+            ),
         ):
             upload_resp = await api_client.post(
                 "/document-courses/upload-and-analyze",
@@ -291,9 +272,7 @@ class TestIntegrationDocumentReaderRouter:
         ext: str,
     ) -> None:
         """All SUPPORTED_EXTENSIONS pass validation and reach the service layer."""
-        doc_content = DocumentContent(
-            filename=f"file{ext}", total_pages=1, text="Content.", pages=["Content."]
-        )
+        doc_content = DocumentContent(filename=f"file{ext}", total_pages=1, text="Content.", pages=["Content."])
         aas = _make_analysis_and_skeleton(1)
         mock_openai_client.beta.chat.completions.parse.return_value = _parsed_response(aas)
 
@@ -303,8 +282,6 @@ class TestIntegrationDocumentReaderRouter:
         ):
             response = await api_client.post(
                 "/document-courses/upload-and-analyze",
-                files={
-                    "file": (f"file{ext}", io.BytesIO(b"data"), "application/octet-stream")
-                },
+                files={"file": (f"file{ext}", io.BytesIO(b"data"), "application/octet-stream")},
             )
         assert response.status_code == 200

@@ -1,4 +1,5 @@
 """Tests for app/courses/schemas.py"""
+
 from __future__ import annotations
 
 import pytest
@@ -21,6 +22,7 @@ from app.courses.schemas import (
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _quiz_option(label: str = "Option", is_correct: bool = False) -> QuizOption:
     return QuizOption(label=label, is_correct=is_correct)
 
@@ -40,6 +42,7 @@ def _quiz_question(question: str = "Q?") -> QuizQuestion:
 # ---------------------------------------------------------------------------
 # CourseSkeletonRequest
 # ---------------------------------------------------------------------------
+
 
 def test_course_skeleton_request_valid() -> None:
     """CourseSkeletonRequest stores the topic correctly."""
@@ -68,6 +71,7 @@ def test_course_skeleton_request_topic_none_raises() -> None:
 # ChapterRequest
 # ---------------------------------------------------------------------------
 
+
 def test_chapter_request_valid() -> None:
     """ChapterRequest stores all three fields correctly."""
     model = ChapterRequest(topic="T", chapter_title="CT", core_concept="CC")
@@ -91,6 +95,7 @@ def test_chapter_request_missing_topic_raises() -> None:
 # ---------------------------------------------------------------------------
 # ChapterSkeleton
 # ---------------------------------------------------------------------------
+
 
 def test_chapter_skeleton_default_day() -> None:
     """ChapterSkeleton.day defaults to 0."""
@@ -118,6 +123,7 @@ def test_chapter_skeleton_missing_core_concept_raises() -> None:
 # LearningPlanSkeleton
 # ---------------------------------------------------------------------------
 
+
 def test_learning_plan_skeleton_stores_chapters() -> None:
     """LearningPlanSkeleton stores all supplied chapters."""
     chapters = [ChapterSkeleton(title=f"Ziua {i}", core_concept="C") for i in range(3)]
@@ -140,6 +146,7 @@ def test_learning_plan_skeleton_missing_topic_raises() -> None:
 # ---------------------------------------------------------------------------
 # SubchapterSkeleton
 # ---------------------------------------------------------------------------
+
 
 def test_subchapter_skeleton_valid() -> None:
     """SubchapterSkeleton stores title and content_summary correctly."""
@@ -164,6 +171,7 @@ def test_subchapter_skeleton_missing_title_raises() -> None:
 # ExpandedDay
 # ---------------------------------------------------------------------------
 
+
 def test_expanded_day_stores_subchapters() -> None:
     """ExpandedDay stores all provided subchapters."""
     subs = [SubchapterSkeleton(title=f"S{i}", content_summary="x") for i in range(4)]
@@ -184,6 +192,7 @@ def test_expanded_day_missing_subchapters_raises() -> None:
 # ---------------------------------------------------------------------------
 # QuizOption
 # ---------------------------------------------------------------------------
+
 
 def test_quiz_option_correct() -> None:
     """QuizOption stores label and is_correct=True correctly."""
@@ -213,6 +222,7 @@ def test_quiz_option_missing_is_correct_raises() -> None:
 # QuizQuestion
 # ---------------------------------------------------------------------------
 
+
 def test_quiz_question_valid() -> None:
     """QuizQuestion stores question text and all options correctly."""
     q = _quiz_question("What is X?")
@@ -241,11 +251,10 @@ def test_quiz_question_empty_options_valid() -> None:
 # SubchapterContentResponse
 # ---------------------------------------------------------------------------
 
+
 def test_subchapter_content_response_valid() -> None:
     """SubchapterContentResponse stores theory_html and quiz correctly."""
-    model = SubchapterContentResponse(
-        theory_html="<p>Content</p>", quiz=[_quiz_question()]
-    )
+    model = SubchapterContentResponse(theory_html="<p>Content</p>", quiz=[_quiz_question()])
     assert "<p>Content</p>" in model.theory_html
     assert len(model.quiz) == 1
 
@@ -270,6 +279,7 @@ def test_subchapter_content_response_empty_quiz_valid() -> None:
 # ---------------------------------------------------------------------------
 # ChapterQuizResponse
 # ---------------------------------------------------------------------------
+
 
 def test_chapter_quiz_response_stores_questions() -> None:
     """ChapterQuizResponse stores all supplied questions."""

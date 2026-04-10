@@ -80,8 +80,7 @@ def extract_text_from_docx(path: Path) -> DocumentContent:
                 raw_paragraphs.append(row_text)
     chunk_size = 30
     pages: list[str] = [
-        "\n".join(raw_paragraphs[i : i + chunk_size])
-        for i in range(0, max(len(raw_paragraphs), 1), chunk_size)
+        "\n".join(raw_paragraphs[i : i + chunk_size]) for i in range(0, max(len(raw_paragraphs), 1), chunk_size)
     ] or [""]
     return DocumentContent(
         filename=path.name,
@@ -127,9 +126,7 @@ def extract_text_from_document(path: str | Path) -> DocumentContent:
         finally:
             shutil.rmtree(converted.parent, ignore_errors=True)
     else:
-        raise ValueError(
-            f"Unsupported file type '{ext}'. Supported: {', '.join(SUPPORTED_EXTENSIONS)}"
-        )
+        raise ValueError(f"Unsupported file type '{ext}'. Supported: {', '.join(SUPPORTED_EXTENSIONS)}")
 
     set_cached_content(key, content)
     return content

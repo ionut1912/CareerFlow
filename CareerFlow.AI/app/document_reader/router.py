@@ -22,6 +22,7 @@ from app.document_reader.schemas import DocumentChapterRequest
 
 router = APIRouter(prefix="/document-courses", tags=["Document Course Generation"])
 
+
 def _save_and_extract(upload: UploadFile) -> tuple[Path, DocumentContent, str]:
     filename = upload.filename or ""
     ext = Path(filename).suffix.lower()
@@ -33,6 +34,7 @@ def _save_and_extract(upload: UploadFile) -> tuple[Path, DocumentContent, str]:
     content = extract_text_from_document(tmp)
     doc_id = file_hash(tmp)
     return tmp, content, doc_id
+
 
 @router.post("/upload-and-analyze")
 async def upload_and_analyze(
@@ -53,6 +55,7 @@ async def upload_and_analyze(
     finally:
         tmp.unlink(missing_ok=True)
 
+
 @router.post("/chapters/expand")
 async def expand_chapter(
     request: DocumentChapterRequest,
@@ -63,7 +66,7 @@ async def expand_chapter(
         raise HTTPException(404, "Document not found in cache. Re-upload the file.")
 
     chunks = await asyncio.to_thread(chunk_text, cached.text, 3000)
-    
+
     chapter = ChapterSkeleton(
         title=request.chapter_title,
         core_concept=request.core_concept,

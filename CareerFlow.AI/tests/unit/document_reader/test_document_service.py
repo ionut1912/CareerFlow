@@ -1,4 +1,5 @@
 """Tests for app/document_reader/service.py"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -32,19 +33,15 @@ _FAST_RETRY = retry(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _make_analysis() -> DocumentAnalysis:
-    return DocumentAnalysis(
-        title="Doc Title", summary="A summary.", key_topics=["a", "b"]
-    )
+    return DocumentAnalysis(title="Doc Title", summary="A summary.", key_topics=["a", "b"])
 
 
 def _make_doc_skeleton(n: int = 2) -> LearningPlanSkeleton:
     return LearningPlanSkeleton(
         topic="Topic",
-        chapters=[
-            ChapterSkeleton(title=f"Ziua {i+1}", core_concept=f"Concept {i+1}", day=i+1)
-            for i in range(n)
-        ],
+        chapters=[ChapterSkeleton(title=f"Ziua {i + 1}", core_concept=f"Concept {i + 1}", day=i + 1) for i in range(n)],
     )
 
 
@@ -68,16 +65,12 @@ def _make_full_chapter() -> FullChapterResponse:
 
 def _client_returning(obj: object) -> AsyncMock:
     client = AsyncMock()
-    client.beta.chat.completions.parse = AsyncMock(
-        return_value=make_parsed_response(obj)
-    )
+    client.beta.chat.completions.parse = AsyncMock(return_value=make_parsed_response(obj))
     return client
 
 
 def _doc_content(text: str = "Paragraph one.\n\nParagraph two.") -> DocumentContent:
-    return DocumentContent(
-        filename="test.pdf", total_pages=1, text=text, pages=[text]
-    )
+    return DocumentContent(filename="test.pdf", total_pages=1, text=text, pages=[text])
 
 
 def _rate_limit_error() -> RateLimitError:
@@ -88,15 +81,14 @@ def _rate_limit_error() -> RateLimitError:
 # Unit tests  analyze_and_skeleton
 # ---------------------------------------------------------------------------
 
+
 class TestUnitAnalyzeAndSkeleton:
     """Unit tests for service.analyze_and_skeleton."""
 
     @pytest.mark.anyio
     async def test_happy_path_returns_analysis_and_skeleton(self) -> None:
         """analyze_and_skeleton returns AnalysisAndSkeleton on success."""
-        result = await service.analyze_and_skeleton(
-            _client_returning(_make_aas(3)), _doc_content()
-        )
+        result = await service.analyze_and_skeleton(_client_returning(_make_aas(3)), _doc_content())
         assert isinstance(result, AnalysisAndSkeleton)
         assert len(result.skeleton.chapters) == 3
 
@@ -122,25 +114,18 @@ class TestUnitAnalyzeAndSkeleton:
         await service.analyze_and_skeleton(client, _doc_content(text="A" * 20_000))
 
         _, kwargs = client.beta.chat.completions.parse.call_args
-        user_msg = next(
-            m["content"] for m in kwargs["messages"] if m["role"] == "user"
-        )
+        user_msg = next(m["content"] for m in kwargs["messages"] if m["role"] == "user")
         assert len(user_msg) < 20_000 + 200
 
     @pytest.mark.anyio
     async def test_filename_and_pages_in_prompt(self) -> None:
         """Filename and page count appear in the user message."""
         client = _client_returning(_make_aas())
-        content = DocumentContent(
-            filename="my_file.pdf", total_pages=42,
-            text="Some text.", pages=["Some text."]
-        )
+        content = DocumentContent(filename="my_file.pdf", total_pages=42, text="Some text.", pages=["Some text."])
         await service.analyze_and_skeleton(client, content)
 
         _, kwargs = client.beta.chat.completions.parse.call_args
-        user_msg = next(
-            m["content"] for m in kwargs["messages"] if m["role"] == "user"
-        )
+        user_msg = next(m["content"] for m in kwargs["messages"] if m["role"] == "user")
         assert "my_file.pdf" in user_msg
         assert "42" in user_msg
 
@@ -153,9 +138,7 @@ class TestUnitAnalyzeAndSkeleton:
         """
         aas = _make_aas()
         client: AsyncMock = AsyncMock()
-        client.beta.chat.completions.parse = AsyncMock(
-            side_effect=[_rate_limit_error(), make_parsed_response(aas)]
-        )
+        client.beta.chat.completions.parse = AsyncMock(side_effect=[_rate_limit_error(), make_parsed_response(aas)])
 
         with patch("app.document_reader.service._retry", _FAST_RETRY):
             result = await service.analyze_and_skeleton(client, _doc_content())
@@ -180,6 +163,7 @@ class TestUnitAnalyzeAndSkeleton:
 # Unit tests generate_full_chapter
 # ---------------------------------------------------------------------------
 
+
 class TestUnitGenerateFullChapter:
     """Unit tests for service.generate_full_chapter."""
 
@@ -189,9 +173,7 @@ class TestUnitGenerateFullChapter:
         client = _client_returning(_make_full_chapter())
         chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
 
-        result = await service.generate_full_chapter(
-            client, ["chunk one", "chunk two"], chapter
-        )
+        result = await service.generate_full_chapter(client, ["chunk one", "chunk two"], chapter)
         assert isinstance(result, FullChapterResponse)
         assert len(result.recap_quiz) == 10
 
@@ -218,15 +200,11 @@ class TestUnitGenerateFullChapter:
     async def test_chapter_title_and_concept_in_prompt(self) -> None:
         """Chapter title and core_concept appear in the user message."""
         client = _client_returning(_make_full_chapter())
-        chapter = ChapterSkeleton(
-            title="UniqueTitle99", core_concept="UniqueConcept88", day=1
-        )
+        chapter = ChapterSkeleton(title="UniqueTitle99", core_concept="UniqueConcept88", day=1)
         await service.generate_full_chapter(client, ["context chunk"], chapter)
 
         _, kwargs = client.beta.chat.completions.parse.call_args
-        user_msg = next(
-            m["content"] for m in kwargs["messages"] if m["role"] == "user"
-        )
+        user_msg = next(m["content"] for m in kwargs["messages"] if m["role"] == "user")
         assert "UniqueTitle99" in user_msg
         assert "UniqueConcept88" in user_msg
 
@@ -254,9 +232,7 @@ class TestUnitGenerateFullChapter:
         """generate_full_chapter retries on RateLimitError and succeeds on second attempt."""
         full = _make_full_chapter()
         client: AsyncMock = AsyncMock()
-        client.beta.chat.completions.parse = AsyncMock(
-            side_effect=[_rate_limit_error(), make_parsed_response(full)]
-        )
+        client.beta.chat.completions.parse = AsyncMock(side_effect=[_rate_limit_error(), make_parsed_response(full)])
         chapter = ChapterSkeleton(title="Ziua 1", core_concept="Concept", day=1)
 
         with patch("app.document_reader.service._retry", _FAST_RETRY):
@@ -279,6 +255,7 @@ class TestUnitGenerateFullChapter:
 # ---------------------------------------------------------------------------
 # Unit tests _select_chunks
 # ---------------------------------------------------------------------------
+
 
 class TestUnitSelectChunks:
     """Unit tests for the private _select_chunks helper."""
@@ -312,6 +289,7 @@ class TestUnitSelectChunks:
 # Integration tests
 # ---------------------------------------------------------------------------
 
+
 class TestIntegrationDocumentReaderService:
     """Integration tests: analyze → generate_full_chapter pipeline."""
 
@@ -335,9 +313,8 @@ class TestIntegrationDocumentReaderService:
         plan = await service.analyze_and_skeleton(client, content)
 
         from app.document_reader.extractor import chunk_text
-        result = await service.generate_full_chapter(
-            client, chunk_text(content.text), plan.skeleton.chapters[0]
-        )
+
+        result = await service.generate_full_chapter(client, chunk_text(content.text), plan.skeleton.chapters[0])
         assert isinstance(result, FullChapterResponse)
         assert len(result.subchapters) >= 1
 
@@ -347,8 +324,6 @@ class TestIntegrationDocumentReaderService:
         """Service handles short, medium, and long documents without error."""
         client = _client_returning(_make_aas(1))
         text = "Word content here. " * (text_length // 20)
-        content = DocumentContent(
-            filename="doc.pdf", total_pages=1, text=text, pages=[text]
-        )
+        content = DocumentContent(filename="doc.pdf", total_pages=1, text=text, pages=[text])
         result = await service.analyze_and_skeleton(client, content)
         assert isinstance(result, AnalysisAndSkeleton)

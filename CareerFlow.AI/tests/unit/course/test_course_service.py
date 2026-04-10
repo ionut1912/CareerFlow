@@ -1,4 +1,5 @@
 """Tests for app/courses/service.py"""
+
 from __future__ import annotations
 
 from typing import Any
@@ -39,11 +40,10 @@ _FAST_RETRY = retry(
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def _client_returning(obj: object) -> AsyncMock:
     client = AsyncMock()
-    client.beta.chat.completions.parse = AsyncMock(
-        return_value=make_parsed_response(obj)
-    )
+    client.beta.chat.completions.parse = AsyncMock(return_value=make_parsed_response(obj))
     return client
 
 
@@ -68,6 +68,7 @@ def _make_dispatch(responses: list[Any]) -> AsyncMock:
 # ---------------------------------------------------------------------------
 # Unit tests  generate_skeleton
 # ---------------------------------------------------------------------------
+
 
 class TestUnitGenerateSkeleton:
     """Unit tests for service.generate_skeleton."""
@@ -104,11 +105,7 @@ class TestUnitGenerateSkeleton:
         await service.generate_skeleton(client, "Docker")
 
         _, kwargs = client.beta.chat.completions.parse.call_args
-        user_content = next(
-            m["content"]
-            for m in kwargs.get("messages", [])
-            if m["role"] == "user"
-        )
+        user_content = next(m["content"] for m in kwargs.get("messages", []) if m["role"] == "user")
         assert "Docker" in user_content
 
     @pytest.mark.anyio
@@ -131,8 +128,7 @@ class TestUnitGenerateSkeleton:
 
     @pytest.mark.anyio
     async def test_exhausted_retries_reraise(self) -> None:
-        """generate_skeleton re-raises RateLimitError after all 8 retry attempts.
-        """
+        """generate_skeleton re-raises RateLimitError after all 8 retry attempts."""
         client: AsyncMock = AsyncMock()
         client.beta.chat.completions.parse = AsyncMock(side_effect=_rate_limit_error())
 
@@ -151,6 +147,7 @@ class TestUnitGenerateSkeleton:
 # ---------------------------------------------------------------------------
 # Unit tests  build_full_chapter
 # ---------------------------------------------------------------------------
+
 
 class TestUnitBuildFullChapter:
     """Unit tests for service.build_full_chapter."""
@@ -236,9 +233,7 @@ class TestUnitBuildFullChapter:
         )
 
         with patch("app.courses.service._retry", _FAST_RETRY):
-            result = await service.build_full_chapter(
-                client, "Python", make_chapter_skeleton()
-            )
+            result = await service.build_full_chapter(client, "Python", make_chapter_skeleton())
 
         assert len(result["subchapter_contents"]) == 1
 
@@ -246,6 +241,7 @@ class TestUnitBuildFullChapter:
 # ---------------------------------------------------------------------------
 # Integration tests
 # ---------------------------------------------------------------------------
+
 
 class TestIntegrationCoursesService:
     """Integration: generate_skeleton → build_full_chapter pipeline."""
@@ -266,9 +262,7 @@ class TestIntegrationCoursesService:
 
     @pytest.mark.anyio
     @pytest.mark.parametrize("num_subs", [1, 2, 4])
-    async def test_build_full_chapter_various_subchapter_counts(
-        self, num_subs: int
-    ) -> None:
+    async def test_build_full_chapter_various_subchapter_counts(self, num_subs: int) -> None:
         """build_full_chapter handles 1, 2, and 4 subchapters correctly."""
         chapter = make_chapter_skeleton()
         expanded = make_expanded_day(num_subchapters=num_subs)

@@ -1,4 +1,5 @@
 """Tests for app/document_reader/schemas.py"""
+
 from __future__ import annotations
 
 import pytest
@@ -17,6 +18,7 @@ from app.document_reader.schemas import (
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _quiz_option(label: str = "Option", is_correct: bool = False) -> QuizOption:
     return QuizOption(label=label, is_correct=is_correct)
@@ -46,10 +48,7 @@ def _make_analysis(**kwargs: object) -> DocumentAnalysis:
 def _make_skeleton(n: int = 2) -> LearningPlanSkeleton:
     return LearningPlanSkeleton(
         topic="Topic",
-        chapters=[
-            ChapterSkeleton(title=f"Ziua {i+1}", core_concept=f"C{i+1}", day=i+1)
-            for i in range(n)
-        ],
+        chapters=[ChapterSkeleton(title=f"Ziua {i + 1}", core_concept=f"C{i + 1}", day=i + 1) for i in range(n)],
     )
 
 
@@ -66,6 +65,7 @@ def _make_subchapter_content(**kwargs: object) -> SubchapterContent:
 # ---------------------------------------------------------------------------
 # DocumentAnalysis
 # ---------------------------------------------------------------------------
+
 
 def test_document_analysis_valid() -> None:
     """DocumentAnalysis stores all fields correctly."""
@@ -118,6 +118,7 @@ def test_document_analysis_missing_key_topics_raises() -> None:
 # LearningPlanSkeleton (document_reader version)
 # ---------------------------------------------------------------------------
 
+
 def test_learning_plan_skeleton_valid() -> None:
     """LearningPlanSkeleton stores topic and chapters correctly."""
     model = _make_skeleton(3)
@@ -152,6 +153,7 @@ def test_learning_plan_skeleton_various_chapter_counts(n: int) -> None:
 # AnalysisAndSkeleton
 # ---------------------------------------------------------------------------
 
+
 def test_analysis_and_skeleton_valid() -> None:
     """AnalysisAndSkeleton combines analysis and skeleton correctly."""
     model = AnalysisAndSkeleton(analysis=_make_analysis(), skeleton=_make_skeleton())
@@ -181,11 +183,10 @@ def test_analysis_and_skeleton_chapter_count_preserved() -> None:
 # DocumentChapterRequest
 # ---------------------------------------------------------------------------
 
+
 def test_document_chapter_request_valid() -> None:
     """DocumentChapterRequest stores all three fields correctly."""
-    model = DocumentChapterRequest(
-        chapter_title="Title", core_concept="Concept", document_id="abc123"
-    )
+    model = DocumentChapterRequest(chapter_title="Title", core_concept="Concept", document_id="abc123")
     assert model.chapter_title == "Title"
     assert model.core_concept == "Concept"
     assert model.document_id == "abc123"
@@ -193,17 +194,13 @@ def test_document_chapter_request_valid() -> None:
 
 def test_document_chapter_request_accepts_long_chapter_title() -> None:
     """DocumentChapterRequest has no max_length on chapter_title."""
-    model = DocumentChapterRequest(
-        chapter_title="a" * 5_000, core_concept="C", document_id="id"
-    )
+    model = DocumentChapterRequest(chapter_title="a" * 5_000, core_concept="C", document_id="id")
     assert len(model.chapter_title) == 5_000
 
 
 def test_document_chapter_request_accepts_long_core_concept() -> None:
     """DocumentChapterRequest has no max_length on core_concept."""
-    model = DocumentChapterRequest(
-        chapter_title="T", core_concept="b" * 5_000, document_id="id"
-    )
+    model = DocumentChapterRequest(chapter_title="T", core_concept="b" * 5_000, document_id="id")
     assert len(model.core_concept) == 5_000
 
 
@@ -234,6 +231,7 @@ def test_document_chapter_request_missing_core_concept_raises() -> None:
 # ---------------------------------------------------------------------------
 # SubchapterContent
 # ---------------------------------------------------------------------------
+
 
 def test_subchapter_content_valid_creation() -> None:
     """SubchapterContent is created correctly with all required fields."""
@@ -280,9 +278,7 @@ def test_subchapter_content_missing_content_summary_raises() -> None:
 @pytest.mark.parametrize("quiz_len", [0, 1, 3, 10])
 def test_subchapter_content_various_quiz_lengths(quiz_len: int) -> None:
     """SubchapterContent stores any number of quiz questions correctly."""
-    model = _make_subchapter_content(
-        quiz=[_quiz_question() for _ in range(quiz_len)]
-    )
+    model = _make_subchapter_content(quiz=[_quiz_question() for _ in range(quiz_len)])
     assert len(model.quiz) == quiz_len
 
 
@@ -290,12 +286,11 @@ def test_subchapter_content_various_quiz_lengths(quiz_len: int) -> None:
 # FullChapterResponse
 # ---------------------------------------------------------------------------
 
+
 def test_full_chapter_response_valid() -> None:
     """FullChapterResponse stores subchapters and recap_quiz correctly."""
     sub = _make_subchapter_content()
-    model = FullChapterResponse(
-        subchapters=[sub], recap_quiz=[_quiz_question()] * 10
-    )
+    model = FullChapterResponse(subchapters=[sub], recap_quiz=[_quiz_question()] * 10)
     assert len(model.subchapters) == 1
     assert len(model.recap_quiz) == 10
 

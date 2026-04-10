@@ -4,6 +4,7 @@ from pydantic import BaseModel
 
 # --- Request Models ---
 
+
 class CourseSkeletonRequest(BaseModel):
     topic: str
 
@@ -15,6 +16,7 @@ class ChapterRequest(BaseModel):
 
 
 # --- AI Structured Output Models ---
+
 
 class SubchapterSkeleton(BaseModel):
     title: str
