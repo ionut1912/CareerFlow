@@ -57,12 +57,18 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
     public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
         bool isRepoNull, bool isLoggerNull)
     {
-        //Arrange
+        // Arrange
         var query = new GetCurrentAccountQuery(Guid.NewGuid());
+        
+        // Use the null-forgiving operator (!) to suppress CS8604
+        var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
+        var logger = isLoggerNull ? null! : _loggerMock.Object;
 
-        //Act&Assert
-        await Should.ThrowAsync<ArgumentNullException>(() => new GetCurrentAccountQueryHandler(
-            isRepoNull ? null : _accountRepositoryMock.Object,
-            isLoggerNull ? null : _loggerMock.Object).Handle(query, Ct));
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        {
+            var handler = new GetCurrentAccountQueryHandler(repo, logger);
+            await handler.Handle(query, Ct);
+        });
     }
 }

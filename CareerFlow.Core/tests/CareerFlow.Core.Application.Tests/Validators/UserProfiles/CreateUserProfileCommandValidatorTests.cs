@@ -29,10 +29,11 @@ public class CreateUserProfileCommandValidatorTests
     [Theory]
     [InlineData(null)]
     [InlineData("")]
-    public void Validate_EmptyLearningType_ShouldHaveError(string learningType)
+    public void Validate_EmptyLearningType_ShouldHaveError(string? learningType)
     {
         //Arrange
-        var command = new CreateUserProfileCommand(Guid.NewGuid(), learningType, ["Student"], "test");
+        // Use ! to pass the null/empty string to the non-nullable command property for testing
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), learningType!, ["Student"], "test");
 
         //Act
         var result = _validator.TestValidate(command);
@@ -59,10 +60,10 @@ public class CreateUserProfileCommandValidatorTests
 
     [Theory]
     [MemberData(nameof(EmptyUserTypeData))]
-    public void Validate_EmptyUserType_ShouldHaveError(List<string> userTypes)
+    public void Validate_EmptyUserType_ShouldHaveError(List<string>? userTypes)
     {
         //Arrange
-        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", userTypes, "test");
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", userTypes!, "test");
 
         //Act
         var result = _validator.TestValidate(command);
@@ -131,11 +132,9 @@ public class CreateUserProfileCommandValidatorTests
             .WithErrorMessage("Domeniul nu trebuie sa aiba mai mult de 100 caractere.");
     }
 
-    public static IEnumerable<object[]> EmptyUserTypeData()
+    public static IEnumerable<object?[]> EmptyUserTypeData()
     {
-        return
-        [
-            [new List<string>()]
-        ];
+        yield return [new List<string>()];
+        yield return [null]; // Testing null lists as well
     }
 }
