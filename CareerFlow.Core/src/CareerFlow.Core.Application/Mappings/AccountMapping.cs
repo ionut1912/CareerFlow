@@ -1,7 +1,8 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
-using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Application.Requests.Account;
+using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Domain.Entities;
 
 namespace CareerFlow.Core.Application.Mappings;

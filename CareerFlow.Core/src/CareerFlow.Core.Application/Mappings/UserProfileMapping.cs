@@ -1,6 +1,6 @@
 using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Application.Dtos;
-using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Application.Requests.UserProfile;
 using CareerFlow.Core.Domain.Entities;
 
 namespace CareerFlow.Core.Application.Mappings;

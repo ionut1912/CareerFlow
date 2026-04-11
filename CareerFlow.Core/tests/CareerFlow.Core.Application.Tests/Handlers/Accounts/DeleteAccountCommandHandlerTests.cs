@@ -63,13 +63,19 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
     public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
         bool isAccountRepoNull, bool isUowNull, bool isLoggerNull)
     {
-        //Act
+        // Arrange
         var command = new DeleteAccountCommand(Guid.NewGuid());
+        
+        // Use ! to suppress the possible null reference argument warning
+        var repo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
+        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
+        var logger = isLoggerNull ? null! : _loggerMock.Object;
 
-        //Arrange&Assert
-        await Should.ThrowAsync<ArgumentNullException>(() => new DeleteAccountCommandHandler(
-            isAccountRepoNull ? null : _accountRepositoryMock.Object,
-            isUowNull ? null : _unitOfWorkMock.Object,
-            isLoggerNull ? null : _loggerMock.Object).Handle(command, Ct));
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        {
+            var handler = new DeleteAccountCommandHandler(repo, uow, logger);
+            await handler.Handle(command, Ct);
+        });
     }
 }

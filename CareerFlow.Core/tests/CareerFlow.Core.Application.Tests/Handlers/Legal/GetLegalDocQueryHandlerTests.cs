@@ -26,16 +26,16 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
     [InlineData("Terms")]
     public async Task Handle_ValidType_ReturnsLegalDocument(string type)
     {
-        //Arrange
+        // Arrange
         var query = new GetLegalDocQuery(type);
         var document = new LegalDocumentResponse("TestContent", "Github", DateTime.UtcNow);
         _legalServiceMock.Setup(x => x.GetDocumentAsync(query.Type, Ct))
             .ReturnsAsync(document);
 
-        //Act
+        // Act
         var response = await _handler.Handle(query, Ct);
 
-        //Arrange
+        // Assert
         response.ShouldNotBeNull();
         response.Content.ShouldBe(document.Content);
         response.Source.ShouldBe(document.Source);
@@ -47,14 +47,14 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
     [InlineData("Privaccy")]
     public async Task Handle_InValidType_ThrowsException(string type)
     {
-        //Arrange
+        // Arrange
         var query = new GetLegalDocQuery(type);
 
-        //Act
+        // Act
         var exception =
             await Should.ThrowAsync<LegalDocInvalidTypeException>(async () => await _handler.Handle(query, Ct));
 
-        //Assert
+        // Assert
         exception.Message.ShouldBe("Tipul precizat nu exista");
         _legalServiceMock.Verify(x => x.GetDocumentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
@@ -64,32 +64,38 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
     [Fact]
     public async Task Handle_DocumentNotFound_ThrowsException()
     {
-        //Arrange
+        // Arrange
         var query = new GetLegalDocQuery("privacy");
         _legalServiceMock.Setup(x => x.GetDocumentAsync(query.Type, Ct))
             .ReturnsAsync((LegalDocumentResponse?)null);
 
-        //Act
+        // Act
         var exception =
             await Should.ThrowAsync<LegalDocNotFoundException>(async () => await _handler.Handle(query, Ct));
 
-        //Assert
+        // Assert
         exception.Message.ShouldBe("Documentul nu a fost gasit");
         _legalServiceMock.Verify(x => x.GetDocumentAsync(query.Type, Ct), Times.Once);
         _loggerMock.VerifyLogError("Documentul nu a fost gasit", Times.Once());
     }
 
     [Theory]
-    [InlineData(false, true)]
     [InlineData(true, false)]
+    [InlineData(false, true)]
     public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(bool isServiceNull, bool isLoggerNull)
     {
-        //Arrange
+        // Arrange
         var query = new GetLegalDocQuery("privacy");
+        
+        // Use the null-forgiving operator (!) to satisfy the compiler while testing null guards
+        var service = isServiceNull ? null! : _legalServiceMock.Object;
+        var logger = isLoggerNull ? null! : _loggerMock.Object;
 
-        //Act&Assert
-        await Should.ThrowAsync<ArgumentException>(async () => await new GetLegalDocQueryHandler(
-            isServiceNull ? null : _legalServiceMock.Object,
-            isLoggerNull ? null : _loggerMock.Object).Handle(query, Ct));
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        {
+            var handler = new GetLegalDocQueryHandler(service, logger);
+            await handler.Handle(query, Ct);
+        });
     }
 }

@@ -67,15 +67,15 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     [Fact]
     public async Task Handle_WhenPasswordsAreDifferent_ThrowsPasswordNotMatchException()
     {
-        //Arrange
+        // Arrange
         var command = new CreateAccountCommand("new@email.com", "pass", "pass2", "user", "name");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
             .ReturnsAsync((Account?)null);
 
-        //Act
+        // Act
         var exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
 
-        //Assert
+        // Assert
         exception.Message.ShouldBe("Parolele nu corespund");
         _loggerMock.VerifyLogError("nu corespund", Times.Once());
         _unitOfWorkMock.VerifySaveChanges(Times.Never());
@@ -90,14 +90,19 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
         bool isRepoNull, bool isPasswordServiceNull, bool isUowNull, bool isLoggerNull)
     {
-        //Arrange
+        // Arrange
         var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
+        
+        var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
+        var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
+        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
+        var logger = isLoggerNull ? null! : _loggerMock.Object;
 
-        //Act
-        await Should.ThrowAsync<ArgumentNullException>(() => new CreateAccountCommandHandler(
-            isRepoNull ? null : _accountRepositoryMock.Object,
-            isPasswordServiceNull ? null : _passwordServiceMock.Object,
-            isUowNull ? null : _unitOfWorkMock.Object,
-            isLoggerNull ? null : _loggerMock.Object).Handle(command, Ct));
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        {
+            var handler = new CreateAccountCommandHandler(repo, passwordService, uow, logger);
+            await handler.Handle(command, Ct);
+        });
     }
 }

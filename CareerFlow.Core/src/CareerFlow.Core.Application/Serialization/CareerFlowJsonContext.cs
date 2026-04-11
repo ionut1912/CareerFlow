@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 using CareerFlow.Core.Application.Dtos;
-using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Application.Requests.Account;
+using CareerFlow.Core.Application.Requests.LegalDoc;
+using CareerFlow.Core.Application.Requests.UserProfile;
 
 namespace CareerFlow.Core.Application.Serialization;
 

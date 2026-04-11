@@ -31,7 +31,7 @@ public class UserProfile : Entity
     }
 
     public Guid AccountId { get; private set; }
-    public Account Account { get; private set; }
+    public Account? Account { get; private set; }
     public string Domain { get; private set; } = string.Empty;
     public int CorrectAnswersForQuiz { get; private set; }
     public int IncorrectAnswersForQuiz { get; private set; }
