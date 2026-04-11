@@ -138,15 +138,21 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
         bool isLoggerNull, bool isAccountRepoNull, bool isTokenServiceNull, bool isRefreshRepoNull, bool isUowNull)
     {
-        //Arrange
+        // Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
 
-        //Act&Assert
-        await Should.ThrowAsync<ArgumentNullException>(() => new CreateRefreshTokenCommandHandler(
-            isLoggerNull ? null : _loggerMock.Object,
-            isAccountRepoNull ? null : _accountRepositoryMock.Object,
-            isTokenServiceNull ? null : _tokenServiceMock.Object,
-            isRefreshRepoNull ? null : _refreshTokenRepositoryMock.Object,
-            isUowNull ? null : _unitOfWorkMock.Object).Handle(command, Ct));
+        // Map the boolean flags to either the mock object or a null-forgiven null
+        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var accountRepo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
+        var tokenService = isTokenServiceNull ? null! : _tokenServiceMock.Object;
+        var refreshRepo = isRefreshRepoNull ? null! : _refreshTokenRepositoryMock.Object;
+        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
+
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () =>
+        {
+            var handler = new CreateRefreshTokenCommandHandler(logger, accountRepo, tokenService, refreshRepo, uow);
+            await handler.Handle(command, Ct);
+        });
     }
 }

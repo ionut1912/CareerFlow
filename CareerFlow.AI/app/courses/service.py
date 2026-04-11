@@ -7,7 +7,7 @@ from typing import Any, TypeVar
 from openai import AsyncOpenAI, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from app.courses.schemas import (
+from app.courses.schema import (
     ChapterQuizResponse,
     ChapterSkeleton,
     ExpandedDay,

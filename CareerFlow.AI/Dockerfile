@@ -11,4 +11,7 @@ RUN poetry install --only main --no-interaction --no-ansi --no-root
 COPY ./app ./app
 COPY main.py .
 
+RUN adduser --system --no-create-home appuser
+USER appuser
+
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

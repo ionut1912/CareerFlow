@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends
 from openai import AsyncOpenAI
 
 from app.courses import service
-from app.courses.schemas import ChapterRequest, ChapterSkeleton, CourseSkeletonRequest
+from app.courses.schema import ChapterRequest, ChapterSkeleton, CourseSkeletonRequest
 from app.dependencies import get_openai_client
 
 router = APIRouter(prefix="/courses", tags=["Generare AI"])

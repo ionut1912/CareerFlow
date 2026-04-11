@@ -42,7 +42,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
 
         // Assert
         _passwordServiceMock.Verify(x => x.HashPassword(command.NewPassword),
-            Times.Once); // Assuming handler calls this
+            Times.Once); 
         _accountRepositoryMock.Verify(x => x.Update(account), Times.Once);
         _unitOfWorkMock.VerifySaveChanges(Times.Once());
     }
@@ -110,15 +110,19 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     public async Task Constructor_WhenDependenciesAreNull_ThrowsArgumentNullException(bool isLoggerNull,
         bool isAccountRepoNull, bool isPasswordServiceNull, bool isUnitOfWorkNull)
     {
-        //Arrange
-        var account = TestDataFactory.CreateAccount();
-        var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
+        // Arrange
+        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var repo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
+        var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
+        var uow = isUnitOfWorkNull ? null! : _unitOfWorkMock.Object;
 
-        //Act&Assert
-        var exception = await Should.ThrowAsync<ArgumentNullException>(() => new ResetPasswordCommandHandler(
-            isLoggerNull ? null : _loggerMock.Object,
-            isAccountRepoNull ? null : _accountRepositoryMock.Object,
-            isPasswordServiceNull ? null : _passwordServiceMock.Object,
-            isUnitOfWorkNull ? null : _unitOfWorkMock.Object).Handle(command, Ct));
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        {
+            var handler = new ResetPasswordCommandHandler(logger, repo, passwordService, uow);
+            // We usually don't need to call Handle here because the constructor 
+            // should throw the exception before Handle can even be called.
+            await handler.Handle(new ResetPasswordCommand("a", "b", "c"), Ct);
+        });
     }
 }

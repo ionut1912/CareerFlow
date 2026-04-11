@@ -7,9 +7,9 @@ from typing import TypeVar
 from openai import AsyncOpenAI, RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_exponential
 
-from app.courses.schemas import ChapterSkeleton
+from app.courses.schema import ChapterSkeleton
 from app.document_reader.extractor import DocumentContent
-from app.document_reader.schemas import AnalysisAndSkeleton, FullChapterResponse
+from app.document_reader.schema import AnalysisAndSkeleton, FullChapterResponse
 
 _ai_semaphore = asyncio.Semaphore(12)
 

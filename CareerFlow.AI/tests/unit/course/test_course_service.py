@@ -10,7 +10,7 @@ from openai import RateLimitError
 from tenacity import retry, retry_if_exception_type, stop_after_attempt, wait_none
 
 from app.courses import service
-from app.courses.schemas import (
+from app.courses.schema import (
     ChapterSkeleton,
     LearningPlanSkeleton,
 )

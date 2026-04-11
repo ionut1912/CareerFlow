@@ -5,12 +5,23 @@ using Shared.Infra.Services;
 
 namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class UserProfileRepository(DbSet<UserProfile> dbSet)
-    : GenericRepository<UserProfile>(dbSet), IUserProfileRepository
+public class UserProfileRepository : GenericRepository<UserProfile>, IUserProfileRepository
 {
+    private readonly DbSet<UserProfile> _userProfiles;
+
+    public UserProfileRepository(DbSet<UserProfile> dbSet) : base(dbSet)
+    {
+        _userProfiles = dbSet;
+    }
+
     public async Task<UserProfile?> GetCurrentUserProfile(Guid accountId, CancellationToken cancellationToken)
     {
+<<<<<<< HEAD
         return await dbSet
+=======
+        return await _userProfiles
+            .Include(x => x.UserTypes)
+>>>>>>> master
             .Include(x => x.Account)
             .FirstOrDefaultAsync(x => x.AccountId == accountId, cancellationToken);
     }

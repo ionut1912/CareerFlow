@@ -6,7 +6,11 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <IsPackable>false</IsPackable>
         <IsTestProject>true</IsTestProject>
+<<<<<<< HEAD
         <RootNamespace>CareerFlow.Core.Infrastructure.Test</RootNamespace>
+=======
+        <RootNamespace>CareerFlow.Core.Infrastructure.Tests</RootNamespace>
+>>>>>>> master
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
@@ -17,13 +21,21 @@
         </PackageReference>
         <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.5" />
         <PackageReference Include="Moq" Version="4.20.72" />
+<<<<<<< HEAD
         <PackageReference Include="WireMock.Net" Version="1.25.0"/>
+=======
+        <PackageReference Include="WireMock.Net" Version="2.2.0" />
+>>>>>>> master
         <PackageReference Include="xunit" Version="2.9.3"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
+<<<<<<< HEAD
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.3.0"/>
+=======
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.4.0" />
+>>>>>>> master
     </ItemGroup>
 
     <ItemGroup>
@@ -31,7 +43,11 @@
     </ItemGroup>
 
     <ItemGroup>
+<<<<<<< HEAD
         <PackageReference Include="Testcontainers" Version="4.10.0"/>
+=======
+        <PackageReference Include="Testcontainers" Version="4.11.0" />
+>>>>>>> master
         <PackageReference Include="Testcontainers.PostgreSql" Version="4.10.0"/>
         <PackageReference Include="Testcontainers.Redis" Version="4.10.0"/>
     </ItemGroup>

@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from app.courses.schemas import ChapterSkeleton, QuizOption, QuizQuestion
-from app.document_reader.schemas import (
+from app.courses.schema import ChapterSkeleton, QuizOption, QuizQuestion
+from app.document_reader.schema import (
     AnalysisAndSkeleton,
     DocumentAnalysis,
     DocumentChapterRequest,

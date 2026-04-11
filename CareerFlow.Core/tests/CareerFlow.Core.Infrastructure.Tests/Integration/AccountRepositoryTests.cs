@@ -1,9 +1,13 @@
 ﻿using CareerFlow.Core.Infrastructure.Persistance.Repositories;
+<<<<<<< HEAD
 using CareerFlow.Core.Infrastructure.Test.Setup;
+=======
+using CareerFlow.Core.Infrastructure.Tests.Setup;
+>>>>>>> master
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Test.Integration;
+namespace CareerFlow.Core.Infrastructure.Tests.Integration;
 
 [Trait("Category", "Integration")]
 public class AccountRepositoryTests : BaseRepositoryTest

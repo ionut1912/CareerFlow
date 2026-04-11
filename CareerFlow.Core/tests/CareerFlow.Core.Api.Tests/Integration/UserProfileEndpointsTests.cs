@@ -149,6 +149,7 @@ public class UserProfileEndpointsIntegrationTests : IntegrationTestBase
     }
  
     [Fact]
+<<<<<<< HEAD
     public async Task GetCurrentUserProfileWithCourses_WithProfile_Returns200()
     {
         var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
@@ -168,6 +169,8 @@ public class UserProfileEndpointsIntegrationTests : IntegrationTestBase
     }
  
     [Fact]
+=======
+>>>>>>> master
     public async Task UpdateUserProfile_ValidRequest_Returns204NoContent()
     {
         var (authClient, _, _) = await CreateAndAuthenticateUserAsync();

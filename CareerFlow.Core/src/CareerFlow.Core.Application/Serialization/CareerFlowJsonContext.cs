@@ -1,10 +1,16 @@
 using System.Text.Json.Serialization;
 using CareerFlow.Core.Application.Dtos;
+<<<<<<< HEAD
 using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Application.Requests.Account;
 using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Application.Requests.UserProfile;
 using CareerFlow.Core.Domain.Entities;
+=======
+using CareerFlow.Core.Application.Requests.Account;
+using CareerFlow.Core.Application.Requests.LegalDoc;
+using CareerFlow.Core.Application.Requests.UserProfile;
+>>>>>>> master
 
 namespace CareerFlow.Core.Application.Serialization;
 

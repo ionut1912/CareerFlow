@@ -101,12 +101,13 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         bool isRepoNull, bool isPasswordServiceNull, bool isTokenServiceNull,
         bool isRefreshTokenServiceNull, bool isUnitOfWorkNull, bool isLoggerNull)
     {
+        // Act & Assert
         Should.Throw<ArgumentNullException>(() => new LoginQueryHandler(
-            isRepoNull ? null : _accountRepositoryMock.Object,
-            isPasswordServiceNull ? null : _passwordServiceMock.Object,
-            isTokenServiceNull ? null : _tokenServiceMock.Object,
-            isRefreshTokenServiceNull ? null : _refreshTokenRepositoryMock.Object,
-            isUnitOfWorkNull ? null : _unitOfWorkMock.Object,
-            isLoggerNull ? null : _loggerMock.Object));
+            isRepoNull ? null! : _accountRepositoryMock.Object,
+            isPasswordServiceNull ? null! : _passwordServiceMock.Object,
+            isTokenServiceNull ? null! : _tokenServiceMock.Object,
+            isRefreshTokenServiceNull ? null! : _refreshTokenRepositoryMock.Object,
+            isUnitOfWorkNull ? null! : _unitOfWorkMock.Object,
+            isLoggerNull ? null! : _loggerMock.Object));
     }
 }

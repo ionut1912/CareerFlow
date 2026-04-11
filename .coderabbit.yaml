@@ -9,9 +9,9 @@ reviews:
     ignore_title_keywords: ["WIP", "DRAFT", "SKIP"]
 
   path_instructions:
-    - path: "**" 
+    - path: "**"
       instructions: |
-        You are the Lead System Architect. 
+        You are the Lead System Architect.
         - DO NOT approve code violating O-complexity or Clean Architecture.
         - FAIL any PR with security vulnerabilities (OWASP 2026).
         - Use "Request Changes" for any standard violation.
@@ -20,18 +20,25 @@ reviews:
       instructions: |
         STRICT ENFORCEMENT (.NET 10/C# 14):
         - MANDATORY: Use RouteGroups and TypedResults. Flag ControllerBase as a legacy anti-pattern.
-        - REQUIRE: C# 14 'field' keyword for all applicable backing-field properties. 
+        - REQUIRE: C# 14 'field' keyword for all applicable backing-field properties.
         - PERFORMANCE BLOCKER: Reject any Minimal API model lacking [JsonSerializable].
         - SECURITY: Block endpoints missing Rate Limiting policies or Prometheus mirrors.
         - STRUCTURE: Enforce Vertical Slices; MapEndpoint logic must stay in the feature folder.
 
     - path: "CareerFlow.AI/app/**/*.py"
       instructions: |
-        ASSERTIVE PYTHON 3.14 STANDARDS:
-        - HARD FAIL: Any dynamic prompt formatting not using t-strings.
-        - REQUIRE: interpreters module for isolation in multi-tenant processing.
-        - ENFORCE: Strict PEP 649 type hinting; reject untyped functions.
-        - TOOLING: Enforce uv for dependency resolution.
+        PYTHON STANDARDS (Python ≥ 3.11 / Poetry):
+        - HARD FAIL: Any dynamic prompt formatting not using t-strings (Python ≥ 3.14 projects only).
+          For this project (Python ≥ 3.11), require f-strings for all prompt interpolation and flag
+          any other approach (%, .format(), +) as a violation.
+        - REQUIRE: interpreters module for isolation in multi-tenant processing (available from 3.12;
+          enforce where runtime is confirmed ≥ 3.12, otherwise flag as a TODO).
+        - ENFORCE: Strict type hinting on all functions and variables; reject untyped code. Mypy
+          strict mode must pass with python_version = "3.11" as configured. PEP 649 lazy annotation
+          semantics apply only when runtime is confirmed ≥ 3.14; until then, from __future__ import
+          annotations is the accepted alternative for forward references.
+        - TOOLING: Enforce Poetry for dependency management (pyproject.toml). Flag any direct
+          pip install or requirements.txt usage as a violation. Enforce ruff for linting/formatting.
 
     - path: "CareerFlow.UI/**/*.{ts,tsx}"
       instructions: |

@@ -5,11 +5,19 @@ using Shared.Infra.Services;
 
 namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class AccountRepository(DbSet<Account> dbSet) : GenericRepository<Account>(dbSet), IAccountRepository
+public class AccountRepository : GenericRepository<Account>, IAccountRepository
 {
+    private readonly DbSet<Account> _accounts;
+
+    public AccountRepository(DbSet<Account> dbSet) : base(dbSet)
+    {
+        _accounts = dbSet;
+    }
+
     public async Task<Account?> GetAccountByEmailAsync(string email, CancellationToken cancellationToken)
     {
-        return await dbSet.FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
+        return await _accounts
+            .FirstOrDefaultAsync(x => x.Email == email, cancellationToken);
     }
 
     public async Task UpdateTermsAsync(string documentType, CancellationToken cancellationToken)
@@ -17,13 +25,13 @@ public class AccountRepository(DbSet<Account> dbSet) : GenericRepository<Account
         switch (documentType)
         {
             case "Terms":
-                await dbSet
+                await _accounts
                     .ExecuteUpdateAsync(s =>
                         s.SetProperty(a => a.TermsAccepted, false)
                             .SetProperty(a => a.UpdatedAt, DateTime.UtcNow), cancellationToken);
                 break;
             case "Privacy":
-                await dbSet
+                await _accounts
                     .ExecuteUpdateAsync(s =>
                         s.SetProperty(a => a.PrivacyPolicyAccepted, false)
                             .SetProperty(a => a.UpdatedAt, DateTime.UtcNow), cancellationToken);

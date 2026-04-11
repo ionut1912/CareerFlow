@@ -28,12 +28,14 @@ public class LoginQueryValidatorTest
 
     [Theory]
     [InlineData("")]
-    [InlineData(null)]
+    [InlineData(null)] // This triggers xUnit1012 if the parameter isn't nullable
     [InlineData("   ")]
-    public void Validate_WhenEmailIsEmpty_ShouldHaveError(string email)
+    public void Validate_WhenEmailIsEmpty_ShouldHaveError(string? email)
     {
-        // Arrange: Create command with the invalid email and dummy data for others
-        var query = new LoginQuery(email, "pass");
+        // Arrange
+        // We use ! here because the Query likely expects a non-null string, 
+        // but we are intentionally passing null to test validation.
+        var query = new LoginQuery(email!, "pass");
 
         // Act
         var result = _validator.TestValidate(query);
@@ -63,10 +65,10 @@ public class LoginQueryValidatorTest
     [Theory]
     [InlineData("")]
     [InlineData(null)]
-    public void Validate_WhenPasswordIsEmpty_ShouldHaveError(string password)
+    public void Validate_WhenPasswordIsEmpty_ShouldHaveError(string? password)
     {
         // Arrange
-        var query = new LoginQuery("test@test.com", password);
+        var query = new LoginQuery("test@test.com", password!);
 
         // Act
         var result = _validator.TestValidate(query);

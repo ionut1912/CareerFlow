@@ -11,7 +11,11 @@ using Moq;
 using Shouldly;
 using Xunit;
 
+<<<<<<< HEAD
 namespace CareerFlow.Core.Infrastructure.Test.Unit;
+=======
+namespace CareerFlow.Core.Infrastructure.Tests.Unit;
+>>>>>>> master
 
 public class LegalDocumentCheckerJobTests
 {

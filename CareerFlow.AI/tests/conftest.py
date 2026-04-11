@@ -8,7 +8,7 @@ from unittest.mock import AsyncMock, MagicMock
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.courses.schemas import (
+from app.courses.schema import (
     ChapterQuizResponse,
     ChapterSkeleton,
     ExpandedDay,

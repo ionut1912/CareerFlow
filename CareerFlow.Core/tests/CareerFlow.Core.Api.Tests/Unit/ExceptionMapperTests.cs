@@ -129,6 +129,7 @@ public class ExceptionMapperTests
     }
  
     [Fact]
+<<<<<<< HEAD
     public void TryMap_InvalidJobStatusException_Returns400()
     {
         var ex = new InvalidJobStatusException("bad status");
@@ -141,6 +142,8 @@ public class ExceptionMapperTests
     }
  
     [Fact]
+=======
+>>>>>>> master
     public void TryMap_UserTypeAlreadyExistsException_Returns400()
     {
         var ex = new UserTypeAlreadyExistsException("exists");
@@ -322,6 +325,7 @@ public class ExceptionMapperTests
     }
  
     [Fact]
+<<<<<<< HEAD
     public void TryMap_ChapterNotFoundException_Returns404()
     {
         var ex = new ChapterNotFoundException("not found");
@@ -334,6 +338,8 @@ public class ExceptionMapperTests
     }
  
     [Fact]
+=======
+>>>>>>> master
     public void TryMap_UnknownException_Returns500()
     {
         var ex = new Exception("unexpected");
@@ -376,10 +382,15 @@ public class ExceptionMapperTests
  
     [Theory]
     [InlineData(typeof(InvalidLearningTypeException), 400)]
+<<<<<<< HEAD
     [InlineData(typeof(InvalidJobStatusException), 400)]
     [InlineData(typeof(AccountNotFoundException), 404)]
     [InlineData(typeof(UserProfileNotFoundException), 404)]
     [InlineData(typeof(ChapterNotFoundException), 404)]
+=======
+    [InlineData(typeof(AccountNotFoundException), 404)]
+    [InlineData(typeof(UserProfileNotFoundException), 404)]
+>>>>>>> master
     [InlineData(typeof(LegalDocNotFoundException), 404)]
     [InlineData(typeof(InvalidRefreshTokenException), 401)]
     public void TryMap_KnownException_ReturnsExpectedStatusCode(Type exType, int expectedStatus)

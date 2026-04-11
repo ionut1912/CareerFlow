@@ -6,10 +6,15 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
-
     <ItemGroup>
+<<<<<<< HEAD
         <PackageReference Include="AWSSDK.S3" Version="4.0.20.3"/>
         <PackageReference Include="BCrypt.Net-Next" Version="4.1.0"/>
+=======
+        <PackageReference Include="AWSSDK.S3" Version="4.0.21.1" />
+        <PackageReference Include="BCrypt.Net-Next" Version="4.1.0"/>
+        <PackageReference Include="BouncyCastle.Cryptography" Version="2.5.1"/>
+>>>>>>> master
         <PackageReference Include="Google.Apis.Auth" Version="1.73.0"/>
         <PackageReference Include="Hangfire.AspNetCore" Version="1.8.23"/>
         <PackageReference Include="Hangfire.Core" Version="1.8.23"/>
@@ -31,7 +36,11 @@
         <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.17.0"/>
         <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.1"/>
         <PackageReference Include="Postmark" Version="5.3.0"/>
+<<<<<<< HEAD
         <PackageReference Include="Shared.Infra" Version="1.0.7"/>
+=======
+        <PackageReference Include="Shared.Infra" Version="1.0.8"/>
+>>>>>>> master
         <PackageReference Include="StackExchange.Redis" Version="2.12.14"/>
     </ItemGroup>
 
@@ -39,9 +48,13 @@
         <ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj"/>
     </ItemGroup>
 
+<<<<<<< HEAD
     <ItemGroup>
         <Reference Include="Hangfire.Core">
             <HintPath>..\..\..\..\..\..\.nuget\packages\hangfire.core\1.8.23\lib\netstandard2.0\Hangfire.Core.dll</HintPath>
         </Reference>
     </ItemGroup>
 </Project>
+=======
+</Project>
+>>>>>>> master

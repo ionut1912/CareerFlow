@@ -5,11 +5,18 @@ using Shared.Infra.Services;
 
 namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class RefreshTokenRepository(DbSet<RefreshToken> dbSet)
-    : GenericRepository<RefreshToken>(dbSet), IRefreshTokenRepository
+public class RefreshTokenRepository : GenericRepository<RefreshToken>, IRefreshTokenRepository
 {
+    private readonly DbSet<RefreshToken> _refreshTokens;
+
+    public RefreshTokenRepository(DbSet<RefreshToken> dbSet) : base(dbSet)
+    {
+        _refreshTokens = dbSet;
+    }
+
     public async Task<RefreshToken?> GetExistingTokenAsync(string refreshToken, CancellationToken cancellationToken)
     {
-        return await dbSet.FirstOrDefaultAsync(rt => rt.TokenHash == refreshToken, cancellationToken);
+        return await _refreshTokens
+            .FirstOrDefaultAsync(rt => rt.TokenHash == refreshToken, cancellationToken);
     }
 }

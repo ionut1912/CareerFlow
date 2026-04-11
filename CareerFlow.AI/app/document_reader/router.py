@@ -7,7 +7,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from openai import AsyncOpenAI
 
-from app.courses.schemas import ChapterSkeleton
+from app.courses.schema import ChapterSkeleton
 from app.dependencies import get_openai_client
 from app.document_reader import service
 from app.document_reader.extractor import (
@@ -18,7 +18,7 @@ from app.document_reader.extractor import (
     file_hash,
     get_cached_content,
 )
-from app.document_reader.schemas import DocumentChapterRequest
+from app.document_reader.schema import DocumentChapterRequest
 
 router = APIRouter(prefix="/document-courses", tags=["Document Course Generation"])
 

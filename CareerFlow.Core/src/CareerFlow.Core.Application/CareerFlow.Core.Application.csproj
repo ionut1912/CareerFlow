@@ -8,7 +8,11 @@
     <ItemGroup>
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1"/>
         <PackageReference Include="Shared.Application" Version="1.0.7"/>
+<<<<<<< HEAD
         <PackageReference Include="WolverineFx" Version="5.27.0"/>
+=======
+        <PackageReference Include="WolverineFx" Version="5.30.0" />
+>>>>>>> master
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj"/>
@@ -18,4 +22,8 @@
     <ItemGroup>
         <FrameworkReference Include="Microsoft.AspNetCore.App"/>
     </ItemGroup>
+<<<<<<< HEAD
 </Project>
+=======
+</Project>
+>>>>>>> master

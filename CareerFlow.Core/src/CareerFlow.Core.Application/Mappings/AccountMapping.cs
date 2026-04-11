@@ -1,7 +1,10 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
+<<<<<<< HEAD
 using CareerFlow.Core.Application.Requests;
+=======
+>>>>>>> master
 using CareerFlow.Core.Application.Requests.Account;
 using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Domain.Entities;
