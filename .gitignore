@@ -32,3 +32,14 @@ CareerFlow.Core/tests/CareerFlow.Core.Domain.Test/obj/*
 CareerFlow.Core/tests/CareerFlow.Core.Api.IntegrationTests/obj/*
 CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Test.Integration/obj/*
 CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests.Unit/obj/*
+CareerFlow.AI/__pycache__/*
+CareerFlow.AI/tests/unit/course/__pycache__/*
+CareerFlow.AI/tests/unit/document_reader/__pycache__/*
+CareerFlow.AI/tests/integration/course/__pycache__/*
+CareerFlow.AI/tests/unit/__pycache__/*
+CareerFlow.AI/app/__pycache__/*
+CareerFlow.AI/app/courses/__pycache__/*
+CareerFlow.AI/app/document_reader/__pycache__/*
+CareerFlow.AI/tests/__pycache__/*
+CareerFlow.AI/tests/integration/__pycache__/*
+CareerFlow.AI/tests/integration/document_reader/__pycache__/*

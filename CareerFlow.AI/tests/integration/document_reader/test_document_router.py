@@ -8,9 +8,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 from httpx import AsyncClient
 
-from app.courses.schemas import ChapterSkeleton
+from app.courses.schema import ChapterSkeleton
 from app.document_reader.extractor import DocumentContent
-from app.document_reader.schemas import (
+from app.document_reader.schema import (
     AnalysisAndSkeleton,
     DocumentAnalysis,
     FullChapterResponse,
