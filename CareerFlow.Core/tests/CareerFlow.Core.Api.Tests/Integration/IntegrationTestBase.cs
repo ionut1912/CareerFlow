@@ -21,17 +21,15 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         AnonymousClient = Factory.CreateClient();
     }
 
-    // xunit v3: InitializeAsync returns ValueTask
-    public virtual async ValueTask InitializeAsync()
+    public virtual async Task InitializeAsync()
     {
         await Factory.ResetDatabaseAsync();
     }
 
-    // xunit v3: DisposeAsync comes from IAsyncDisposable and returns ValueTask
-    public virtual ValueTask DisposeAsync()
+    public virtual Task DisposeAsync()
     {
         AnonymousClient?.Dispose();
-        return ValueTask.CompletedTask;
+        return Task.CompletedTask;
     }
 
     protected HttpClient CreateClientForNonExistentUser(Account account)

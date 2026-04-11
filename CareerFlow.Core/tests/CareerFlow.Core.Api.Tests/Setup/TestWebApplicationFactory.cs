@@ -29,8 +29,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     public string DbConnectionString => _dbContainer.GetConnectionString();
 
-    // xunit v3: InitializeAsync returns ValueTask
-    public async ValueTask InitializeAsync()
+    public async Task InitializeAsync()
     {
         await Task.WhenAll(
             _dbContainer.StartAsync(),
@@ -38,20 +37,31 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             _rabbitContainer.StartAsync()
         );
 
+        // Core Connections
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", DbConnectionString);
+        
+        // Fix for Redis error: Mapping Redis container connection string to Redis:ConnectionString
         Environment.SetEnvironmentVariable("Redis__ConnectionString", _redisContainer.GetConnectionString());
+        
+        // RabbitMQ
         Environment.SetEnvironmentVariable("RabbitMQ__Host", _rabbitContainer.Hostname);
         Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString());
         Environment.SetEnvironmentVariable("RabbitMQ__Username", "rabbitmq");
         Environment.SetEnvironmentVariable("RabbitMQ__Password", "rabbitmq");
+        
+        // JWT & OpenAI
         Environment.SetEnvironmentVariable("JwtSettings__Key", "testjwtsuperlongkeyforauthentication");
         Environment.SetEnvironmentVariable("JwtSettings__Issuer", "testjwtissuer");
         Environment.SetEnvironmentVariable("JwtSettings__Audience", "testaudience");
         Environment.SetEnvironmentVariable("OpenAI__ApiKey", "testkey");
+
+        // Fix for R2 error: Providing a non-empty AccountId so the Endpoint URL is valid
         Environment.SetEnvironmentVariable("R2__AccountId", "test-account-id");
         Environment.SetEnvironmentVariable("R2__AccessKey", "test-access-key");
         Environment.SetEnvironmentVariable("R2__SecretKey", "test-secret-key");
         Environment.SetEnvironmentVariable("R2__BucketName", "careerflow-courses-test");
+
+        // Analyzer Settings
         Environment.SetEnvironmentVariable("Analyzer__BaseUrl", "http://localhost:8080/ai");
 
         using var scope = Services.CreateScope();
@@ -59,11 +69,11 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         await dbContext.Database.MigrateAsync();
     }
 
-    // xunit v3: DisposeAsync comes from IAsyncDisposable and returns ValueTask
-    public override async ValueTask DisposeAsync()
+    public new async Task DisposeAsync()
     {
         await base.DisposeAsync();
 
+        // Clean up environment variables
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
         Environment.SetEnvironmentVariable("Redis__ConnectionString", null);
         Environment.SetEnvironmentVariable("RabbitMQ__Host", null);

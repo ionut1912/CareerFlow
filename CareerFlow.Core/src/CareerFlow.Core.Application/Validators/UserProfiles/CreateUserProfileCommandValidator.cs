@@ -20,11 +20,11 @@ public class CreateUserProfileCommandValidator : AbstractValidator<CreateUserPro
 
         RuleFor(x => x.UserTypes)
             .NotEmpty().WithMessage("Cel putin un tip pentru user este necesar.")
-            .Must(x => x.Count <= ValidUserTypes.Count)
+            .Must(x => x == null || x.Count <= ValidUserTypes.Count)
             .WithMessage("Prea multe tipuri.")
-            .Must(x => x.All(ValidUserTypes.Contains))
+            .Must(x => x == null || x.All(ValidUserTypes.Contains))
             .WithMessage($"Fiecare tip de user trebuie sa fie unul dintre: {string.Join(", ", ValidUserTypes)}.")
-            .Must(x => x.Distinct().Count() == x.Count)
+            .Must(x => x == null || x.Distinct().Count() == x.Count)
             .WithMessage("Tipul user nu trebuie sa contina duplicate");
 
         RuleFor(x => x.Domain)
