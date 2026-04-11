@@ -2,7 +2,7 @@ using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
-using CareerFlow.Core.Application.Requests;
+using CareerFlow.Core.Application.Requests.UserProfile;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Shared.Api.Endpoints;
