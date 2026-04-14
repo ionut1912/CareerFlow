@@ -5,7 +5,6 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Course.Dto;
-using ChapterDetailResponse = CareerFlow.Core.Domain.Models.Responses.ChapterDetailResponse;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 

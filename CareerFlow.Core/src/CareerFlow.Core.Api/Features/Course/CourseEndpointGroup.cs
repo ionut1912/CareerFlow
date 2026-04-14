@@ -1,6 +1,7 @@
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests.Course;
 using CareerFlow.Core.Domain.Models.Course.Response;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
@@ -21,39 +22,42 @@ public class CourseEndpointGroup : EndpointGroup
         group.MapPost("/generate", GenerateCourseAsync);
     }
 
-    private static async Task<IResult> UploadAsync(
+    private static async Task<Results<Accepted<UploadCoursesResponse>, UnauthorizedHttpResult>> UploadAsync(
         IMessageBus messageBus,
         [FromForm] UploadCourseDocumentRequest request,
         HttpContext httpContext,
         CancellationToken ct)
     {
         var userId = httpContext.GetAccountId();
-        if (userId == Guid.Empty) return Results.Unauthorized();
+        if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = request.ToUploadCourseDocumentCommand(userId);
         var response = await messageBus.InvokeAsync<UploadCoursesResponse>(command, ct);
-        return Results.Accepted(value: response);
+        return TypedResults.Accepted((string?)null, value: response);
     }
 
-    private static async Task<IResult> FinishChapterAsync(
+    private static async Task<Results<NoContent, UnauthorizedHttpResult>> FinishChapterAsync(
         IMessageBus messageBus,
         [AsParameters] FinishChapterRequest request,
         HttpContext httpContext,
         CancellationToken ct)
     {
         var userId = httpContext.GetAccountId();
-        if (userId == Guid.Empty) return Results.Unauthorized();
+        if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = request.ToFinishChapterCommand(userId);
         await messageBus.InvokeAsync(command, ct);
-        return Results.NoContent();
+        return TypedResults.NoContent();
     }
 
-    private async Task<IResult> GenerateCourseAsync(IMessageBus messageBus, CourseRequest courseRequest,
-        HttpContext httpContext, CancellationToken ct)
+    private static async Task<Results<Ok<Guid>, UnauthorizedHttpResult>> GenerateCourseAsync(
+        IMessageBus messageBus,
+        CourseRequest courseRequest,
+        HttpContext httpContext,
+        CancellationToken ct)
     {
         var userId = httpContext.GetAccountId();
-        if (userId == Guid.Empty) return Results.Unauthorized();
+        if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = courseRequest.ToGenerateCourseCommand(userId);
         var result = await messageBus.InvokeAsync<Guid>(command, ct);
-        return Results.Ok(result);
+        return TypedResults.Ok(result);
     }
 }

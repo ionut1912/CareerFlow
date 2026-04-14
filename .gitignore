@@ -14,7 +14,6 @@ CareerFlow.Core/src/CareerFlow.Core.Application/bin/Debug/*
 CareerFlow.Core/src/CareerFlow.Core.Application/obj/*
 CareerFlow.Core/src/CareerFlow.Core.Domain/bin/Debu/*
 CareerFlow.Core/src/CareerFlow.Core.Domain/bin/Debug/*
-CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests/*
 CareerFlow.Core/src/CareerFlow.Core.Domain/obj/*
 CareerFlow.Core/src/CareerFlow.Core.Infrastructure/bin/Debu/*
 CareerFlow.Core/src/CareerFlow.Core.Infrastructure/bin/Debug/*
@@ -46,3 +45,5 @@ CareerFlow.AI/tests/integration/document_reader/__pycache__/*
 CareerFlow.Core/tests/CareerFlow.Core.Domain.Tests/obj/*
 CareerFlow.Core/tests/CareerFlow.Core.Domain.Tests/bin/Debug/*
 CareerFlow.AI/.vscode/settings.json
+CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests/bin/Debug/*
+CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests/obj/*

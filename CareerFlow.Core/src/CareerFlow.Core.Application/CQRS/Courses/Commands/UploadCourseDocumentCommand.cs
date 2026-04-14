@@ -3,4 +3,4 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CareerFlow.Core.Application.CQRS.Courses.Commands;
 
-public sealed record UploadCourseDocumentCommand(Guid UserId, [FromForm] string Title, List<UploadFileDto> Files);
+public sealed record UploadCourseDocumentCommand(Guid UserId, string Title, List<UploadFileDto> Files);

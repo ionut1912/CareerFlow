@@ -12,7 +12,6 @@ using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Mappers;
 using Hangfire;
 using Microsoft.Extensions.Logging;
-using ChapterExpandResponse = CareerFlow.Core.Domain.Models.Responses.ChapterExpandResponse;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
