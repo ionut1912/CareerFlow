@@ -92,14 +92,14 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     {
         // Arrange
         var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
-        
+
         var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
         var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
         var uow = isUowNull ? null! : _unitOfWorkMock.Object;
         var logger = isLoggerNull ? null! : _loggerMock.Object;
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        await Should.ThrowAsync<ArgumentNullException>(async () =>
         {
             var handler = new CreateAccountCommandHandler(repo, passwordService, uow, logger);
             await handler.Handle(command, Ct);

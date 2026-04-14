@@ -86,13 +86,13 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
     {
         // Arrange
         var query = new GetLegalDocQuery("privacy");
-        
+
         // Use the null-forgiving operator (!) to satisfy the compiler while testing null guards
         var service = isServiceNull ? null! : _legalServiceMock.Object;
         var logger = isLoggerNull ? null! : _loggerMock.Object;
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        await Should.ThrowAsync<ArgumentNullException>(async () =>
         {
             var handler = new GetLegalDocQueryHandler(service, logger);
             await handler.Handle(query, Ct);

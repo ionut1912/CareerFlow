@@ -17,7 +17,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "10.0.3")
+                .HasAnnotation("ProductVersion", "10.0.5")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -79,6 +79,60 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.ToTable("Accounts");
                 });
 
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Chapter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CoreConcept")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Day")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.ToTable("Chapter");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Course", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Topic")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Course");
+                });
+
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.RefreshToken", b =>
                 {
                     b.Property<Guid>("Id")
@@ -123,6 +177,40 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("RefreshTokens");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.SubChapter", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("ChapterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Summary")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("TheoryHtml")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChapterId");
+
+                    b.ToTable("SubChapter");
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.SystemDocument", b =>
@@ -202,6 +290,32 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.ToTable("UserProfiles");
                 });
 
+            modelBuilder.Entity("CourseUserProfile", b =>
+                {
+                    b.Property<Guid>("CoursesId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("UserProfilesId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("CoursesId", "UserProfilesId");
+
+                    b.HasIndex("UserProfilesId");
+
+                    b.ToTable("CourseUserProfile");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Chapter", b =>
+                {
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", "Course")
+                        .WithMany("Chapters")
+                        .HasForeignKey("CourseId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+                });
+
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.RefreshToken", b =>
                 {
                     b.HasOne("CareerFlow.Core.Domain.Entities.Account", "Account")
@@ -211,6 +325,17 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Account");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.SubChapter", b =>
+                {
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Chapter", "Chapter")
+                        .WithMany("SubChapters")
+                        .HasForeignKey("ChapterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Chapter");
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.UserProfile", b =>
@@ -244,9 +369,34 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Navigation("UserTypes");
                 });
 
+            modelBuilder.Entity("CourseUserProfile", b =>
+                {
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CoursesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CareerFlow.Core.Domain.Entities.UserProfile", null)
+                        .WithMany()
+                        .HasForeignKey("UserProfilesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Account", b =>
                 {
                     b.Navigation("UserProfile");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Chapter", b =>
+                {
+                    b.Navigation("SubChapters");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Course", b =>
+                {
+                    b.Navigation("Chapters");
                 });
 #pragma warning restore 612, 618
         }

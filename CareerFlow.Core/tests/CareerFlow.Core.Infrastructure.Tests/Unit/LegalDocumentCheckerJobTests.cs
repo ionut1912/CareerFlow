@@ -15,11 +15,11 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
 public class LegalDocumentCheckerJobTests
 {
-    private readonly Mock<IGithubPagesRequestsSender> _githubMock = new();
     private readonly Mock<IAccountRepository> _accountRepoMock = new();
-    private readonly Mock<IUnitOfWork> _uowMock = new();
     private readonly ApplicationDbContext _dbContext;
+    private readonly Mock<IGithubPagesRequestsSender> _githubMock = new();
     private readonly LegalDocumentCheckerJob _sut;
+    private readonly Mock<IUnitOfWork> _uowMock = new();
 
     public LegalDocumentCheckerJobTests()
     {
@@ -27,7 +27,7 @@ public class LegalDocumentCheckerJobTests
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .ConfigureWarnings(x => x.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
-            
+
         _dbContext = new ApplicationDbContext(options);
         _sut = new LegalDocumentCheckerJob(_githubMock.Object, _dbContext, _accountRepoMock.Object, _uowMock.Object);
     }
@@ -67,7 +67,7 @@ public class LegalDocumentCheckerJobTests
     public async Task CheckForUpdatesAsync_NullEtag_DoesNotSaveChanges()
     {
         _githubMock.Setup(g => g.GetContentAsync("Terms", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(BuildHttpResponse(HttpStatusCode.OK, etag: null));
+            .ReturnsAsync(BuildHttpResponse(HttpStatusCode.OK, null));
 
         await _sut.CheckForUpdatesAsync("Terms");
 
@@ -102,10 +102,10 @@ public class LegalDocumentCheckerJobTests
 
         // Assert
         // Clear tracking if necessary to ensure we fetch fresh from the "DB"
-        _dbContext.ChangeTracker.Clear(); 
-    
+        _dbContext.ChangeTracker.Clear();
+
         var doc = await _dbContext.SystemDocuments.FirstOrDefaultAsync(d => d.DocumentType == "Terms");
-    
+
         doc.ShouldNotBeNull();
         doc.CurrentETag.ShouldBe("\"etag123\"");
     }
@@ -133,7 +133,8 @@ public class LegalDocumentCheckerJobTests
 
         await _sut.CheckForUpdatesAsync("Terms");
 
-        _accountRepoMock.Verify(a => a.UpdateTermsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _accountRepoMock.Verify(a => a.UpdateTermsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
         _uowMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -146,7 +147,8 @@ public class LegalDocumentCheckerJobTests
         _githubMock.Setup(g => g.GetContentAsync("Terms", It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildHttpResponse(HttpStatusCode.OK, "\"new\""));
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        _accountRepoMock.Setup(a => a.UpdateTermsAsync("Terms", It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _accountRepoMock.Setup(a => a.UpdateTermsAsync("Terms", It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         await _sut.CheckForUpdatesAsync("Terms");
 
@@ -162,7 +164,8 @@ public class LegalDocumentCheckerJobTests
         _githubMock.Setup(g => g.GetContentAsync("Privacy", It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildHttpResponse(HttpStatusCode.OK, "\"v2\""));
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        _accountRepoMock.Setup(a => a.UpdateTermsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _accountRepoMock.Setup(a => a.UpdateTermsAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
 
         await _sut.CheckForUpdatesAsync("Privacy");
 

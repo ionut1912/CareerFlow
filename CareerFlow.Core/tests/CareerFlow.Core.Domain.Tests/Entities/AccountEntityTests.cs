@@ -14,7 +14,9 @@ public class AccountEntityTests
         string password = "Password1!",
         string username = "username",
         string name = "Full Name")
-        => Account.Create(email, password, username, name);
+    {
+        return Account.Create(email, password, username, name);
+    }
 
     [Fact]
     public void Create_ValidParameters_ReturnsAccount()
@@ -210,7 +212,7 @@ public class AccountEntityTests
 
         account.GenerateResetPasswordToken("raw-token", passwordService.Object);
 
-        ((DateTime)account.ResetPasswordTokenExpiresAt!).ShouldBeGreaterThan(expectedExpiry);
+        account.ResetPasswordTokenExpiresAt!.ShouldBeGreaterThan(expectedExpiry);
     }
 
     [Theory]

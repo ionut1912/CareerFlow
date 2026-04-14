@@ -8,7 +8,7 @@
     <ItemGroup>
         <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1"/>
         <PackageReference Include="Shared.Application" Version="1.0.7"/>
-        <PackageReference Include="WolverineFx" Version="5.30.0" />
+        <PackageReference Include="WolverineFx" Version="5.30.0"/>
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj"/>

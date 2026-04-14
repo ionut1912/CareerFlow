@@ -5,14 +5,10 @@ using Shared.Infra.Services;
 
 namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class UserProfileRepository : GenericRepository<UserProfile>, IUserProfileRepository
+public class UserProfileRepository(DbSet<UserProfile> dbSet)
+    : GenericRepository<UserProfile>(dbSet), IUserProfileRepository
 {
-    private readonly DbSet<UserProfile> _userProfiles;
-
-    public UserProfileRepository(DbSet<UserProfile> dbSet) : base(dbSet)
-    {
-        _userProfiles = dbSet;
-    }
+    private readonly DbSet<UserProfile> _userProfiles = dbSet;
 
     public async Task<UserProfile?> GetCurrentUserProfile(Guid accountId, CancellationToken cancellationToken)
     {
@@ -20,5 +16,16 @@ public class UserProfileRepository : GenericRepository<UserProfile>, IUserProfil
             .Include(x => x.UserTypes)
             .Include(x => x.Account)
             .FirstOrDefaultAsync(x => x.AccountId == accountId, cancellationToken);
+    }
+
+    public async Task<UserProfile?> GetUserCourses(Guid accountId, CancellationToken cancellationToken)
+    {
+        return await
+            _userProfiles
+                .Include(x => x.Account)
+                .Include(x => x.Courses)
+                .ThenInclude(x => x.Chapters)
+                .ThenInclude(x => x.SubChapters)
+                .FirstOrDefaultAsync(x => x.AccountId == accountId, cancellationToken);
     }
 }
