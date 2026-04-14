@@ -18,10 +18,12 @@ public class UploadCourseDocumentCommandHandlerTests
         _sut = new UploadCourseDocumentCommandHandler(_courseServiceMock.Object);
     }
 
-    private static List<UploadFileDto> CreateFiles(int count = 1) =>
-        Enumerable.Range(0, count)
+    private static List<UploadFileDto> CreateFiles(int count = 1)
+    {
+        return Enumerable.Range(0, count)
             .Select(i => new UploadFileDto($"test{i}.pdf", "application/pdf", new MemoryStream([1, 2, 3])))
             .ToList();
+    }
 
     [Fact]
     public void Constructor_NullCourseService_ThrowsArgumentNullException()
@@ -70,7 +72,8 @@ public class UploadCourseDocumentCommandHandlerTests
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", CreateFiles());
 
         _courseServiceMock
-            .Setup(s => s.UploadManyAsync(It.IsAny<Guid>(), It.IsAny<IEnumerable<UploadFileDto>>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.UploadManyAsync(It.IsAny<Guid>(), It.IsAny<IEnumerable<UploadFileDto>>(), It.IsAny<string>(),
+                It.IsAny<CancellationToken>()))
             .ThrowsAsync(new IOException("Storage error"));
 
         await Should.ThrowAsync<IOException>(() =>

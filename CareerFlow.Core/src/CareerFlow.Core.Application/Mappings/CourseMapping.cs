@@ -8,21 +8,20 @@ namespace CareerFlow.Core.Application.Mappings;
 
 public static class CourseMapping
 {
-
     public static UploadCourseDocumentCommand ToUploadCourseDocumentCommand(this UploadCourseDocumentRequest request,
         Guid userId)
     {
         var files = request.Files.Select(f => new UploadFileDto(
-            f.FileName,
-            f.ContentType,
-            f.OpenReadStream()))
+                f.FileName,
+                f.ContentType,
+                f.OpenReadStream()))
             .ToList();
-        return new UploadCourseDocumentCommand(userId, request.Title,files);
+        return new UploadCourseDocumentCommand(userId, request.Title, files);
     }
 
     public static FinishChapterCommand ToFinishChapterCommand(this FinishChapterRequest request, Guid userId)
     {
-        return new FinishChapterCommand(userId,request.CourseId, request.ChapterId);
+        return new FinishChapterCommand(userId, request.CourseId, request.ChapterId);
     }
 
     public static GenerateCourseCommand ToGenerateCourseCommand(this CourseRequest request, Guid userId)
@@ -37,6 +36,6 @@ public static class CourseMapping
 
     public static List<CourseDto> ToDto(this IEnumerable<Course> courses)
     {
-        return courses.Select(c=>c.ToDto()).ToList();
+        return courses.Select(c => c.ToDto()).ToList();
     }
 }

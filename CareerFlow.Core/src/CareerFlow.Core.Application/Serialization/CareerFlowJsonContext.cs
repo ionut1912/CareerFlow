@@ -1,7 +1,7 @@
-
 using System.Text.Json.Serialization;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests.Account;
+using CareerFlow.Core.Application.Requests.Course;
 using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Application.Requests.UserProfile;
 using ForgotPasswordRequest = Microsoft.AspNetCore.Identity.Data.ForgotPasswordRequest;
@@ -29,6 +29,9 @@ namespace CareerFlow.Core.Application.Serialization;
 [JsonSerializable(typeof(ChapterDto))]
 [JsonSerializable(typeof(List<ChapterDto>))]
 [JsonSerializable(typeof(SubChapterDto))]
+[JsonSerializable(typeof(CourseRequest))]
+[JsonSerializable(typeof(FinishChapterRequest))]
+[JsonSerializable(typeof(UploadCourseDocumentRequest))]
 [JsonSerializable(typeof(List<SubChapterDto>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

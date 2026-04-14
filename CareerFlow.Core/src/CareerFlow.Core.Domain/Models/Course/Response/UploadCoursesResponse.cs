@@ -1,4 +1,3 @@
-
 using CareerFlow.Core.Domain.Models.Course.Dto;
 
 namespace CareerFlow.Core.Domain.Models.Course.Response;

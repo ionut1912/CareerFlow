@@ -1,8 +1,5 @@
 using CareerFlow.Core.Application.Mappings;
-using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Application.Requests.Course;
-
-using CareerFlow.Core.Domain.Models.Course;
 using CareerFlow.Core.Domain.Models.Course.Response;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Endpoints;
@@ -21,12 +18,12 @@ public class CourseEndpointGroup : EndpointGroup
 
         group.MapPost("/upload", UploadAsync).DisableAntiforgery();
         group.MapPost("/{courseId:guid}/chapters/{chapterId:guid}/finish", FinishChapterAsync);
-        group.MapPost("/gemerate", GenerateCourseAsync);
+        group.MapPost("/generate", GenerateCourseAsync);
     }
 
     private static async Task<IResult> UploadAsync(
         IMessageBus messageBus,
-        [FromForm]UploadCourseDocumentRequest request,
+        [FromForm] UploadCourseDocumentRequest request,
         HttpContext httpContext,
         CancellationToken ct)
     {
@@ -39,13 +36,13 @@ public class CourseEndpointGroup : EndpointGroup
 
     private static async Task<IResult> FinishChapterAsync(
         IMessageBus messageBus,
-        [AsParameters]FinishChapterRequest request,
+        [AsParameters] FinishChapterRequest request,
         HttpContext httpContext,
         CancellationToken ct)
     {
         var userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return Results.Unauthorized();
-        var command=request.ToFinishChapterCommand(userId);
+        var command = request.ToFinishChapterCommand(userId);
         await messageBus.InvokeAsync(command, ct);
         return Results.NoContent();
     }
@@ -55,8 +52,8 @@ public class CourseEndpointGroup : EndpointGroup
     {
         var userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return Results.Unauthorized();
-        var command=courseRequest.ToGenerateCourseCommand(userId);
-        var result=await  messageBus.InvokeAsync<Guid>(command, ct);
+        var command = courseRequest.ToGenerateCourseCommand(userId);
+        var result = await messageBus.InvokeAsync<Guid>(command, ct);
         return Results.Ok(result);
     }
 }

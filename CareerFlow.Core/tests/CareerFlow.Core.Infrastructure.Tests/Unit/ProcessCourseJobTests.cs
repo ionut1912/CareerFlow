@@ -1,8 +1,10 @@
+using System.Linq.Expressions;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Responses;
+using CareerFlow.Core.Domain.Models.Assembly;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
@@ -15,14 +17,14 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
 public class ProcessCourseJobTests
 {
-    private readonly Mock<IUnitOfWork> _uowMock = new();
-    private readonly Mock<IStorageService> _storageMock = new();
     private readonly Mock<IDocumentAnalyzerService> _analyzerMock = new();
-    private readonly Mock<ILogger<ProcessCourseJob>> _loggerMock = new();
-    private readonly Mock<ICourseJobRepository> _jobRepoMock = new();
-    private readonly Mock<ICoursePersistenceService> _persistenceMock = new();
     private readonly Mock<ICacheService> _cacheMock = new();
+    private readonly Mock<ICourseJobRepository> _jobRepoMock = new();
+    private readonly Mock<ILogger<ProcessCourseJob>> _loggerMock = new();
+    private readonly Mock<ICoursePersistenceService> _persistenceMock = new();
+    private readonly Mock<IStorageService> _storageMock = new();
     private readonly ProcessCourseJob _sut;
+    private readonly Mock<IUnitOfWork> _uowMock = new();
 
     public ProcessCourseJobTests()
     {
@@ -92,7 +94,7 @@ public class ProcessCourseJobTests
     {
         var jobId = Guid.NewGuid();
         _jobRepoMock.Setup(r => r.GetByIdAsync(jobId, It.IsAny<CancellationToken>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<CourseJob, object>>[]>()))
+                It.IsAny<Expression<Func<CourseJob, object>>[]>()))
             .ReturnsAsync((CourseJob?)null);
 
         await _sut.ExecuteAsync(jobId, Guid.NewGuid(), CancellationToken.None);
@@ -109,7 +111,7 @@ public class ProcessCourseJobTests
     public async Task ExecuteAsync_JobNotFound_DoesNotCallStorage()
     {
         _jobRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<CourseJob, object>>[]>()))
+                It.IsAny<Expression<Func<CourseJob, object>>[]>()))
             .ReturnsAsync((CourseJob?)null);
 
         await _sut.ExecuteAsync(Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
@@ -164,10 +166,11 @@ public class ProcessCourseJobTests
         var docResponse = BuildDocumentResponse();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(docResponse);
-        _cacheMock.Setup(c => c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c =>
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ExpandedChapterDataDto>());
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
-                It.IsAny<List<CareerFlow.Core.Domain.Models.Assembly.ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -183,10 +186,11 @@ public class ProcessCourseJobTests
         var (job, jobId, userId) = SetupJobWithUpload();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildDocumentResponse());
-        _cacheMock.Setup(c => c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c =>
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ExpandedChapterDataDto>());
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
-                It.IsAny<List<CareerFlow.Core.Domain.Models.Assembly.ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(courseId);
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
@@ -202,17 +206,18 @@ public class ProcessCourseJobTests
         var (_, jobId, userId) = SetupJobWithUpload();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildDocumentResponse());
-        _cacheMock.Setup(c => c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c =>
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new List<ExpandedChapterDataDto>());
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
-                It.IsAny<List<CareerFlow.Core.Domain.Models.Assembly.ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
+                It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         await _sut.ExecuteAsync(jobId, userId, CancellationToken.None);
 
         _persistenceMock.Verify(p => p.PersistAsync(userId, It.IsAny<string>(),
-            It.IsAny<List<CareerFlow.Core.Domain.Models.Assembly.ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()),
+                It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -226,7 +231,7 @@ public class ProcessCourseJobTests
         typeof(CourseJob).GetProperty(nameof(CourseJob.Upload))?.SetValue(job, upload);
 
         _jobRepoMock.Setup(r => r.GetByIdAsync(jobId, It.IsAny<CancellationToken>(),
-                It.IsAny<System.Linq.Expressions.Expression<Func<CourseJob, object>>[]>()))
+                It.IsAny<Expression<Func<CourseJob, object>>[]>()))
             .ReturnsAsync(job);
 
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
@@ -238,7 +243,8 @@ public class ProcessCourseJobTests
     {
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DocumentProcessingResponse?)null);
-        _cacheMock.Setup(c => c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c =>
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((List<ExpandedChapterDataDto>?)null);
     }
 

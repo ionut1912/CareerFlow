@@ -132,15 +132,14 @@ public class ExceptionMapperTests
     public void TryMap_InvalidJobStatusException_Returns400()
     {
         var ex = new InvalidJobStatusException("bad status");
- 
+
         var result = _sut.TryMap(ex, out var pd);
- 
+
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
         pd.Title.ShouldBe("Invalid Job Status");
     }
- 
-   
+
 
     [Fact]
     public void TryMap_DomainAlreadyExistsException_Returns400()
@@ -310,9 +309,8 @@ public class ExceptionMapperTests
         pd.Status.ShouldBe(404);
         pd.Title.ShouldBe("Legal Doc Not Found");
     }
- 
-    [Fact]
 
+    [Fact]
     public void TryMap_UnknownException_Returns500()
     {
         var ex = new Exception("unexpected");

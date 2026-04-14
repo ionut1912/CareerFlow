@@ -1,5 +1,3 @@
-
-
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.CQRS.Courses.Handlers;
 using CareerFlow.Core.Domain.Abstractions.Services;
@@ -39,7 +37,8 @@ public class GenerateCourseCommandHandlerTests
             .Setup(s => s.GetCourseSkeletonAsync(It.IsAny<CourseSkeletonRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(skeletonResponse);
         _courseServiceMock
-            .Setup(s => s.SaveCourseContentAsync(command.UserId, "C# Advanced", skeletonResponse, It.IsAny<CancellationToken>()))
+            .Setup(s => s.SaveCourseContentAsync(command.UserId, "C# Advanced", skeletonResponse,
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedCourseId);
 
         var result = await _sut.Handle(command, CancellationToken.None);
@@ -55,16 +54,19 @@ public class GenerateCourseCommandHandlerTests
         var skeletonResponse = new CourseSkeletonResponse(new SkeletonDto("Machine Learning", []), 5);
 
         _courseServiceMock
-            .Setup(s => s.GetCourseSkeletonAsync(It.Is<CourseSkeletonRequest>(r => r.Topic == "Machine Learning"), It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetCourseSkeletonAsync(It.Is<CourseSkeletonRequest>(r => r.Topic == "Machine Learning"),
+                It.IsAny<CancellationToken>()))
             .ReturnsAsync(skeletonResponse);
         _courseServiceMock
-            .Setup(s => s.SaveCourseContentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.SaveCourseContentAsync(It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
         await _sut.Handle(command, CancellationToken.None);
 
         _courseServiceMock.Verify(
-            s => s.GetCourseSkeletonAsync(It.Is<CourseSkeletonRequest>(r => r.Topic == "Machine Learning"), It.IsAny<CancellationToken>()),
+            s => s.GetCourseSkeletonAsync(It.Is<CourseSkeletonRequest>(r => r.Topic == "Machine Learning"),
+                It.IsAny<CancellationToken>()),
             Times.Once);
     }
 
@@ -113,7 +115,8 @@ public class GenerateCourseCommandHandlerTests
             .Setup(s => s.GetCourseSkeletonAsync(It.IsAny<CourseSkeletonRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(skeletonResponse);
         _courseServiceMock
-            .Setup(s => s.SaveCourseContentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.SaveCourseContentAsync(It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new InvalidOperationException("Persistence error"));
 
         await Should.ThrowAsync<InvalidOperationException>(() =>
@@ -131,7 +134,8 @@ public class GenerateCourseCommandHandlerTests
             .Setup(s => s.GetCourseSkeletonAsync(It.IsAny<CourseSkeletonRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(skeletonResponse);
         _courseServiceMock
-            .Setup(s => s.SaveCourseContentAsync(It.IsAny<Guid>(), It.IsAny<string>(), It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.SaveCourseContentAsync(It.IsAny<Guid>(), It.IsAny<string>(),
+                It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
         var result = await _sut.Handle(command, CancellationToken.None);

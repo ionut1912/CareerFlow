@@ -9,7 +9,7 @@ public class FinishChapterCommandHandler
 
     public FinishChapterCommandHandler(ICourseService courseService)
     {
-        ArgumentNullException.ThrowIfNull(courseService, nameof(courseService));
+        ArgumentNullException.ThrowIfNull(courseService);
         _courseService = courseService;
     }
 

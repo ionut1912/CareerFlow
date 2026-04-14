@@ -1,5 +1,3 @@
-
-
 using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests.UserProfile;
@@ -11,9 +9,9 @@ public static class UserProfileMapping
 {
     public static UserProfileDto ToDto(this UserProfile profile)
     {
-        var email    = profile.Account?.Email    ?? string.Empty;
+        var email = profile.Account?.Email ?? string.Empty;
         var username = profile.Account?.Username ?? string.Empty;
-        var name     = profile.Account?.Name     ?? string.Empty;
+        var name = profile.Account?.Name ?? string.Empty;
 
         var courses = profile.Courses?.ToDto() ?? [];
 

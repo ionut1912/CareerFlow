@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using CareerFlow.Core.Application.CQRS.UserProfiles.Handlers;
 using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
 using CareerFlow.Core.Application.Tests.Common;
@@ -27,9 +28,9 @@ public class GetUserProfileByIdQueryHandlerTests : BaseHandlerTest<GetUserProfil
     {
         // Arrange
         var userProfileToReturn = UserProfile.Create(
-            Guid.NewGuid(), 
-            LearningType.Auditory, 
-            [UserType.HobbyLearner], 
+            Guid.NewGuid(),
+            LearningType.Auditory,
+            [UserType.HobbyLearner],
             "testDomain");
 
         var query = new GetUserProfileByIdQuery(userProfileToReturn.Id);
@@ -37,9 +38,9 @@ public class GetUserProfileByIdQueryHandlerTests : BaseHandlerTest<GetUserProfil
         // Use It.IsAny to match the params/expressions argument used in the handler
         _userProfileRepositoryMock
             .Setup(x => x.GetByIdAsync(
-                query.Id, 
-                Ct, 
-                It.IsAny<System.Linq.Expressions.Expression<Func<UserProfile, object>>[]>()))
+                query.Id,
+                Ct,
+                It.IsAny<Expression<Func<UserProfile, object>>[]>()))
             .ReturnsAsync(userProfileToReturn);
 
         // Act

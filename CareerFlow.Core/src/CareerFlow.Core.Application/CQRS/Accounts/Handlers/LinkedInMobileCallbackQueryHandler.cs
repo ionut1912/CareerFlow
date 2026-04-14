@@ -9,13 +9,12 @@ public class LinkedInMobileCallbackQueryHandler
 
     public LinkedInMobileCallbackQueryHandler(ISocialService socialService)
     {
-        ArgumentNullException.ThrowIfNull(socialService, nameof(socialService));
+        ArgumentNullException.ThrowIfNull(socialService);
         _socialService = socialService;
     }
 
     public async Task<string> Handle(LinkedInMobileCallbackQuery request, CancellationToken cancellationToken)
     {
-
         return await _socialService.LinkedInCallBackAsync(request.Code, request.State, cancellationToken);
     }
 }

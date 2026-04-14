@@ -6,7 +6,6 @@ using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Course.Dto;
-using CareerFlow.Core.Domain.Models.Responses;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Mappers;
 using Hangfire;

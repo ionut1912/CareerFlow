@@ -77,7 +77,7 @@ public static class DependencyInjection
                 .AddRepos<ILegalService, LegalService>()
                 .AddRepos<ICourseService, CourseService>()
                 .AddRepos<ICoursePersistenceService, CoursePersistenceService>();
-            
+
             return services;
         }
 

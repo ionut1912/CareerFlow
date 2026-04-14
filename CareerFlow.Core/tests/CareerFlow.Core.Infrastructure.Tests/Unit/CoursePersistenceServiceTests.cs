@@ -13,10 +13,10 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 public class CoursePersistenceServiceTests
 {
     private readonly Mock<ICourseRepository> _courseRepoMock = new();
-    private readonly Mock<IUserProfileRepository> _userProfileRepoMock = new();
     private readonly Mock<IQuizRepository> _quizRepoMock = new();
-    private readonly Mock<IUnitOfWork> _uowMock = new();
     private readonly CoursePersistenceService _sut;
+    private readonly Mock<IUnitOfWork> _uowMock = new();
+    private readonly Mock<IUserProfileRepository> _userProfileRepoMock = new();
 
     public CoursePersistenceServiceTests()
     {
@@ -179,18 +179,24 @@ public class CoursePersistenceServiceTests
 
     private void SetupSuccessfulPersist(Guid userId, UserProfile profile)
     {
-        _userProfileRepoMock.Setup(r => r.GetCurrentUserProfile(userId, It.IsAny<CancellationToken>())).ReturnsAsync(profile);
+        _userProfileRepoMock.Setup(r => r.GetCurrentUserProfile(userId, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(profile);
         _uowMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
-        _courseRepoMock.Setup(r => r.AddAsync(It.IsAny<Course>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _courseRepoMock.Setup(r => r.AddAsync(It.IsAny<Course>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _userProfileRepoMock.Setup(r => r.Update(It.IsAny<UserProfile>()));
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
-        _quizRepoMock.Setup(r => r.AddRangeAsync(It.IsAny<List<QuizQuestion>>(), It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
+        _quizRepoMock.Setup(r => r.AddRangeAsync(It.IsAny<List<QuizQuestion>>(), It.IsAny<CancellationToken>()))
+            .Returns(Task.CompletedTask);
         _uowMock.Setup(u => u.CommitAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
     }
 
-    private static List<ChapterAssemblyModel> CreateValidAssemblyData() =>
-    [
-        new ChapterAssemblyModel(1, "Chapter 1", "Core Concept",
-        [new SubchapterAssemblyModel("Sub 1", "Summary", "<p>Theory</p>", [])], [])
-    ];
+    private static List<ChapterAssemblyModel> CreateValidAssemblyData()
+    {
+        return
+        [
+            new ChapterAssemblyModel(1, "Chapter 1", "Core Concept",
+                [new SubchapterAssemblyModel("Sub 1", "Summary", "<p>Theory</p>", [])], [])
+        ];
+    }
 }

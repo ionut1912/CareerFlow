@@ -2,10 +2,7 @@ using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.Validators.Course;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using FluentValidation.TestHelper;
-using Microsoft.AspNetCore.Http;
-using Moq;
 using Shouldly;
-using Xunit;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Course;
 
@@ -17,14 +14,12 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var files = new List<UploadFileDto>();
 
-        for (int i = 0; i < count; i++)
-        {
+        for (var i = 0; i < count; i++)
             files.Add(new UploadFileDto(
-                FileName: $"test{i}.pdf",
-                ContentType: "application/pdf",
-                Content: new MemoryStream([1, 2, 3])
+                $"test{i}.pdf",
+                "application/pdf",
+                new MemoryStream([1, 2, 3])
             ));
-        }
 
         return files;
     }
@@ -50,7 +45,7 @@ public class UploadCourseDocumentCommandValidatorTests
         var result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Title)
-              .WithErrorMessage("Titlul este necesar");
+            .WithErrorMessage("Titlul este necesar");
     }
 
     [Fact]
@@ -61,7 +56,7 @@ public class UploadCourseDocumentCommandValidatorTests
         var result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Files)
-              .WithErrorMessage("Files sunt necesare");
+            .WithErrorMessage("Files sunt necesare");
     }
 
     [Fact]

@@ -44,7 +44,6 @@ public class SocialEndpointGroup : EndpointGroup
     }
 
     private static async Task<IResult> LinkedInMobileCallback(
-
         [AsParameters] LinkedInMobileCallbackQuery query,
         IMessageBus messageBus,
         CancellationToken cancellationToken)

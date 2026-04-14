@@ -3,7 +3,7 @@ using CareerFlow.Core.Domain.Entities;
 
 namespace CareerFlow.Core.Application.Mappings;
 
-public  static class ChapterMapping
+public static class ChapterMapping
 {
     private static ChapterDto ToDto(this Chapter chapter)
     {
