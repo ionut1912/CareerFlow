@@ -8,6 +8,7 @@ public sealed class CourseJob : Entity
 {
     private CourseJob()
     {
+        Status = JobStatus.Pending;
     }
 
     private CourseJob(Guid uploadId, JobStatus status)

@@ -5,10 +5,13 @@ using Shared.Infra.Services;
 
 namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class QuizRepository(DbSet<QuizQuestion> dbSet) : GenericRepository<QuizQuestion>(dbSet), IQuizRepository
+public class QuizRepository(DbSet<QuizQuestion> quizQuestions)
+    : GenericRepository<QuizQuestion>(quizQuestions), IQuizRepository
 {
-    public async Task AddRangeAsync(List<QuizQuestion> quizQuestions,CancellationToken cancellationToken)
+    private readonly DbSet<QuizQuestion> _quizQuestions = quizQuestions;
+
+    public async Task AddRangeAsync(List<QuizQuestion> quizQuestions, CancellationToken cancellationToken)
     {
-        await dbSet.AddRangeAsync(quizQuestions,cancellationToken);
+        await _quizQuestions.AddRangeAsync(quizQuestions, cancellationToken);
     }
 }

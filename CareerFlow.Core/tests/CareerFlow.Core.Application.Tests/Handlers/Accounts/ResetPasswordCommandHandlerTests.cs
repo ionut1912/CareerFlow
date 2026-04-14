@@ -42,7 +42,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
 
         // Assert
         _passwordServiceMock.Verify(x => x.HashPassword(command.NewPassword),
-            Times.Once); 
+            Times.Once);
         _accountRepositoryMock.Verify(x => x.Update(account), Times.Once);
         _unitOfWorkMock.VerifySaveChanges(Times.Once());
     }
@@ -117,7 +117,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         var uow = isUnitOfWorkNull ? null! : _unitOfWorkMock.Object;
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        await Should.ThrowAsync<ArgumentNullException>(async () =>
         {
             var handler = new ResetPasswordCommandHandler(logger, repo, passwordService, uow);
             // We usually don't need to call Handle here because the constructor 

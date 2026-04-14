@@ -59,13 +59,13 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
     {
         // Arrange
         var query = new GetCurrentAccountQuery(Guid.NewGuid());
-        
+
         // Use the null-forgiving operator (!) to suppress CS8604
         var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
         var logger = isLoggerNull ? null! : _loggerMock.Object;
 
         // Act & Assert
-        await Should.ThrowAsync<ArgumentNullException>(async () => 
+        await Should.ThrowAsync<ArgumentNullException>(async () =>
         {
             var handler = new GetCurrentAccountQueryHandler(repo, logger);
             await handler.Handle(query, Ct);

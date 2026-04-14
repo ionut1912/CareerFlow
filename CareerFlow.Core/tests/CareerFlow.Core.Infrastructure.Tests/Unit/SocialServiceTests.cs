@@ -1,5 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
+using System.Web;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
@@ -18,34 +19,42 @@ public class SocialServiceTests
     // ─── Fixtures ────────────────────────────────────────────────────────────
 
     private readonly Mock<IAuthService> _authServiceMock = new();
-    private readonly Mock<ITokenService> _tokenServiceMock = new();
-    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
-    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
     private readonly IMemoryCache _memoryCache = new MemoryCache(new MemoryCacheOptions());
+    private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
 
     // Fix 1: Use the correct nested settings class names (GoogleSettings / LinkedInSettings)
     private readonly SocialAuthSettings _settings = new()
     {
-        BaseUrl  = "https://api.careerflow.com",
-        Google   = new GoogleSettings   { ClientId = "google-client-id" },
+        BaseUrl = "https://api.careerflow.com",
+        Google = new GoogleSettings { ClientId = "google-client-id" },
         LinkedIn = new LinkedInSettings { ClientId = "linkedin-client-id" }
     };
 
-    private SocialService CreateSut() => new(
-        Options.Create(_settings),
-        _authServiceMock.Object,
-        _tokenServiceMock.Object,
-        _refreshTokenRepositoryMock.Object,
-        _unitOfWorkMock.Object,
-        _memoryCache);
+    private readonly Mock<ITokenService> _tokenServiceMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
+
+    private SocialService CreateSut()
+    {
+        return new SocialService(
+            Options.Create(_settings),
+            _authServiceMock.Object,
+            _tokenServiceMock.Object,
+            _refreshTokenRepositoryMock.Object,
+            _unitOfWorkMock.Object,
+            _memoryCache);
+    }
 
     // Fix 2: Account has no public constructor — use the static factory method.
-    private static Account MakeAccount() =>
-        Account.Create("user@example.com", "P@ssw0rd!", "testuser", "Test User");
+    private static Account MakeAccount()
+    {
+        return Account.Create("user@example.com", "P@ssw0rd!", "testuser", "Test User");
+    }
 
     // Helper: builds a dummy AuthResult (token + jti)
-    private static AuthResult MakeJwt(string token = "jwt-token") =>
-        new(token, Guid.NewGuid().ToString());
+    private static AuthResult MakeJwt(string token = "jwt-token")
+    {
+        return new AuthResult(token, Guid.NewGuid().ToString());
+    }
 
     // Fix 3: RefreshToken.TokenHash is SHA-256 of the raw token, not the raw value itself.
     // We create a real RefreshToken via its factory and expose the *expected* hash so
@@ -69,7 +78,7 @@ public class SocialServiceTests
     // Helper: extract ?state= from a Google OAuth URL
     private static string ExtractStateFromGoogleUrl(string url)
     {
-        var pairs = System.Web.HttpUtility.ParseQueryString(new Uri(url).Query);
+        var pairs = HttpUtility.ParseQueryString(new Uri(url).Query);
         return pairs["state"]
                ?? throw new InvalidOperationException("state not found in Google URL");
     }
@@ -77,7 +86,7 @@ public class SocialServiceTests
     // Helper: extract ?state= from a LinkedIn OAuth URL
     private static string ExtractStateFromLinkedInUrl(string url)
     {
-        var pairs = System.Web.HttpUtility.ParseQueryString(new Uri(url).Query);
+        var pairs = HttpUtility.ParseQueryString(new Uri(url).Query);
         return pairs["state"]
                ?? throw new InvalidOperationException("state not found in LinkedIn URL");
     }
@@ -142,7 +151,7 @@ public class SocialServiceTests
     {
         var sut = CreateSut();
 
-        var state = ExtractStateFromGoogleUrl(sut.GoogleMobileLogin(null));
+        var state = ExtractStateFromGoogleUrl(sut.GoogleMobileLogin());
 
         Assert.True(_memoryCache.TryGetValue(state, out string? cached));
         Assert.Equal("careerflow://auth/callback", cached);
@@ -175,9 +184,9 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_ReturnsUrlContainingJwtToken()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
-        var jwt     = MakeJwt("my-jwt");
+        var jwt = MakeJwt("my-jwt");
         var (refresh, _) = MakeRefreshToken();
 
         var state = ExtractStateFromGoogleUrl(sut.GoogleMobileLogin("exp://192.168.1.1:8081/--/auth"));
@@ -191,9 +200,9 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_ReturnsUrlContainingHashedRefreshToken()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
-        var jwt     = MakeJwt();
+        var jwt = MakeJwt();
         var (refresh, expectedHash) = MakeRefreshToken("known-raw-token");
 
         var state = ExtractStateFromGoogleUrl(sut.GoogleMobileLogin("exp://host/callback"));
@@ -208,7 +217,7 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_AppendsTokensWithQuestionMark_WhenNoExistingQuery()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
 
@@ -224,7 +233,7 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_AppendsTokensWithAmpersand_WhenQueryAlreadyExists()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
 
@@ -240,7 +249,7 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_RemovesStateFromCacheAfterUse()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
@@ -254,7 +263,7 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_SavesRefreshTokenAndCommits()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
@@ -289,7 +298,7 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleMobileCallBackAsync_ThrowsInvalidOperationException_WhenStateIsReused()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
@@ -352,7 +361,7 @@ public class SocialServiceTests
     {
         var sut = CreateSut();
 
-        var state = ExtractStateFromLinkedInUrl(sut.LinkedInMobileLogin(null));
+        var state = ExtractStateFromLinkedInUrl(sut.LinkedInMobileLogin());
 
         Assert.True(_memoryCache.TryGetValue(state, out string? cached));
         Assert.Equal("careerflow://auth/callback", cached);
@@ -374,9 +383,9 @@ public class SocialServiceTests
     [Fact]
     public async Task LinkedInCallBackAsync_ReturnsUrlContainingJwtToken()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
-        var jwt     = MakeJwt("linkedin-jwt");
+        var jwt = MakeJwt("linkedin-jwt");
         var (refresh, _) = MakeRefreshToken();
 
         var state = ExtractStateFromLinkedInUrl(sut.LinkedInMobileLogin("exp://host/callback"));
@@ -390,9 +399,9 @@ public class SocialServiceTests
     [Fact]
     public async Task LinkedInCallBackAsync_ReturnsUrlContainingHashedRefreshToken()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
-        var jwt     = MakeJwt();
+        var jwt = MakeJwt();
         var (refresh, expectedHash) = MakeRefreshToken("known-linkedin-raw");
 
         var state = ExtractStateFromLinkedInUrl(sut.LinkedInMobileLogin("exp://host/callback"));
@@ -406,7 +415,7 @@ public class SocialServiceTests
     [Fact]
     public async Task LinkedInCallBackAsync_RemovesStateFromCacheAfterUse()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullLinkedInFlow(account, MakeJwt(), refresh);
@@ -420,7 +429,7 @@ public class SocialServiceTests
     [Fact]
     public async Task LinkedInCallBackAsync_SavesRefreshTokenAndCommits()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullLinkedInFlow(account, MakeJwt(), refresh);
@@ -446,7 +455,7 @@ public class SocialServiceTests
     [Fact]
     public async Task LinkedInCallBackAsync_ThrowsInvalidOperationException_WhenStateIsReused()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullLinkedInFlow(account, MakeJwt(), refresh);
@@ -463,7 +472,7 @@ public class SocialServiceTests
     [Fact]
     public async Task GoogleState_CannotBeReused_AfterGoogleCallbackConsumesIt()
     {
-        var sut     = CreateSut();
+        var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
@@ -484,11 +493,11 @@ public class SocialServiceTests
         const string returnUrl1 = "exp://device1/callback";
         const string returnUrl2 = "exp://device2/callback";
 
-        var googleState   = ExtractStateFromGoogleUrl(sut.GoogleMobileLogin(returnUrl1));
+        var googleState = ExtractStateFromGoogleUrl(sut.GoogleMobileLogin(returnUrl1));
         var linkedInState = ExtractStateFromLinkedInUrl(sut.LinkedInMobileLogin(returnUrl2));
 
         Assert.NotEqual(googleState, linkedInState);
-        Assert.True(_memoryCache.TryGetValue(googleState,   out string? g) && g == returnUrl1);
+        Assert.True(_memoryCache.TryGetValue(googleState, out string? g) && g == returnUrl1);
         Assert.True(_memoryCache.TryGetValue(linkedInState, out string? l) && l == returnUrl2);
     }
 

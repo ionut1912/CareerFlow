@@ -2,7 +2,6 @@ using System.Text.Json.Serialization;
 
 namespace CareerFlow.Core.Domain.Models.AI.Requests;
 
-
 public sealed record DocumentChapterRequest(
     [property: JsonPropertyName("chapter_title")]
     string ChapterTitle,

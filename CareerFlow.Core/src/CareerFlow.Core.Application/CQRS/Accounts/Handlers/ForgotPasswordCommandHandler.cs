@@ -4,7 +4,6 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Rabbit.Events.Events;
 using Microsoft.Extensions.Logging;
-using Shared.Domain.Interfaces;
 using Wolverine;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;

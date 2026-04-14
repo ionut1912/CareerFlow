@@ -5,7 +5,6 @@ using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.AI.Requests;
-using CareerFlow.Core.Domain.Models.Course;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.Models.Course.Response;
 using CareerFlow.Core.Domain.Models.Responses;
@@ -18,17 +17,17 @@ namespace CareerFlow.Core.Infrastructure.Services;
 
 public sealed class CourseService : ICourseService
 {
-    private readonly IChapterRepository _chapterRepository;
+    private readonly IAnalyzerService _analyzer;
     private readonly ICacheService _cacheService;
-    private readonly ILogger<CourseService> _logger;
+    private readonly IChapterRepository _chapterRepository;
     private readonly ICourseJobRepository _courseJobRepository;
+    private readonly ICoursePersistenceService _coursePersistenceService;
     private readonly ICourseUploadsRepository _courseUploadsRepository;
     private readonly IBackgroundJobClient _jobClient;
+    private readonly ILogger<CourseService> _logger;
     private readonly IStorageService _storage;
-    private readonly IAnalyzerService _analyzer;
     private readonly IUnitOfWork _uow;
     private readonly IUserProfileRepository _userProfileRepository;
-    private readonly ICoursePersistenceService _coursePersistenceService;
 
     public CourseService(
         IStorageService storage,

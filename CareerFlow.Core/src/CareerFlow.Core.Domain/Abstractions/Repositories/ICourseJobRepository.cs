@@ -1,5 +1,4 @@
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Domain.Models.Course;
 using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Domain.Abstractions.Repositories;

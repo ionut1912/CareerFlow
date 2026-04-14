@@ -30,7 +30,8 @@ public class DocsAnalyzerService : IDocumentAnalyzerService
         return await PostAsync<DocumentProcessingResponse>("/document-courses/upload-and-analyze", content, ct);
     }
 
-    public async Task<ChapterDetailResponse> ExpandAnalyzedDocument(DocumentChapterRequest documentChapterRequest, CancellationToken ct)
+    public async Task<ChapterDetailResponse> ExpandAnalyzedDocument(DocumentChapterRequest documentChapterRequest,
+        CancellationToken ct)
     {
         var response = await _http.PostAsJsonAsync("/document-courses/chapters/expand", documentChapterRequest, ct);
         response.EnsureSuccessStatusCode();

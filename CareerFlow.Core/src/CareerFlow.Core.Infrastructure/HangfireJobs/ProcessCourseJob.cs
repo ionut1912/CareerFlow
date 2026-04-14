@@ -118,21 +118,22 @@ public sealed class ProcessCourseJob
         var concurrentChapters = new ConcurrentBag<ExpandedChapterDataDto>();
         var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 6, CancellationToken = ct };
 
-        await Parallel.ForEachAsync(documentResponse.Skeleton.Chapters, parallelOptions, async (chapterSkeleton, token) =>
-        {
-            var request = new DocumentChapterRequest(
-                chapterSkeleton.Title,
-                chapterSkeleton.CoreConcept,
-                documentResponse.DocumentId);
+        await Parallel.ForEachAsync(documentResponse.Skeleton.Chapters, parallelOptions,
+            async (chapterSkeleton, token) =>
+            {
+                var request = new DocumentChapterRequest(
+                    chapterSkeleton.Title,
+                    chapterSkeleton.CoreConcept,
+                    documentResponse.DocumentId);
 
-            var detail = await _analyzer.ExpandAnalyzedDocument(request, token);
+                var detail = await _analyzer.ExpandAnalyzedDocument(request, token);
 
-            concurrentChapters.Add(new ExpandedChapterDataDto(
-                chapterSkeleton.Day,
-                chapterSkeleton.Title,
-                chapterSkeleton.CoreConcept,
-                detail));
-        });
+                concurrentChapters.Add(new ExpandedChapterDataDto(
+                    chapterSkeleton.Day,
+                    chapterSkeleton.Title,
+                    chapterSkeleton.CoreConcept,
+                    detail));
+            });
 
         var result = concurrentChapters.OrderBy(c => c.Day).ToList();
         await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(2), ct);
