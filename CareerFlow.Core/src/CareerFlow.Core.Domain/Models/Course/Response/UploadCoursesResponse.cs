@@ -3,7 +3,7 @@ using CareerFlow.Core.Domain.Models.Course.Dto;
 namespace CareerFlow.Core.Domain.Models.Course.Response;
 
 public sealed record UploadCoursesResponse(
-    IReadOnlyList<CourseJobSummaryDto> Jobs,
+    List<CourseJobSummaryDto> Jobs,
     int TotalFiles,
     int Accepted,
     int Rejected,

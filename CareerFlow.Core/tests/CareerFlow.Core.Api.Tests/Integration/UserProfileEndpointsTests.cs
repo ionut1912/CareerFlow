@@ -151,6 +151,14 @@ public class UserProfileEndpointsIntegrationTests : IntegrationTestBase
     }
 
     [Fact]
+    public async Task GetCurrentUserProfileWithCourses_Unauthenticated_Returns401()
+    {
+        var response = await AnonymousClient.GetAsync("/user-profile/current/with-courses");
+
+        response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    [Fact]
     public async Task UpdateUserProfile_ValidRequest_Returns204NoContent()
     {
         var (authClient, _, _) = await CreateAndAuthenticateUserAsync();

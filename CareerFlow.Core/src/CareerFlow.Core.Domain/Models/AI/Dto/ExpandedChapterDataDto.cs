@@ -1,4 +1,4 @@
-using CareerFlow.Core.Domain.Models.Responses;
+using CareerFlow.Core.Domain.Models.AI.Responses;
 
 namespace CareerFlow.Core.Domain.Models.AI.Dto;
 

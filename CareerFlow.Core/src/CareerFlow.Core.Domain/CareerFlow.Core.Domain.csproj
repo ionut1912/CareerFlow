@@ -7,6 +7,9 @@
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="Shared.Domain" Version="1.0.6"/>
+
     </ItemGroup>
 
+
 </Project>
+

@@ -69,6 +69,10 @@ async def analyze_and_skeleton(client: AsyncOpenAI, content: DocumentContent) ->
                             "conținutul documentului de la zero la expert (ritm de 2-3 ore/zi, "
                             "minim 1, maxim 90 de zile). Alege un număr realist.\n"
                             "3. PLAN: Creează planul de învățare progresiv cu exact acel număr de zile.\n"
+                            "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
+                            "Dacă informația nu reiese explicit din document, deduce sau sintetizează "
+                            "pe baza contextului disponibil — dar nu lăsa absolut nimic necompletat.\n"
                             "RĂSPUNDE ÎN ROMÂNĂ."
                         ),
                     },
@@ -128,6 +132,13 @@ async def generate_full_chapter(
                             "folosește tiparul: 2,0,1. NU pune răspunsul corect mereu pe prima poziție.\n"
                             "- Distractorii (răspunsurile greșite) trebuie să fie plauzibili, "
                             "nu absurzi — să reflecte greșeli tipice de înțelegere.\n"
+                            "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
+                            "Fiecare subcapitol trebuie să aibă titlu, conținut HTML și mini quiz complet. "
+                            "Quiz-ul recapitulativ trebuie să conțină exact 10 întrebări, fiecare cu "
+                            "exact 4 opțiuni și un răspuns corect specificat. "
+                            "Dacă contextul este insuficient, extinde pe baza cunoștințelor generale "
+                            "despre subiect — dar nu lăsa absolut nimic necompletat.\n"
                             "TOTUL ÎN ROMÂNĂ."
                         ),
                     },

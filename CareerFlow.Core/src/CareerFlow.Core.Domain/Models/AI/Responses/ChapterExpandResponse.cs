@@ -1,7 +1,7 @@
 using System.Text.Json.Serialization;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 
-namespace CareerFlow.Core.Domain.Models.Responses;
+namespace CareerFlow.Core.Domain.Models.AI.Responses;
 
 public sealed record ChapterExpandResponse(
     [property: JsonPropertyName("chapter")]

@@ -9,7 +9,7 @@ public class SystemDocument : Entity
     {
     }
 
-    public SystemDocument(string documentType, string currentETag)
+    private SystemDocument(string documentType, string currentETag)
     {
         if (string.IsNullOrWhiteSpace(documentType))
             throw new InvalidFieldException("Tipul documentului este necesar");

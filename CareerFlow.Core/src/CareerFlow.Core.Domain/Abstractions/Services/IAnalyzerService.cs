@@ -1,5 +1,5 @@
 using CareerFlow.Core.Domain.Models.AI.Requests;
-using CareerFlow.Core.Domain.Models.Responses;
+using CareerFlow.Core.Domain.Models.AI.Responses;
 
 namespace CareerFlow.Core.Domain.Abstractions.Services;
 

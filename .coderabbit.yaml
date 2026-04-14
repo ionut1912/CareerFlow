@@ -25,7 +25,7 @@ reviews:
         - SECURITY: Block endpoints missing Rate Limiting policies or Prometheus mirrors.
         - STRUCTURE: Enforce Vertical Slices; MapEndpoint logic must stay in the feature folder.
 
-    - path: "CareerFlow.AI/**/*.py"
+    - path: "CareerFlow.AI/app/**/*.py"
       instructions: |
         PYTHON STANDARDS (Python ≥ 3.11 / Poetry):
         - HARD FAIL: Any dynamic prompt formatting not using t-strings (Python ≥ 3.14 projects only).

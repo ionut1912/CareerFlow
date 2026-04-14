@@ -129,16 +129,17 @@ public class ExceptionMapperTests
     }
 
     [Fact]
-    public void TryMap_UserTypeAlreadyExistsException_Returns400()
+    public void TryMap_InvalidJobStatusException_Returns400()
     {
-        var ex = new UserTypeAlreadyExistsException("exists");
+        var ex = new InvalidJobStatusException("bad status");
 
         var result = _sut.TryMap(ex, out var pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
-        pd.Title.ShouldBe("User Already Exists");
+        pd.Title.ShouldBe("Invalid Job Status");
     }
+
 
     [Fact]
     public void TryMap_DomainAlreadyExistsException_Returns400()
@@ -352,8 +353,10 @@ public class ExceptionMapperTests
 
     [Theory]
     [InlineData(typeof(InvalidLearningTypeException), 400)]
+    [InlineData(typeof(InvalidJobStatusException), 400)]
     [InlineData(typeof(AccountNotFoundException), 404)]
     [InlineData(typeof(UserProfileNotFoundException), 404)]
+    [InlineData(typeof(ChapterNotFoundException), 404)]
     [InlineData(typeof(LegalDocNotFoundException), 404)]
     [InlineData(typeof(InvalidRefreshTokenException), 401)]
     public void TryMap_KnownException_ReturnsExpectedStatusCode(Type exType, int expectedStatus)

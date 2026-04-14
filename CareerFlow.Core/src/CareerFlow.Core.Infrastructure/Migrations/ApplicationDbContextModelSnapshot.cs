@@ -82,14 +82,17 @@ namespace CareerFlow.Core.Infrastructure.Migrations
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Chapter", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<string>("CoreConcept")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<Guid>("CourseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("CourseId1")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -100,7 +103,8 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -109,13 +113,14 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.HasIndex("CourseId");
 
-                    b.ToTable("Chapter");
+                    b.HasIndex("CourseId1");
+
+                    b.ToTable("Chapters");
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Course", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<DateTime>("CreatedAt")
@@ -123,14 +128,142 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.Property<string>("Topic")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Course");
+                    b.ToTable("Courses");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.CourseJob", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CourseId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTime?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("learning_type");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UploadId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CourseId");
+
+                    b.HasIndex("UploadId")
+                        .IsUnique();
+
+                    b.ToTable("CourseJobs");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.CourseUpload", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("FileKey")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .HasDatabaseName("ix_course_uploads_user_id");
+
+                    b.ToTable("CourseUploads");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ChapterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("CorrectAnswer")
+                        .IsRequired()
+                        .HasMaxLength(10000)
+                        .HasColumnType("character varying(10000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.PrimitiveCollection<string>("Options")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("Question")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<Guid?>("SubChapterId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ChapterId")
+                        .HasDatabaseName("ix_quiz_questions_chapter_id");
+
+                    b.HasIndex("SubChapterId")
+                        .HasDatabaseName("ix_quiz_questions_sub_chapter_id");
+
+                    b.ToTable("QuizQuestions");
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.RefreshToken", b =>
@@ -182,7 +315,6 @@ namespace CareerFlow.Core.Infrastructure.Migrations
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.SubChapter", b =>
                 {
                     b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("ChapterId")
@@ -193,7 +325,8 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.Property<string>("Summary")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<string>("TheoryHtml")
                         .IsRequired()
@@ -201,7 +334,8 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasColumnType("text");
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -210,7 +344,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.HasIndex("ChapterId");
 
-                    b.ToTable("SubChapter");
+                    b.ToTable("SubChapters");
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.SystemDocument", b =>
@@ -282,6 +416,11 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.PrimitiveCollection<string>("_finishedChapters")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("finished_chapters");
+
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId")
@@ -302,18 +441,54 @@ namespace CareerFlow.Core.Infrastructure.Migrations
 
                     b.HasIndex("UserProfilesId");
 
-                    b.ToTable("CourseUserProfile");
+                    b.ToTable("course_user_profiles", (string)null);
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Chapter", b =>
                 {
-                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", "Course")
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", null)
                         .WithMany("Chapters")
                         .HasForeignKey("CourseId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId1");
+
                     b.Navigation("Course");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.CourseJob", b =>
+                {
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Course", "Course")
+                        .WithMany()
+                        .HasForeignKey("CourseId");
+
+                    b.HasOne("CareerFlow.Core.Domain.Entities.CourseUpload", "Upload")
+                        .WithOne("Job")
+                        .HasForeignKey("CareerFlow.Core.Domain.Entities.CourseJob", "UploadId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Course");
+
+                    b.Navigation("Upload");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.QuizQuestion", b =>
+                {
+                    b.HasOne("CareerFlow.Core.Domain.Entities.Chapter", "Chapter")
+                        .WithMany()
+                        .HasForeignKey("ChapterId");
+
+                    b.HasOne("CareerFlow.Core.Domain.Entities.SubChapter", "SubChapter")
+                        .WithMany()
+                        .HasForeignKey("SubChapterId");
+
+                    b.Navigation("Chapter");
+
+                    b.Navigation("SubChapter");
                 });
 
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.RefreshToken", b =>
@@ -397,6 +572,11 @@ namespace CareerFlow.Core.Infrastructure.Migrations
             modelBuilder.Entity("CareerFlow.Core.Domain.Entities.Course", b =>
                 {
                     b.Navigation("Chapters");
+                });
+
+            modelBuilder.Entity("CareerFlow.Core.Domain.Entities.CourseUpload", b =>
+                {
+                    b.Navigation("Job");
                 });
 #pragma warning restore 612, 618
         }

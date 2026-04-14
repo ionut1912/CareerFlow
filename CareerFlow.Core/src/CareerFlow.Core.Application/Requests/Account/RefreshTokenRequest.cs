@@ -1,5 +1,3 @@
 ﻿namespace CareerFlow.Core.Application.Requests.Account;
 
-public record RefreshTokenRequest(string Token, string RefreshToken)
-{
-}
+public sealed record RefreshTokenRequest(string Token, string RefreshToken);

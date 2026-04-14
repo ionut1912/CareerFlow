@@ -34,17 +34,35 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Course",
+                name: "Courses",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Topic = table.Column<string>(type: "text", nullable: false),
+                    Topic = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Course", x => x.Id);
+                    table.PrimaryKey("PK_Courses", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "CourseUploads",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UserId = table.Column<Guid>(type: "uuid", nullable: false),
+                    Title = table.Column<string>(type: "character varying(300)", maxLength: 300, nullable: false),
+                    FileName = table.Column<string>(type: "character varying(500)", maxLength: 500, nullable: false),
+                    FileKey = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    FileType = table.Column<string>(type: "character varying(100)", maxLength: 100, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseUploads", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -98,6 +116,7 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                     IncorrectAnswersForQuiz = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     Experience = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
                     learning_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    finished_chapters = table.Column<string>(type: "jsonb", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
@@ -113,30 +132,66 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Chapter",
+                name: "Chapters",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     CourseId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CourseId1 = table.Column<Guid>(type: "uuid", nullable: true),
                     Day = table.Column<int>(type: "integer", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    CoreConcept = table.Column<string>(type: "text", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    CoreConcept = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Chapter", x => x.Id);
+                    table.PrimaryKey("PK_Chapters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Chapter_Course_CourseId",
+                        name: "FK_Chapters_Courses_CourseId",
                         column: x => x.CourseId,
-                        principalTable: "Course",
+                        principalTable: "Courses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Chapters_Courses_CourseId1",
+                        column: x => x.CourseId1,
+                        principalTable: "Courses",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateTable(
-                name: "CourseUserProfile",
+                name: "CourseJobs",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    UploadId = table.Column<Guid>(type: "uuid", nullable: false),
+                    CourseId = table.Column<Guid>(type: "uuid", nullable: true),
+                    learning_type = table.Column<string>(type: "character varying(50)", maxLength: 50, nullable: false),
+                    ErrorMessage = table.Column<string>(type: "character varying(2000)", maxLength: 2000, nullable: true),
+                    StartedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CompletedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CourseJobs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CourseJobs_CourseUploads_UploadId",
+                        column: x => x.UploadId,
+                        principalTable: "CourseUploads",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CourseJobs_Courses_CourseId",
+                        column: x => x.CourseId,
+                        principalTable: "Courses",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "course_user_profiles",
                 columns: table => new
                 {
                     CoursesId = table.Column<Guid>(type: "uuid", nullable: false),
@@ -144,15 +199,15 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_CourseUserProfile", x => new { x.CoursesId, x.UserProfilesId });
+                    table.PrimaryKey("PK_course_user_profiles", x => new { x.CoursesId, x.UserProfilesId });
                     table.ForeignKey(
-                        name: "FK_CourseUserProfile_Course_CoursesId",
+                        name: "FK_course_user_profiles_Courses_CoursesId",
                         column: x => x.CoursesId,
-                        principalTable: "Course",
+                        principalTable: "Courses",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_CourseUserProfile_UserProfiles_UserProfilesId",
+                        name: "FK_course_user_profiles_UserProfiles_UserProfilesId",
                         column: x => x.UserProfilesId,
                         principalTable: "UserProfiles",
                         principalColumn: "Id",
@@ -178,12 +233,12 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SubChapter",
+                name: "SubChapters",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Title = table.Column<string>(type: "text", nullable: false),
-                    Summary = table.Column<string>(type: "text", nullable: false),
+                    Title = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Summary = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
                     TheoryHtml = table.Column<string>(type: "text", nullable: false),
                     ChapterId = table.Column<Guid>(type: "uuid", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
@@ -191,13 +246,41 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SubChapter", x => x.Id);
+                    table.PrimaryKey("PK_SubChapters", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SubChapter_Chapter_ChapterId",
+                        name: "FK_SubChapters_Chapters_ChapterId",
                         column: x => x.ChapterId,
-                        principalTable: "Chapter",
+                        principalTable: "Chapters",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuizQuestions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    Question = table.Column<string>(type: "character varying(1000)", maxLength: 1000, nullable: false),
+                    Options = table.Column<string>(type: "jsonb", nullable: false),
+                    CorrectAnswer = table.Column<string>(type: "character varying(10000)", maxLength: 10000, nullable: false),
+                    ChapterId = table.Column<Guid>(type: "uuid", nullable: true),
+                    SubChapterId = table.Column<Guid>(type: "uuid", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "timestamp with time zone", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuizQuestions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_QuizQuestions_Chapters_ChapterId",
+                        column: x => x.ChapterId,
+                        principalTable: "Chapters",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_QuizQuestions_SubChapters_SubChapterId",
+                        column: x => x.SubChapterId,
+                        principalTable: "SubChapters",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -207,14 +290,45 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Chapter_CourseId",
-                table: "Chapter",
+                name: "IX_Chapters_CourseId",
+                table: "Chapters",
                 column: "CourseId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_CourseUserProfile_UserProfilesId",
-                table: "CourseUserProfile",
+                name: "IX_Chapters_CourseId1",
+                table: "Chapters",
+                column: "CourseId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_course_user_profiles_UserProfilesId",
+                table: "course_user_profiles",
                 column: "UserProfilesId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseJobs_CourseId",
+                table: "CourseJobs",
+                column: "CourseId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CourseJobs_UploadId",
+                table: "CourseJobs",
+                column: "UploadId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "ix_course_uploads_user_id",
+                table: "CourseUploads",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_questions_chapter_id",
+                table: "QuizQuestions",
+                column: "ChapterId");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_quiz_questions_sub_chapter_id",
+                table: "QuizQuestions",
+                column: "SubChapterId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RefreshTokens_token_hash",
@@ -228,8 +342,8 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SubChapter_ChapterId",
-                table: "SubChapter",
+                name: "IX_SubChapters_ChapterId",
+                table: "SubChapters",
                 column: "ChapterId");
 
             migrationBuilder.CreateIndex(
@@ -249,13 +363,16 @@ namespace CareerFlow.Core.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "CourseUserProfile");
+                name: "course_user_profiles");
+
+            migrationBuilder.DropTable(
+                name: "CourseJobs");
+
+            migrationBuilder.DropTable(
+                name: "QuizQuestions");
 
             migrationBuilder.DropTable(
                 name: "RefreshTokens");
-
-            migrationBuilder.DropTable(
-                name: "SubChapter");
 
             migrationBuilder.DropTable(
                 name: "SystemDocuments");
@@ -264,16 +381,22 @@ namespace CareerFlow.Core.Infrastructure.Migrations
                 name: "user_profile_user_types");
 
             migrationBuilder.DropTable(
-                name: "Chapter");
+                name: "CourseUploads");
+
+            migrationBuilder.DropTable(
+                name: "SubChapters");
 
             migrationBuilder.DropTable(
                 name: "UserProfiles");
 
             migrationBuilder.DropTable(
-                name: "Course");
+                name: "Chapters");
 
             migrationBuilder.DropTable(
                 name: "Accounts");
+
+            migrationBuilder.DropTable(
+                name: "Courses");
         }
     }
 }

@@ -1,6 +1,6 @@
 using CareerFlow.Core.Domain.Models.AI.Dto;
+using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Assembly;
-using CareerFlow.Core.Domain.Models.Responses;
 
 namespace CareerFlow.Core.Infrastructure.Mappers;
 

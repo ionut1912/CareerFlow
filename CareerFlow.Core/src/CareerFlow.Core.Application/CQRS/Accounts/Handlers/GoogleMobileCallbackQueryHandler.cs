@@ -10,6 +10,7 @@ public class GoogleMobileCallbackQueryHandler
     public GoogleMobileCallbackQueryHandler(ISocialService socialService)
     {
         ArgumentNullException.ThrowIfNull(socialService);
+
         _socialService = socialService;
     }
 

@@ -13,6 +13,7 @@ public class GoogleMobileLoginQueryHandler
         _socialService = socialService;
     }
 
+
     public async Task<string> Handle(GoogleMobileLoginQuery request, CancellationToken cancellationToken)
     {
         return await Task.FromResult(_socialService.GoogleMobileLogin(request.ReturnUrl));

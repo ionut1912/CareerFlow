@@ -1,3 +1,3 @@
 namespace CareerFlow.Core.Application.Requests.Account;
 
-public record ForgotPasswordRequest(string Email);
+public sealed record ForgotPasswordRequest(string Email);

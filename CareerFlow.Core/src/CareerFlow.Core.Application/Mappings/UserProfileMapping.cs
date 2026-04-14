@@ -9,9 +9,29 @@ public static class UserProfileMapping
 {
     public static UserProfileDto ToDto(this UserProfile profile)
     {
-        return new UserProfileDto(profile.Id, profile.AccountId, profile.Domain, profile.CorrectAnswersForQuiz,
-            profile.IncorrectAnswersForQuiz, profile.Experience, profile.LearningType.Value,
-            profile.UserTypes.Select(x => x.Value).ToList());
+        var email = profile.Account?.Email ?? string.Empty;
+        var username = profile.Account?.Username ?? string.Empty;
+        var name = profile.Account?.Name ?? string.Empty;
+
+        var courses = profile.Courses?.ToDto() ?? [];
+
+        var userTypes = profile.UserTypes?
+            .Select(ut => ut.Value)
+            .ToList() ?? [];
+
+        return new UserProfileDto(
+            profile.Id,
+            profile.AccountId,
+            email,
+            username,
+            name,
+            profile.Domain,
+            profile.CorrectAnswersForQuiz,
+            profile.IncorrectAnswersForQuiz,
+            profile.Experience,
+            profile.LearningType.Value,
+            userTypes,
+            courses);
     }
 
     public static List<UserProfileDto> ToDtos(this IEnumerable<UserProfile> profiles)

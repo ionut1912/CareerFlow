@@ -23,7 +23,7 @@ public class GetUserProfileByIdQueryHandler
 
     public async Task<UserProfileDto> Handle(GetUserProfileByIdQuery request, CancellationToken cancellationToken)
     {
-        var userProfile = await _userProfileRepository.GetByIdAsync(request.Id, cancellationToken);
+        var userProfile = await _userProfileRepository.GetByIdAsync(request.Id, cancellationToken, up => up.Account!);
         if (userProfile is not null) return userProfile.ToDto();
         _logger.LogError("Profilul cu id-ul {Id} not foud", request.Id);
         throw new UserProfileNotFoundException($"Profilul cu id-ul {request.Id} nu a fost gasit");

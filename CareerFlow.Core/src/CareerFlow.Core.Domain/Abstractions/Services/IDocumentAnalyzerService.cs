@@ -1,6 +1,6 @@
 using CareerFlow.Core.Domain.Models.AI.Requests;
+using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Course.Dto;
-using CareerFlow.Core.Domain.Models.Responses;
 
 namespace CareerFlow.Core.Domain.Abstractions.Services;
 

@@ -1,5 +1,3 @@
 ﻿namespace CareerFlow.Core.Application.Requests.Account;
 
-public record ResetPasswordRequest(string Email, string NewPassword, string Token)
-{
-}
+public sealed record ResetPasswordRequest(string Email, string NewPassword, string Token);
