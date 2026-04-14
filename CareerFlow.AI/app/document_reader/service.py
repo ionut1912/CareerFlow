@@ -70,7 +70,7 @@ async def analyze_and_skeleton(client: AsyncOpenAI, content: DocumentContent) ->
                             "minim 1, maxim 90 de zile). Alege un număr realist.\n"
                             "3. PLAN: Creează planul de învățare progresiv cu exact acel număr de zile.\n"
                             "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
-                            "Niciun câmp nu poate fi gol (\"\"), null, sau listă vidă ([]). "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
                             "Dacă informația nu reiese explicit din document, deduce sau sintetizează "
                             "pe baza contextului disponibil — dar nu lăsa absolut nimic necompletat.\n"
                             "RĂSPUNDE ÎN ROMÂNĂ."
@@ -133,7 +133,7 @@ async def generate_full_chapter(
                             "- Distractorii (răspunsurile greșite) trebuie să fie plauzibili, "
                             "nu absurzi — să reflecte greșeli tipice de înțelegere.\n"
                             "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
-                            "Niciun câmp nu poate fi gol (\"\"), null, sau listă vidă ([]). "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
                             "Fiecare subcapitol trebuie să aibă titlu, conținut HTML și mini quiz complet. "
                             "Quiz-ul recapitulativ trebuie să conțină exact 10 întrebări, fiecare cu "
                             "exact 4 opțiuni și un răspuns corect specificat. "

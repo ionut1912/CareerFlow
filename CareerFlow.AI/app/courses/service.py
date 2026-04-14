@@ -51,7 +51,7 @@ async def generate_skeleton(client: AsyncOpenAI, topic: str) -> LearningPlanSkel
                             "Alege un număr realist.\n"
                             "2. PLAN: Creează planul de învățare progresiv cu exact acel număr de zile.\n"
                             "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
-                            "Niciun câmp nu poate fi gol (\"\"), null, sau listă vidă ([]). "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
                             "Dacă informația nu reiese explicit, deduce sau sintetizează din context "
                             "— dar nu lăsa absolut nimic necompletat.\n"
                             "RĂSPUNDE ÎN ROMÂNĂ."
@@ -85,7 +85,7 @@ async def _expand_chapter(client: AsyncOpenAI, topic: str, chapter: ChapterSkele
                             "Împarte capitolul în 2-4 subcapitole logice pe baza subiectului "
                             "și conceptului central.\n"
                             "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
-                            "Niciun câmp nu poate fi gol (\"\"), null, sau listă vidă ([]). "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
                             "Fiecare subcapitol trebuie să aibă titlu și descriere completă a conținutului "
                             "— nu lăsa absolut nimic necompletat.\n"
                             "TOTUL ÎN ROMÂNĂ."
@@ -143,7 +143,7 @@ async def _generate_subchapter_content(
                             "- Distractorii (răspunsurile greșite) trebuie să fie plauzibili, "
                             "nu absurzi — să reflecte greșeli tipice de înțelegere.\n"
                             "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
-                            "Niciun câmp nu poate fi gol (\"\"), null, sau listă vidă ([]). "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
                             "Conținutul HTML nu poate fi gol. Mini quiz-ul trebuie să conțină exact "
                             "3 întrebări, fiecare cu exact 4 opțiuni și un răspuns corect specificat "
                             "— nu lăsa absolut nimic necompletat.\n"
@@ -207,7 +207,7 @@ async def _generate_chapter_quiz(
                             "- Distractorii (răspunsurile greșite) trebuie să fie plauzibili, "
                             "nu absurzi — să reflecte greșeli tipice de înțelegere.\n"
                             "OBLIGATORIU — CÂMPURI COMPLETE: Fiecare câmp din răspuns trebuie completat. "
-                            "Niciun câmp nu poate fi gol (\"\"), null, sau listă vidă ([]). "
+                            'Niciun câmp nu poate fi gol (""), null, sau listă vidă ([]). '
                             "Quiz-ul trebuie să conțină exact 10 întrebări, fiecare cu exact 4 opțiuni "
                             "și un răspuns corect specificat — nu lăsa absolut nimic necompletat.\n"
                             "TOTUL ÎN ROMÂNĂ."
