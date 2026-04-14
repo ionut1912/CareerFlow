@@ -1,16 +1,13 @@
+
 using System.Text.Json.Serialization;
 using CareerFlow.Core.Application.Dtos;
-<<<<<<< HEAD
-using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Application.Requests.Account;
 using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Application.Requests.UserProfile;
-using CareerFlow.Core.Domain.Entities;
-=======
-using CareerFlow.Core.Application.Requests.Account;
-using CareerFlow.Core.Application.Requests.LegalDoc;
-using CareerFlow.Core.Application.Requests.UserProfile;
->>>>>>> master
+using ForgotPasswordRequest = Microsoft.AspNetCore.Identity.Data.ForgotPasswordRequest;
+using LoginRequest = Microsoft.AspNetCore.Identity.Data.LoginRequest;
+using ResetPasswordRequest = Microsoft.AspNetCore.Identity.Data.ResetPasswordRequest;
+
 
 namespace CareerFlow.Core.Application.Serialization;
 

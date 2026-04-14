@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.Validators.Course;
+using CareerFlow.Core.Domain.Models.Course.Dto;
 using FluentValidation.TestHelper;
 using Microsoft.AspNetCore.Http;
 using Moq;
@@ -12,19 +13,20 @@ public class UploadCourseDocumentCommandValidatorTests
 {
     private readonly UploadCourseDocumentCommandValidator _sut = new();
 
-    private static IFormFileCollection CreateMockFiles(int count = 1)
+    private static List<UploadFileDto> CreateMockFiles(int count = 1)
     {
-        var collection = new FormFileCollection();
-        
+        var files = new List<UploadFileDto>();
+
         for (int i = 0; i < count; i++)
         {
-            var fileMock = new Mock<IFormFile>();
-            fileMock.Setup(f => f.Length).Returns(100);
-            fileMock.Setup(f => f.FileName).Returns($"test{i}.pdf");
-            collection.Add(fileMock.Object);
+            files.Add(new UploadFileDto(
+                FileName: $"test{i}.pdf",
+                ContentType: "application/pdf",
+                Content: new MemoryStream([1, 2, 3])
+            ));
         }
 
-        return collection;
+        return files;
     }
 
     [Fact]

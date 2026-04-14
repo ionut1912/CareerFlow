@@ -13,14 +13,10 @@ public class GoogleMobileLoginQueryHandler
         _socialService = socialService;
     }
 
-<<<<<<< HEAD
-    public async  Task<string> Handle(GoogleMobileLoginQuery request, CancellationToken cancellationToken)
-    {
-        return  await Task.FromResult( _socialService.GoogleMobileLogin(request.ReturnUrl));
-=======
+
     public async Task<string> Handle(GoogleMobileLoginQuery request, CancellationToken cancellationToken)
     {
         return await Task.FromResult(_socialService.GoogleMobileLogin(request.ReturnUrl));
->>>>>>> master
+
     }
 }

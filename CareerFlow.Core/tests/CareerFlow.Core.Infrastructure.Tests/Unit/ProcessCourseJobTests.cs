@@ -3,6 +3,7 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Responses;
+using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
 using Microsoft.Extensions.Logging;
@@ -10,7 +11,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Test.Unit;
+namespace CareerFlow.Core.Infrastructure.Tests.Unit;
 
 public class ProcessCourseJobTests
 {
@@ -89,16 +90,13 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_JobNotFound_LogsWarning()
     {
-        // Arrange
         var jobId = Guid.NewGuid();
         _jobRepoMock.Setup(r => r.GetByIdAsync(jobId, It.IsAny<CancellationToken>(),
                 It.IsAny<System.Linq.Expressions.Expression<Func<CourseJob, object>>[]>()))
             .ReturnsAsync((CourseJob?)null);
 
-        // Act
         await _sut.ExecuteAsync(jobId, Guid.NewGuid(), CancellationToken.None);
 
-        // Assert
         _loggerMock.Verify(
             x => x.Log(LogLevel.Warning, It.IsAny<EventId>(),
                 It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains(jobId.ToString())),
@@ -110,66 +108,58 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_JobNotFound_DoesNotCallStorage()
     {
-        // Arrange
         _jobRepoMock.Setup(r => r.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>(),
                 It.IsAny<System.Linq.Expressions.Expression<Func<CourseJob, object>>[]>()))
             .ReturnsAsync((CourseJob?)null);
 
-        // Act
         await _sut.ExecuteAsync(Guid.NewGuid(), Guid.NewGuid(), CancellationToken.None);
 
-        // Assert
         _storageMock.Verify(s => s.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ExecuteAsync_AnalyzerThrows_SetsJobToFailed()
     {
-        // Arrange
         var (job, jobId, userId) = SetupJobWithUpload();
         SetupCacheMiss();
         _storageMock.Setup(s => s.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream(new byte[] { 1 }));
-        _analyzerMock.Setup(a => a.AnalyzeDocumentAsync(It.IsAny<Microsoft.AspNetCore.Http.IFormFile>(), It.IsAny<CancellationToken>()))
+        _analyzerMock
+            .Setup(a => a.AnalyzeDocumentAsync(It.IsAny<UploadFileDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("AI down"));
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        // Act
         await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.ExecuteAsync(jobId, userId, CancellationToken.None));
 
-        // Assert
         job.Status.ShouldBe(JobStatus.Failed);
     }
 
     [Fact]
     public async Task ExecuteAsync_AnalyzerThrows_SetsErrorMessage()
     {
-        // Arrange
         var (job, jobId, userId) = SetupJobWithUpload();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((DocumentProcessingResponse)null!);
         _storageMock.Setup(s => s.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new MemoryStream(new byte[] { 1 }));
-        _analyzerMock.Setup(a => a.AnalyzeDocumentAsync(It.IsAny<Microsoft.AspNetCore.Http.IFormFile>(), It.IsAny<CancellationToken>()))
+        _analyzerMock
+            .Setup(a => a.AnalyzeDocumentAsync(It.IsAny<UploadFileDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("AI service down"));
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        // Act
         var exception = await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.ExecuteAsync(jobId, userId, CancellationToken.None));
 
-        // Assert
         exception.Message.ShouldBe("AI service down");
-        job.ErrorMessage.ShouldContain("AI service down");
+        job.ErrorMessage!.ShouldContain("AI service down");
         job.Status.ShouldBe(JobStatus.Failed);
     }
 
     [Fact]
     public async Task ExecuteAsync_DocumentCacheHit_SkipsStorage()
     {
-        // Arrange
         var (_, jobId, userId) = SetupJobWithUpload();
         var docResponse = BuildDocumentResponse();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -181,17 +171,14 @@ public class ProcessCourseJobTests
             .ReturnsAsync(Guid.NewGuid());
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        // Act
         await _sut.ExecuteAsync(jobId, userId, CancellationToken.None);
 
-        // Assert
         _storageMock.Verify(s => s.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
     public async Task ExecuteAsync_SuccessfulExecution_SetsCourseIdOnJob()
     {
-        // Arrange
         var courseId = Guid.NewGuid();
         var (job, jobId, userId) = SetupJobWithUpload();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
@@ -203,10 +190,8 @@ public class ProcessCourseJobTests
             .ReturnsAsync(courseId);
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        // Act
         await _sut.ExecuteAsync(jobId, userId, CancellationToken.None);
 
-        // Assert
         job.CourseId.ShouldBe(courseId);
         job.Status.ShouldBe(JobStatus.Done);
     }
@@ -214,7 +199,6 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_SuccessfulExecution_CallsPersistenceService()
     {
-        // Arrange
         var (_, jobId, userId) = SetupJobWithUpload();
         _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(BuildDocumentResponse());
@@ -225,10 +209,8 @@ public class ProcessCourseJobTests
             .ReturnsAsync(Guid.NewGuid());
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-        // Act
         await _sut.ExecuteAsync(jobId, userId, CancellationToken.None);
 
-        // Assert
         _persistenceMock.Verify(p => p.PersistAsync(userId, It.IsAny<string>(),
             It.IsAny<List<CareerFlow.Core.Domain.Models.Assembly.ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()),
             Times.Once);
@@ -240,13 +222,13 @@ public class ProcessCourseJobTests
         var userId = Guid.NewGuid();
         var upload = CourseUpload.Create(userId, "Course", "file.pdf", "storage/file.pdf", "pdf");
         var job = CourseJob.Create(upload.Id, "pending");
-        
+
         typeof(CourseJob).GetProperty(nameof(CourseJob.Upload))?.SetValue(job, upload);
 
         _jobRepoMock.Setup(r => r.GetByIdAsync(jobId, It.IsAny<CancellationToken>(),
                 It.IsAny<System.Linq.Expressions.Expression<Func<CourseJob, object>>[]>()))
             .ReturnsAsync(job);
-        
+
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
         return (job, jobId, userId);
@@ -264,12 +246,11 @@ public class ProcessCourseJobTests
     {
         var analysis = new DocumentAnalysisDto("Test Title", "Test Summary", ["Topic 1", "Topic 2"]);
         var skeleton = new SkeletonDto("Test Topic", []);
-    
+
         return new DocumentProcessingResponse(
-            Guid.NewGuid().ToString(), 
-            analysis, 
-            skeleton, 
-            5 
-        );
+            Guid.NewGuid().ToString(),
+            analysis,
+            skeleton,
+            5);
     }
 }

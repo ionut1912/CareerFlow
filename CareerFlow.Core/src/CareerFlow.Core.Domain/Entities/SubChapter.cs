@@ -25,11 +25,11 @@ public class SubChapter : Entity
         TheoryHtml = theoryHtml;
     }
 
-    public string Title { get; private set; }
-    public string Summary { get; private set; }
-    public string TheoryHtml { get; private set; }
+    public string Title { get; private set; } = string.Empty;
+    public string Summary { get; private set; } = string.Empty;
+    public string TheoryHtml { get; private set; } = string.Empty;
     public Guid ChapterId { get; private set; }
-    public Chapter Chapter { get; private set; }
+    public Chapter? Chapter { get; private set; }
 
     public static SubChapter Create(string title, string summary, string theoryHtml)
     {

@@ -2,11 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-<<<<<<< HEAD
-namespace CareerFlow.Core.Infrastructure.Test.Setup;
-=======
 namespace CareerFlow.Core.Infrastructure.Tests.Setup;
->>>>>>> master
 
 [Collection("RepositoryCollection")]
 public abstract class BaseRepositoryTest : IAsyncLifetime

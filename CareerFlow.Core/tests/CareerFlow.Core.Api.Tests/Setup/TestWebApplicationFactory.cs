@@ -39,16 +39,16 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         // Core Connections
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", DbConnectionString);
-        
+
         // Fix for Redis error: Mapping Redis container connection string to Redis:ConnectionString
         Environment.SetEnvironmentVariable("Redis__ConnectionString", _redisContainer.GetConnectionString());
-        
+
         // RabbitMQ
         Environment.SetEnvironmentVariable("RabbitMQ__Host", _rabbitContainer.Hostname);
         Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString());
         Environment.SetEnvironmentVariable("RabbitMQ__Username", "rabbitmq");
         Environment.SetEnvironmentVariable("RabbitMQ__Password", "rabbitmq");
-        
+
         // JWT & OpenAI
         Environment.SetEnvironmentVariable("JwtSettings__Key", "testjwtsuperlongkeyforauthentication");
         Environment.SetEnvironmentVariable("JwtSettings__Issuer", "testjwtissuer");

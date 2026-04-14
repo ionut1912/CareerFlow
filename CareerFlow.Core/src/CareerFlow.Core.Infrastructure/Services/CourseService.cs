@@ -6,28 +6,29 @@ using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
-using CareerFlow.Core.Domain.Models.Course;
+using CareerFlow.Core.Domain.Models.Course.Dto;
+using CareerFlow.Core.Domain.Models.Course.Response;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Mappers;
 using Hangfire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using ChapterExpandResponse = CareerFlow.Core.Domain.Models.Responses.ChapterExpandResponse;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
 public sealed class CourseService : ICourseService
 {
-    private readonly IChapterRepository _chapterRepository;
+    private readonly IAnalyzerService _analyzer;
     private readonly ICacheService _cacheService;
-    private readonly ILogger<CourseService> _logger;
+    private readonly IChapterRepository _chapterRepository;
     private readonly ICourseJobRepository _courseJobRepository;
+    private readonly ICoursePersistenceService _coursePersistenceService;
     private readonly ICourseUploadsRepository _courseUploadsRepository;
     private readonly IBackgroundJobClient _jobClient;
+    private readonly ILogger<CourseService> _logger;
     private readonly IStorageService _storage;
-    private readonly IAnalyzerService _analyzer;
     private readonly IUnitOfWork _uow;
     private readonly IUserProfileRepository _userProfileRepository;
-    private readonly ICoursePersistenceService _coursePersistenceService;
 
     public CourseService(
         IStorageService storage,
@@ -68,12 +69,13 @@ public sealed class CourseService : ICourseService
     }
 
     public async Task<UploadCoursesResponse> UploadManyAsync(
-        Guid userId, IFormFileCollection files, string title, CancellationToken ct = default)
+        Guid userId, IEnumerable<UploadFileDto> files, string title, CancellationToken ct = default)
     {
-        var (valid, errors) = ValidateFiles(files);
+        var fileList = files.ToList();
+        var (valid, errors) = ValidateFiles(fileList);
 
         if (valid.Count == 0)
-            return new UploadCoursesResponse([], files.Count, 0, files.Count, errors);
+            return new UploadCoursesResponse([], fileList.Count, 0, fileList.Count, errors);
 
         var uploads = new List<CourseUpload>();
         var jobs = new List<CourseJob>();
@@ -99,7 +101,7 @@ public sealed class CourseService : ICourseService
             .Zip(uploads, (job, upload) => new CourseJobSummaryDto(job.Id, upload.FileName, "Pending"))
             .ToList();
 
-        return new UploadCoursesResponse(summaries, files.Count, valid.Count, errors.Count, errors);
+        return new UploadCoursesResponse(summaries, fileList.Count, valid.Count, errors.Count, errors);
     }
 
     public async Task FinishChapterAsync(Guid userId, Guid courseId, Guid chapterId, CancellationToken ct = default)
@@ -167,20 +169,20 @@ public sealed class CourseService : ICourseService
         return result;
     }
 
-    private static (List<IFormFile> Valid, List<string> Errors) ValidateFiles(IFormFileCollection files)
+    private static (List<UploadFileDto> Valid, List<string> Errors) ValidateFiles(List<UploadFileDto> files)
     {
-        var valid = new List<IFormFile>();
+        var valid = new List<UploadFileDto>();
         var errors = new List<string>();
 
         foreach (var file in files)
         {
             var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
-            if (file.Length == 0)
+            if (file.Content.Length == 0)
                 errors.Add($"{file.FileName}: file is empty.");
             else if (!CourseConstants.AllowedExtensions.Contains(extension))
                 errors.Add($"{file.FileName}: only PDF, DOC and DOCX files are allowed.");
-            else if (file.Length > CourseConstants.MaxFileSizeBytes)
+            else if (file.Content.Length > CourseConstants.MaxFileSizeBytes)
                 errors.Add($"{file.FileName}: exceeds 20MB limit.");
             else if (valid.Count >= CourseConstants.MaxFiles)
                 errors.Add($"{file.FileName}: max {CourseConstants.MaxFiles} files per request.");
@@ -192,11 +194,10 @@ public sealed class CourseService : ICourseService
     }
 
     private async Task<(string FileName, string FileKey, string Extension)> UploadSingleAsync(
-        IFormFile file, CancellationToken ct)
+        UploadFileDto file, CancellationToken ct)
     {
         var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        await using var stream = file.OpenReadStream();
-        var key = await _storage.UploadAsync(stream, file.FileName, file.ContentType, ct);
+        var key = await _storage.UploadAsync(file.Content, file.FileName, file.ContentType, ct);
         return (file.FileName, key, extension);
     }
 }

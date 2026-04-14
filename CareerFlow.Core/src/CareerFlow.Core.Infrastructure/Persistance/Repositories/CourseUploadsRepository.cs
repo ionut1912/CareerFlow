@@ -5,11 +5,13 @@ using Shared.Infra.Services;
 
 namespace CareerFlow.Core.Infrastructure.Persistance.Repositories;
 
-public class CourseUploadsRepository(DbSet<CourseUpload> dbSet)
-    : GenericRepository<CourseUpload>(dbSet), ICourseUploadsRepository
+public class CourseUploadsRepository(DbSet<CourseUpload> uploads)
+    : GenericRepository<CourseUpload>(uploads), ICourseUploadsRepository
 {
+    private readonly DbSet<CourseUpload> _uploads = uploads;
+
     public async Task AddRangeAsync(List<CourseUpload> courseUploads, CancellationToken cancellationToken)
     {
-        await dbSet.AddRangeAsync(courseUploads, cancellationToken);
+        await _uploads.AddRangeAsync(courseUploads, cancellationToken);
     }
 }

@@ -1,9 +1,5 @@
 ﻿using CareerFlow.Core.Infrastructure.Persistance.Repositories;
-<<<<<<< HEAD
-using CareerFlow.Core.Infrastructure.Test.Setup;
-=======
 using CareerFlow.Core.Infrastructure.Tests.Setup;
->>>>>>> master
 using Shouldly;
 using Xunit;
 

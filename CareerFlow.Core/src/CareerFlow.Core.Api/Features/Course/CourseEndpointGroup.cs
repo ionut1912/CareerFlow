@@ -1,8 +1,9 @@
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests;
 using CareerFlow.Core.Application.Requests.Course;
-using CareerFlow.Core.Domain.Abstractions.Services;
+
 using CareerFlow.Core.Domain.Models.Course;
+using CareerFlow.Core.Domain.Models.Course.Response;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;

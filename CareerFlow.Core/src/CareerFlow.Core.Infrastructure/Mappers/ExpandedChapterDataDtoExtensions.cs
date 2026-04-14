@@ -5,8 +5,9 @@ namespace CareerFlow.Core.Infrastructure.Mappers;
 
 public static class ExpandedChapterDataDtoExtensions
 {
-    public static List<ChapterAssemblyModel> ToAssemblyModels(this List<ExpandedChapterDataDto> data) =>
-        data.Select(ch => new ChapterAssemblyModel(
+    public static List<ChapterAssemblyModel> ToAssemblyModels(this List<ExpandedChapterDataDto> data)
+    {
+        return data.Select(ch => new ChapterAssemblyModel(
             ch.Day,
             ch.Title,
             ch.CoreConcept,
@@ -18,7 +19,11 @@ public static class ExpandedChapterDataDtoExtensions
             )).ToList(),
             ch.Details.RecapQuiz?.Select(ToQuizItem).ToList() ?? []
         )).ToList();
+    }
 
-    private static QuizItemAssemblyModel ToQuizItem(QuestionDto q) =>
-        new(q.Question, q.Options.Select(o => new QuizOptionAssemblyModel(o.Label, o.IsCorrect)).ToList());
+    private static QuizItemAssemblyModel ToQuizItem(QuestionDto q)
+    {
+        return new QuizItemAssemblyModel(q.Question,
+            q.Options.Select(o => new QuizOptionAssemblyModel(o.Label, o.IsCorrect)).ToList());
+    }
 }

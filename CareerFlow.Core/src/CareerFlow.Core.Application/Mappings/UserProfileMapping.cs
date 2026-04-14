@@ -1,9 +1,7 @@
+
+
 using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Application.Dtos;
-<<<<<<< HEAD
-using CareerFlow.Core.Application.Requests;
-=======
->>>>>>> master
 using CareerFlow.Core.Application.Requests.UserProfile;
 using CareerFlow.Core.Domain.Entities;
 

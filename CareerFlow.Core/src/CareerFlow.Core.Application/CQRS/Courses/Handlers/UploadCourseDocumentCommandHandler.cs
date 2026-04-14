@@ -1,6 +1,7 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.Course;
+using CareerFlow.Core.Domain.Models.Course.Response;
 
 namespace CareerFlow.Core.Application.CQRS.Courses.Handlers;
 

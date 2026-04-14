@@ -2,11 +2,9 @@
 using CareerFlow.Core.Infrastructure.Persistance.Configurations;
 using Microsoft.EntityFrameworkCore;
 
-<<<<<<< HEAD
-namespace CareerFlow.Core.Infrastructure.Test.Setup;
-=======
+
 namespace CareerFlow.Core.Infrastructure.Tests.Setup;
->>>>>>> master
+
 
 public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options) : DbContext(options)
 {

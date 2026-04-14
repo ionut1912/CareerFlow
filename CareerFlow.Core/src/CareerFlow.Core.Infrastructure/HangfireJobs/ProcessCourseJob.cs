@@ -5,10 +5,11 @@ using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
+using CareerFlow.Core.Domain.Models.Course.Dto;
+using CareerFlow.Core.Domain.Models.Responses;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Mappers;
 using Hangfire;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.HangfireJobs;
@@ -96,9 +97,8 @@ public sealed class ProcessCourseJob
             return cached;
         }
 
-        var fileBytes = await DownloadFileBytesAsync(upload.FileKey, ct);
-        var formFile = CreateFormFile(fileBytes, upload.FileName);
-        var response = await _analyzer.AnalyzeDocumentAsync(formFile, ct);
+        var uploadFile = await DownloadAsUploadFileModelAsync(upload, ct);
+        var response = await _analyzer.AnalyzeDocumentAsync(uploadFile, ct);
 
         await _cache.SetAsync(cacheKey, response, TimeSpan.FromHours(2), ct);
         return response;
@@ -119,43 +119,35 @@ public sealed class ProcessCourseJob
         var concurrentChapters = new ConcurrentBag<ExpandedChapterDataDto>();
         var parallelOptions = new ParallelOptions { MaxDegreeOfParallelism = 6, CancellationToken = ct };
 
-        await Parallel.ForEachAsync(documentResponse.Skeleton.Chapters, parallelOptions, async (chapterSkeleton, token) =>
-        {
-            var request = new DocumentChapterRequest(
-                chapterSkeleton.Title,
-                chapterSkeleton.CoreConcept,
-                documentResponse.DocumentId);
+        await Parallel.ForEachAsync(documentResponse.Skeleton.Chapters, parallelOptions,
+            async (chapterSkeleton, token) =>
+            {
+                var request = new DocumentChapterRequest(
+                    chapterSkeleton.Title,
+                    chapterSkeleton.CoreConcept,
+                    documentResponse.DocumentId);
 
-            var detail = await _analyzer.ExpandAnalyzedDocument(request, token);
+                var detail = await _analyzer.ExpandAnalyzedDocument(request, token);
 
-            concurrentChapters.Add(new ExpandedChapterDataDto(
-                chapterSkeleton.Day,
-                chapterSkeleton.Title,
-                chapterSkeleton.CoreConcept,
-                detail));
-        });
+                concurrentChapters.Add(new ExpandedChapterDataDto(
+                    chapterSkeleton.Day,
+                    chapterSkeleton.Title,
+                    chapterSkeleton.CoreConcept,
+                    detail));
+            });
 
         var result = concurrentChapters.OrderBy(c => c.Day).ToList();
         await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(2), ct);
         return result;
     }
 
-    private async Task<byte[]> DownloadFileBytesAsync(string fileKey, CancellationToken ct)
+    private async Task<UploadFileDto> DownloadAsUploadFileModelAsync(CourseUpload upload, CancellationToken ct)
     {
-        await using var stream = await _storage.DownloadAsync(fileKey, ct);
+        var stream = await _storage.DownloadAsync(upload.FileKey, ct);
         var ms = new MemoryStream();
         await stream.CopyToAsync(ms, ct);
-        return ms.ToArray();
-    }
-
-    private static IFormFile CreateFormFile(byte[] bytes, string fileName)
-    {
-        var ms = new MemoryStream(bytes);
-        return new FormFile(ms, 0, ms.Length, "file", fileName)
-        {
-            Headers = new HeaderDictionary(),
-            ContentType = "application/octet-stream"
-        };
+        ms.Position = 0;
+        return new UploadFileDto(upload.FileName, "application/octet-stream", ms);
     }
 
     private async Task UpdateJobStatusAsync(CourseJob job, JobStatus status, CancellationToken ct)

@@ -1,9 +1,4 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
-<<<<<<< HEAD
-using CareerFlow.Core.Domain.Abstractions.Services;
-using Microsoft.AspNetCore.Mvc;
-=======
->>>>>>> master
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 using Wolverine;
@@ -49,11 +44,8 @@ public class SocialEndpointGroup : EndpointGroup
     }
 
     private static async Task<IResult> LinkedInMobileCallback(
-<<<<<<< HEAD
-        [AsParameters]  LinkedInMobileCallbackQuery query,
-=======
+
         [AsParameters] LinkedInMobileCallbackQuery query,
->>>>>>> master
         IMessageBus messageBus,
         CancellationToken cancellationToken)
     {

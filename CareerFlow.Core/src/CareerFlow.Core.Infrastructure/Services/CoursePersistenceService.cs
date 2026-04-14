@@ -10,9 +10,9 @@ namespace CareerFlow.Core.Infrastructure.Services;
 public sealed class CoursePersistenceService : ICoursePersistenceService
 {
     private readonly ICourseRepository _courseRepository;
-    private readonly IUserProfileRepository _userProfileRepository;
     private readonly IQuizRepository _quizRepository;
     private readonly IUnitOfWork _uow;
+    private readonly IUserProfileRepository _userProfileRepository;
 
     public CoursePersistenceService(
         ICourseRepository courseRepository,
@@ -31,7 +31,8 @@ public sealed class CoursePersistenceService : ICoursePersistenceService
         _uow = uow;
     }
 
-    public async Task<Guid> PersistAsync(Guid userId, string topic, List<ChapterAssemblyModel> assemblyData, CancellationToken ct = default)
+    public async Task<Guid> PersistAsync(Guid userId, string topic, List<ChapterAssemblyModel> assemblyData,
+        CancellationToken ct = default)
     {
         var chapters = CourseAssembler.BuildChapters(assemblyData);
         var course = Course.Create(topic, chapters);

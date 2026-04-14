@@ -43,3 +43,5 @@ CareerFlow.AI/app/document_reader/__pycache__/*
 CareerFlow.AI/tests/__pycache__/*
 CareerFlow.AI/tests/integration/__pycache__/*
 CareerFlow.AI/tests/integration/document_reader/__pycache__/*
+CareerFlow.Core/tests/CareerFlow.Core.Domain.Tests/obj/*
+CareerFlow.Core/tests/CareerFlow.Core.Domain.Tests/bin/Debug/*

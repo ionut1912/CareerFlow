@@ -1,11 +1,7 @@
 ﻿using Testcontainers.PostgreSql;
 using Xunit;
 
-<<<<<<< HEAD
-namespace CareerFlow.Core.Infrastructure.Test.Setup;
-=======
 namespace CareerFlow.Core.Infrastructure.Tests.Setup;
->>>>>>> master
 
 public class IntegrationTestFixture : IAsyncLifetime
 {

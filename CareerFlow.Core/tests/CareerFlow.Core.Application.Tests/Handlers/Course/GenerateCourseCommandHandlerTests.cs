@@ -1,9 +1,11 @@
+
+
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.CQRS.Courses.Handlers;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
-using CareerFlow.Core.Domain.Models.AI.Dto; // Added missing using directive
 using Moq;
 using Shouldly;
 
