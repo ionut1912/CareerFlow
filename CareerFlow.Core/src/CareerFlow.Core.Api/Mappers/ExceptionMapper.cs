@@ -23,6 +23,7 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
         {
             ValidationException ex => CreateFromFluent(ex),
             InvalidLearningTypeException ex => Create(400, "Invalid Learning Type", ex.Message),
+            InvalidJobStatusException ex => Create(400, "Invalid Job Status", ex.Message),
             UserTypeAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
             DomainAlreadyExistsException ex => Create(400, "Domain Already Exists", ex.Message),
             UserProfileNotFoundException ex => Create(404, "User Profile Not Found", ex.Message),
@@ -38,6 +39,7 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
             LegalDocInvalidTypeException ex => Create(400, "Legal Doc Invalid Type", ex.Message),
             LegalDocNotFoundException ex => Create(404, "Legal Doc Not Found", ex.Message),
+            ChapterNotFoundException ex => Create(404, "Chapter Not Found", ex.Message),
             CustomValidationException ex => CreateValidation(ex),
 
             _ => Create(500, "Internal Server Error", "An unexpected error occurred")
