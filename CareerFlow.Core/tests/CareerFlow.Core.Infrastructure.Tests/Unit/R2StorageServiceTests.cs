@@ -88,8 +88,8 @@ public class R2StorageServiceTests
         _s3.Setup(s => s.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new AmazonS3Exception("S3 error"));
 
-        await Should.ThrowAsync<AmazonS3Exception>(
-            () => _sut.UploadAsync(new MemoryStream([1]), "doc.pdf", "application/pdf"));
+        await Should.ThrowAsync<AmazonS3Exception>(() =>
+            _sut.UploadAsync(new MemoryStream([1]), "doc.pdf", "application/pdf"));
     }
 
     // -------------------------------------------------------------------------
@@ -127,8 +127,7 @@ public class R2StorageServiceTests
         _s3.Setup(s => s.GetObjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new AmazonS3Exception("Not found"));
 
-        await Should.ThrowAsync<AmazonS3Exception>(
-            () => _sut.DownloadAsync("courses/missing/doc.pdf"));
+        await Should.ThrowAsync<AmazonS3Exception>(() => _sut.DownloadAsync("courses/missing/doc.pdf"));
     }
 
     // -------------------------------------------------------------------------
@@ -153,8 +152,7 @@ public class R2StorageServiceTests
         _s3.Setup(s => s.DeleteObjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new AmazonS3Exception("Delete failed"));
 
-        await Should.ThrowAsync<AmazonS3Exception>(
-            () => _sut.DeleteAsync("courses/abc/doc.pdf"));
+        await Should.ThrowAsync<AmazonS3Exception>(() => _sut.DeleteAsync("courses/abc/doc.pdf"));
     }
 
     [Fact]
@@ -166,6 +164,7 @@ public class R2StorageServiceTests
         await _sut.DeleteAsync("courses/abc/doc.pdf");
 
         _s3.Verify(s => s.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()), Times.Never);
-        _s3.Verify(s => s.GetObjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()), Times.Never);
+        _s3.Verify(s => s.GetObjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()),
+            Times.Never);
     }
 }

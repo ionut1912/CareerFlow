@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Runtime.CompilerServices;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
@@ -9,7 +11,6 @@ using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Assembly;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.ValueObjects;
-using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Services;
 using Hangfire;
 using Hangfire.Common;
@@ -33,10 +34,10 @@ public class CourseServiceTests
     private readonly Mock<IBackgroundJobClient> _jobClient = new();
     private readonly Mock<ILogger<CourseService>> _logger = new();
     private readonly Mock<IStorageService> _storage = new();
-    private readonly Mock<IUnitOfWork> _uow = new();
-    private readonly Mock<IUserProfileRepository> _userProfileRepository = new();
 
     private readonly CourseService _sut;
+    private readonly Mock<IUnitOfWork> _uow = new();
+    private readonly Mock<IUserProfileRepository> _userProfileRepository = new();
 
     public CourseServiceTests()
     {
@@ -62,20 +63,31 @@ public class CourseServiceTests
     private static UploadFileDto CreateFile(
         string fileName = "test.pdf",
         string contentType = "application/pdf",
-        byte[]? content = null) =>
-        new(fileName, contentType, new MemoryStream(content ?? [1, 2, 3]));
+        byte[]? content = null)
+    {
+        return new UploadFileDto(fileName, contentType, new MemoryStream(content ?? [1, 2, 3]));
+    }
 
-    private static UploadFileDto EmptyFile(string fileName = "empty.pdf") =>
-        new(fileName, "application/pdf", new MemoryStream([]));
+    private static UploadFileDto EmptyFile(string fileName = "empty.pdf")
+    {
+        return new UploadFileDto(fileName, "application/pdf", new MemoryStream([]));
+    }
 
-    private static UploadFileDto OversizedFile(string fileName = "big.pdf") =>
-        new(fileName, "application/pdf", new MemoryStream(new byte[CourseConstants.MaxFileSizeBytes + 1]));
+    private static UploadFileDto OversizedFile(string fileName = "big.pdf")
+    {
+        return new UploadFileDto(fileName, "application/pdf",
+            new MemoryStream(new byte[CourseConstants.MaxFileSizeBytes + 1]));
+    }
 
-    private static UploadFileDto DisallowedFile(string fileName = "virus.exe") =>
-        new(fileName, "application/octet-stream", new MemoryStream([1, 2, 3]));
+    private static UploadFileDto DisallowedFile(string fileName = "virus.exe")
+    {
+        return new UploadFileDto(fileName, "application/octet-stream", new MemoryStream([1, 2, 3]));
+    }
 
-    private static UserProfile CreateProfile(Guid userId) =>
-        UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
+    private static UserProfile CreateProfile(Guid userId)
+    {
+        return UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
+    }
 
     private static UserProfile CreateProfileEnrolledIn(Guid userId, Course course)
     {
@@ -94,12 +106,12 @@ public class CourseServiceTests
     }
 
     /// <summary>
-    /// Instantiates SubChapter via reflection since it has a private constructor.
-    /// Adjust the field assignments if SubChapter's internals change.
+    ///     Instantiates SubChapter via reflection since it has a private constructor.
+    ///     Adjust the field assignments if SubChapter's internals change.
     /// </summary>
     private static SubChapter CreateSubChapter()
     {
-        var subChapter = (SubChapter)System.Runtime.CompilerServices.RuntimeHelpers
+        var subChapter = (SubChapter)RuntimeHelpers
             .GetUninitializedObject(typeof(SubChapter));
 
         SetPrivateField(subChapter, "_title", "Intro SubChapter");
@@ -108,23 +120,29 @@ public class CourseServiceTests
         return subChapter;
     }
 
-    private static ChapterExpandResponse CreateChapterExpandResponse() =>
-        new(
+    private static ChapterExpandResponse CreateChapterExpandResponse()
+    {
+        return new ChapterExpandResponse(
             new ChapterDto("Day 1", "Intro", 1),
-            new ExpandedContentDto([]),           // adjust if ExpandedContentDto signature differs
-            [],                                   // List<SubchapterContentDto>
-            []                                    // List<QuestionDto>
+            new ExpandedContentDto([]), // adjust if ExpandedContentDto signature differs
+            [], // List<SubchapterContentDto>
+            [] // List<QuestionDto>
         );
+    }
 
-    private static CourseSkeletonResponse EmptySkeleton() =>
-        new(new SkeletonDto("topic", []), 1);
+    private static CourseSkeletonResponse EmptySkeleton()
+    {
+        return new CourseSkeletonResponse(new SkeletonDto("topic", []), 1);
+    }
 
-    private static CourseSkeletonResponse SkeletonWithChapters(params ChapterDto[] chapters) =>
-        new(new SkeletonDto("Python", [.. chapters]), chapters.Length);
+    private static CourseSkeletonResponse SkeletonWithChapters(params ChapterDto[] chapters)
+    {
+        return new CourseSkeletonResponse(new SkeletonDto("Python", [.. chapters]), chapters.Length);
+    }
 
     /// <summary>
-    /// Sets the Id on an Entity base class via reflection since entity IDs
-    /// are normally assigned by EF — not exposed via constructor.
+    ///     Sets the Id on an Entity base class via reflection since entity IDs
+    ///     are normally assigned by EF — not exposed via constructor.
     /// </summary>
     private static void SetEntityId(Entity entity, Guid id)
     {
@@ -136,7 +154,7 @@ public class CourseServiceTests
     private static void SetPrivateField(object target, string fieldName, object value)
     {
         var field = target.GetType()
-            .GetField(fieldName, System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            .GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
         field?.SetValue(target, value);
     }
 
@@ -164,7 +182,7 @@ public class CourseServiceTests
             r.AddRangeAsync(It.IsAny<List<CourseJob>>(), It.IsAny<CancellationToken>()), Times.Once);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         _jobClient.Verify(j =>
-            j.Create(It.IsAny<Job>(), It.IsAny<IState>()),
+                j.Create(It.IsAny<Job>(), It.IsAny<IState>()),
             Times.Once);
     }
 
@@ -180,7 +198,7 @@ public class CourseServiceTests
 
         result.Accepted.ShouldBe(3);
         _jobClient.Verify(j =>
-            j.Create(It.IsAny<Job>(), It.IsAny<IState>()),
+                j.Create(It.IsAny<Job>(), It.IsAny<IState>()),
             Times.Exactly(3));
     }
 
@@ -196,7 +214,7 @@ public class CourseServiceTests
             r.AddRangeAsync(It.IsAny<List<CourseUpload>>(), It.IsAny<CancellationToken>()), Times.Never);
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
         _jobClient.Verify(j =>
-            j.Create(It.IsAny<Job>(), It.IsAny<IState>()),
+                j.Create(It.IsAny<Job>(), It.IsAny<IState>()),
             Times.Never);
     }
 
@@ -220,7 +238,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_EmptyFileContent_AddsError()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [EmptyFile("empty.pdf")], "Course");
+        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [EmptyFile()], "Course");
 
         result.Errors.ShouldContain(e => e.Contains("empty.pdf") && e.Contains("empty"));
     }
@@ -228,7 +246,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_OversizedFile_AddsError()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [OversizedFile("big.pdf")], "Course");
+        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [OversizedFile()], "Course");
 
         result.Errors.ShouldContain(e => e.Contains("big.pdf") && e.Contains("20MB"));
     }
@@ -236,7 +254,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_DisallowedExtension_AddsError()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [DisallowedFile("virus.exe")], "Course");
+        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [DisallowedFile()], "Course");
 
         result.Errors.ShouldContain(e => e.Contains("virus.exe"));
     }
@@ -320,8 +338,8 @@ public class CourseServiceTests
                 It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync((UserProfile?)null);
 
-        await Should.ThrowAsync<UserProfileNotFoundException>(
-            () => _sut.FinishChapterAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
+        await Should.ThrowAsync<UserProfileNotFoundException>(() =>
+            _sut.FinishChapterAsync(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid()));
 
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -340,8 +358,8 @@ public class CourseServiceTests
                 It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(false);
 
-        await Should.ThrowAsync<ChapterNotFoundException>(
-            () => _sut.FinishChapterAsync(userId, courseId, Guid.NewGuid()));
+        await Should.ThrowAsync<ChapterNotFoundException>(() =>
+            _sut.FinishChapterAsync(userId, courseId, Guid.NewGuid()));
 
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
@@ -359,8 +377,7 @@ public class CourseServiceTests
                 It.IsAny<Guid>(), courseId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(true);
 
-        await Should.ThrowAsync<InvalidFieldException>(
-            () => _sut.FinishChapterAsync(userId, courseId, Guid.NewGuid()));
+        await Should.ThrowAsync<InvalidFieldException>(() => _sut.FinishChapterAsync(userId, courseId, Guid.NewGuid()));
 
         _uow.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
