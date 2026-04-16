@@ -22,13 +22,25 @@ export function useSocialAuth() {
         try {
           const parsed = Linking.parse(url);
           if (parsed.queryParams?.error) {
-            if (parsed.queryParams?.error === 'duplicate_request') {
+            const errorType = parsed.queryParams.error;
+            const serverMessage = parsed.queryParams.message as string;
+
+            if (errorType === 'session_expired') {
+              Alert.alert(
+                'Sesiune Expirată',
+                'Te rugăm să încerci să te autentifici din nou.',
+              );
               return;
             }
-            Alert.alert(
-              'Sesiune Expirată',
-              'Te rugăm să încerci să te autentifici din nou.',
-            );
+
+            if (errorType === 'server_error' && serverMessage) {
+              Alert.alert('Eroare Server', decodeURIComponent(serverMessage));
+              return;
+            }
+
+            if (errorType === 'duplicate_request') {
+              return;
+            }
             return;
           }
 
@@ -67,10 +79,14 @@ export function useSocialAuth() {
 
   const loginWithGoogle = useCallback(async () => {
     try {
+      const redirectUrl = Linking.createURL('auth/callback');
+      const backendUrl = `${API_URL}/social/auth/google/mobile?returnUrl=${encodeURIComponent(redirectUrl)}`;
+
       const result = await WebBrowser.openAuthSessionAsync(
-        `${API_URL}/social/auth/google/mobile`,
-        'careerflow://auth/callback',
+        backendUrl,
+        redirectUrl,
       );
+
       if (result.type === 'success' && result.url) {
         handleRedirectUrl(result.url);
       }
@@ -81,10 +97,14 @@ export function useSocialAuth() {
 
   const loginWithLinkedin = useCallback(async () => {
     try {
+      const redirectUrl = Linking.createURL('auth/callback');
+      const backendUrl = `${API_URL}/social/auth/linkedin/mobile?returnUrl=${encodeURIComponent(redirectUrl)}`;
+
       const result = await WebBrowser.openAuthSessionAsync(
-        `${API_URL}/social/auth/linkedin/mobile`,
-        'careerflow://auth/callback',
+        backendUrl,
+        redirectUrl,
       );
+
       if (result.type === 'success' && result.url) {
         handleRedirectUrl(result.url);
       }

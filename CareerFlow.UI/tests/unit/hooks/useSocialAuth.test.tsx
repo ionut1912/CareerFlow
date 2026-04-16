@@ -2,9 +2,17 @@ import {renderHook, act} from '@testing-library/react-native';
 import {Platform, Alert} from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Linking from 'expo-linking';
+import {router} from 'expo-router';
 import {useAppDispatch} from '@/store/hook';
 import {loginWithSocialThunk} from '@/store/auth/thunks';
 import {useSocialAuth} from '@/hooks/useSocialAuth';
+
+// 1. Mock expo-router to prevent crashes when router.replace is called
+jest.mock('expo-router', () => ({
+  router: {
+    replace: jest.fn(),
+  },
+}));
 
 jest.mock('@/store/hook', () => ({
   useAppDispatch: jest.fn(),
@@ -26,6 +34,8 @@ jest.mock('expo-web-browser', () => ({
 const mockRemoveListener = jest.fn();
 jest.mock('expo-linking', () => ({
   parse: jest.fn(),
+  // 2. Add createURL mock so it doesn't return undefined
+  createURL: jest.fn(() => 'careerflow://auth/callback'),
   addEventListener: jest.fn(() => ({remove: mockRemoveListener})),
 }));
 
@@ -34,7 +44,13 @@ describe('useSocialAuth', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+
+    // 3. Fix the unwrap() issue by returning a mock promise interface
+    mockDispatch.mockReturnValue({
+      unwrap: jest.fn().mockResolvedValue({}),
+    });
     (useAppDispatch as jest.Mock).mockReturnValue(mockDispatch);
+
     jest.spyOn(console, 'error').mockImplementation(() => {});
     jest.spyOn(Alert, 'alert').mockImplementation(() => {});
     Platform.OS = 'ios';
@@ -54,6 +70,7 @@ describe('useSocialAuth', () => {
     it('handles successful Google login and dispatches tokens', async () => {
       const mockRedirectUrl =
         'careerflow://auth/callback?token=123&refreshToken=abc';
+
       (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValueOnce({
         type: 'success',
         url: mockRedirectUrl,
@@ -70,19 +87,23 @@ describe('useSocialAuth', () => {
         await result.current.loginWithGoogle();
       });
 
+      // 4. Update the expected URL to include the encoded returnUrl
       expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
-        'https://mock-api.com/social/auth/google/mobile',
+        'https://mock-api.com/social/auth/google/mobile?returnUrl=careerflow%3A%2F%2Fauth%2Fcallback',
         'careerflow://auth/callback',
       );
       expect(Linking.parse).toHaveBeenCalledWith(mockRedirectUrl);
       expect(mockDispatch).toHaveBeenCalledWith(
         loginWithSocialThunk({token: '123', refreshToken: 'abc'}),
       );
+      // Verify router.replace was called on success
+      expect(router.replace).toHaveBeenCalledWith('/(auth)/preferences');
     });
 
     it('handles successful LinkedIn login and dispatches tokens', async () => {
       const mockRedirectUrl =
         'careerflow://auth/callback?token=456&refreshToken=def';
+
       (WebBrowser.openAuthSessionAsync as jest.Mock).mockResolvedValueOnce({
         type: 'success',
         url: mockRedirectUrl,
@@ -99,11 +120,13 @@ describe('useSocialAuth', () => {
         await result.current.loginWithLinkedin();
       });
 
+      // 4. Update the expected URL for LinkedIn as well
       expect(WebBrowser.openAuthSessionAsync).toHaveBeenCalledWith(
-        'https://mock-api.com/social/auth/linkedin/mobile',
+        'https://mock-api.com/social/auth/linkedin/mobile?returnUrl=careerflow%3A%2F%2Fauth%2Fcallback',
         'careerflow://auth/callback',
       );
       expect(mockDispatch).toHaveBeenCalledTimes(1);
+      expect(router.replace).toHaveBeenCalledWith('/(auth)/preferences');
     });
 
     it('does not dispatch if the browser session is cancelled or dismissed', async () => {
@@ -163,7 +186,7 @@ describe('useSocialAuth', () => {
       expect(Linking.addEventListener).not.toHaveBeenCalled();
     });
 
-    it('processes incoming Android deep links via the event listener', () => {
+    it('processes incoming Android deep links via the event listener', async () => {
       Platform.OS = 'android';
 
       let registeredCallback: (event: {url: string}) => void = () => {};
@@ -181,8 +204,9 @@ describe('useSocialAuth', () => {
 
       renderHook(() => useSocialAuth());
 
-      act(() => {
-        registeredCallback({
+      // Wrap in act since it triggers state changes/dispatches
+      await act(async () => {
+        await registeredCallback({
           url: 'careerflow://auth/callback?token=android-token&refreshToken=android-refresh',
         });
       });
