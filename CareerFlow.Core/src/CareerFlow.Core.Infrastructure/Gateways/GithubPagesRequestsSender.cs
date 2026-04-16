@@ -6,24 +6,26 @@ namespace CareerFlow.Core.Infrastructure.Gateways;
 
 public class GithubPagesRequestsSender : IGithubPagesRequestsSender
 {
+    private readonly string _privacyUrl;
+    private readonly string _termsUrl;
     private readonly HttpClient _httpClient;
-    private readonly LegalDocSettings _legalDocSettings;
 
     public GithubPagesRequestsSender(HttpClient httpClient, IOptions<LegalDocSettings> legalDocOptions)
     {
         ArgumentNullException.ThrowIfNull(httpClient);
         ArgumentNullException.ThrowIfNull(legalDocOptions);
         _httpClient = httpClient;
-        _legalDocSettings = legalDocOptions.Value;
+        var baseUrl = legalDocOptions.Value.GitHubPagesBaseUrl.TrimEnd('/');
+        _privacyUrl = $"{baseUrl}/privacy.md";
+        _termsUrl = $"{baseUrl}/terms.md";
     }
 
-    public async Task<HttpResponseMessage> GetContentAsync(string type, CancellationToken cancellationToken)
+    public Task<HttpResponseMessage> GetContentAsync(string type, CancellationToken cancellationToken)
     {
-        var baseUrl = _legalDocSettings.GitHubPagesBaseUrl;
-        var fileName = type.ToLower() == "privacy" ? "privacy.md" : "terms.md";
-        var url = $"{baseUrl.TrimEnd('/')}/{fileName}";
+        var url = type.Equals("privacy", StringComparison.OrdinalIgnoreCase)
+            ? _privacyUrl
+            : _termsUrl;
 
-        var response = await _httpClient.GetAsync(url, cancellationToken);
-        return response;
+        return _httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
     }
 }

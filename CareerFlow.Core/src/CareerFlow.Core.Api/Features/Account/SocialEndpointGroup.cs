@@ -1,4 +1,5 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 using Wolverine;
@@ -16,39 +17,39 @@ public class SocialEndpointGroup : EndpointGroup
         group.MapGet("/auth/linkedin/mobile/callback", LinkedInMobileCallback);
     }
 
-    private static async Task<IResult> GoogleMobileLogin(
+    private static async Task<RedirectHttpResult> GoogleMobileLogin(
         [AsParameters] GoogleMobileLoginQuery request,
         IMessageBus messageBus,
         CancellationToken ct)
     {
         var url = await messageBus.InvokeAsync<string>(request, ct);
-        return Results.Redirect(url);
+        return TypedResults.Redirect(url);
     }
 
-    private static async Task<IResult> GoogleMobileCallback(
+    private static async Task<RedirectHttpResult> GoogleMobileCallback(
         [AsParameters] GoogleMobileCallbackQuery query,
         IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
         var url = await messageBus.InvokeAsync<string>(query, cancellationToken);
-        return Results.Redirect(url);
+        return TypedResults.Redirect(url);
     }
 
-    private static async Task<IResult> LinkedInMobileLogin(
+    private static async Task<RedirectHttpResult> LinkedInMobileLogin(
         [AsParameters] LinkedinMobileLoginQuery query,
         IMessageBus messageBus,
         CancellationToken ct)
     {
         var url = await messageBus.InvokeAsync<string>(query, ct);
-        return Results.Redirect(url);
+        return TypedResults.Redirect(url);
     }
 
-    private static async Task<IResult> LinkedInMobileCallback(
+    private static async Task<RedirectHttpResult> LinkedInMobileCallback(
         [AsParameters] LinkedInMobileCallbackQuery query,
         IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
         var url = await messageBus.InvokeAsync<string>(query, cancellationToken);
-        return Results.Redirect(url);
+        return TypedResults.Redirect(url);
     }
 }

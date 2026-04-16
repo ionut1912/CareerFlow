@@ -24,7 +24,7 @@ public class UserProfileRepository(DbSet<UserProfile> dbSet)
             _userProfiles
                 .Include(x => x.Account)
                 .Include(x => x.Courses)
-                .ThenInclude(x => x.Chapters)
+                .ThenInclude(x => x.Chapters.OrderBy(chapter => chapter.Day))
                 .ThenInclude(x => x.SubChapters)
                 .FirstOrDefaultAsync(x => x.AccountId == accountId, cancellationToken);
     }

@@ -11,7 +11,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Unit;
+namespace CareerFlow.Core.Infrastructure.Tests.Unit.HangfireJobs;
 
 public class LegalDocumentCheckerJobTests
 {

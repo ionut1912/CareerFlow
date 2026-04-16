@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Setup;
+namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 
 [Collection("RepositoryCollection")]
 public abstract class BaseRepositoryTest : IAsyncLifetime
@@ -42,6 +42,6 @@ public abstract class BaseRepositoryTest : IAsyncLifetime
 
     protected static Account CreateAccount(string email)
     {
-        return Account.Create(email, "Password1!", "username", "Full Name");
+        return Account.Create(email, "Password1!", Guid.NewGuid().ToString("N")[..20], "Full Name");
     }
 }

@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.Legal.Queries;
 using CareerFlow.Core.Domain.Models.Legal;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
 using Wolverine;
@@ -14,10 +15,11 @@ public class LegalEndpointGroup : EndpointGroup
         group.MapGet(GetLegalDoc);
     }
 
-    private async Task<IResult> GetLegalDoc(IMessageBus bus, string type, CancellationToken cancellationToken)
+    private async Task<Ok<LegalDocumentResponse>> GetLegalDoc(IMessageBus bus, string type,
+        CancellationToken cancellationToken)
     {
         var getLegalDocQuery = new GetLegalDocQuery(type);
         var response = await bus.InvokeAsync<LegalDocumentResponse>(getLegalDocQuery, cancellationToken);
-        return Results.Ok(response);
+        return TypedResults.Ok(response);
     }
 }
