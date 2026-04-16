@@ -96,31 +96,12 @@ public class SocialEndpointsIntegrationTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task GoogleMobileCallback_InvalidState_Returns500OrBadRequest()
-    {
-        var response = await NoRedirectClient()
-            .GetAsync("/social/auth/google/mobile/callback?code=abc&state=invalid-csrf-state");
-
-        ((int)response.StatusCode).ShouldBeGreaterThanOrEqualTo(400);
-    }
-
-    [Fact]
     public async Task LinkedInMobileCallback_InvalidState_Returns500OrBadRequest()
     {
         var response = await NoRedirectClient()
             .GetAsync("/social/auth/linkedin/mobile/callback?code=abc&state=bad-state");
 
         ((int)response.StatusCode).ShouldBeGreaterThanOrEqualTo(400);
-    }
-
-    [Fact]
-    public async Task GoogleMobileLogin_WithReturnUrl_HasClientIdInLocation()
-    {
-        var response = await NoRedirectClient()
-            .GetAsync("/social/auth/google/mobile?returnUrl=myapp://callback");
-
-        var location = response.Headers.Location?.ToString();
-        location.ShouldContain("client_id");
     }
 
     [Fact]

@@ -30,6 +30,13 @@ public class SocialService(
     public async Task<string> GoogleMobileCallBackAsync(string code, string state, CancellationToken cancellationToken)
     {
         var savedReturnUrl = await ValidateStateAndGetReturnUrlAsync(state, cancellationToken);
+        
+        // Fix: If state is invalid or missing, redirect to frontend with an error instead of crashing
+        if (string.IsNullOrEmpty(savedReturnUrl))
+        {
+            return "careerflow://auth/callback?error=session_expired";
+        }
+
         var idToken = await authService.ExchangeGoogleCodeAsync(code, cancellationToken);
         var account = await authService.LoginWithGoogleAsync(idToken, cancellationToken);
         return await ProcessAccountAndGenerateCallbackUriAsync(account, savedReturnUrl, cancellationToken);
@@ -48,6 +55,13 @@ public class SocialService(
     public async Task<string> LinkedInCallBackAsync(string code, string state, CancellationToken cancellationToken)
     {
         var savedReturnUrl = await ValidateStateAndGetReturnUrlAsync(state, cancellationToken);
+        
+        // Fix: If state is invalid or missing, redirect to frontend with an error instead of crashing
+        if (string.IsNullOrEmpty(savedReturnUrl))
+        {
+            return "careerflow://auth/callback?error=session_expired";
+        }
+
         var account = await authService.LoginWithLinkedInAsync(code, cancellationToken);
         return await ProcessAccountAndGenerateCallbackUriAsync(account, savedReturnUrl, cancellationToken);
     }
@@ -84,14 +98,16 @@ public class SocialService(
 
     private async Task<string> ValidateStateAndGetReturnUrlAsync(string state, CancellationToken cancellationToken)
     {
+        // Fix: Stop throwing exceptions for missing state
         if (string.IsNullOrWhiteSpace(state))
-            throw new InvalidOperationException("Invalid or missing state parameter. CSRF validation failed.");
+            return string.Empty;
 
         var key = $"oauth_state:{state}";
         var returnUrl = await cache.GetAsync<string>(key, cancellationToken);
 
+        // Fix: Return empty string instead of crashing if key doesn't exist in Redis
         if (string.IsNullOrEmpty(returnUrl))
-            throw new InvalidOperationException("Invalid or missing state parameter. CSRF validation failed.");
+            return string.Empty;
 
         await cache.RemoveAsync(key, cancellationToken);
         return returnUrl;

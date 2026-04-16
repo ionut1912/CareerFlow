@@ -4,41 +4,57 @@ import {useAppDispatch} from '@/store/hook';
 import * as Linking from 'expo-linking';
 import {router} from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import {useCallback, useEffect} from 'react';
+import {useCallback, useEffect, useRef} from 'react';
 import {Alert, Platform} from 'react-native';
 
 export function useSocialAuth() {
   const dispatch = useAppDispatch();
 
+  // Fix: Add a lock to prevent the app from processing the redirect twice simultaneously
+  const isProcessing = useRef(false);
+
   const handleRedirectUrl = useCallback(
     async (url: string) => {
-      // Verificăm robust dacă URL-ul conține calea noastră de callback
+      // Exit immediately if we are already handling a callback
+      if (isProcessing.current) return;
+
       if (url.includes('auth/callback')) {
-        const parsed = Linking.parse(url);
+        isProcessing.current = true; // Lock
 
-        const token = parsed.queryParams?.token as string;
-        const refreshToken = parsed.queryParams?.refreshToken as string;
+        try {
+          const parsed = Linking.parse(url);
 
-        if (token && refreshToken) {
-          try {
-            // Așteptăm ca Redux să salveze sesiunea
+          // Fix: Check if the backend sent us an error instead of a token
+          if (parsed.queryParams?.error) {
+            Alert.alert(
+              'Sesiune Expirată',
+              'Te rugăm să încerci să te autentifici din nou.',
+            );
+            return;
+          }
+
+          const token = parsed.queryParams?.token as string;
+          const refreshToken = parsed.queryParams?.refreshToken as string;
+
+          if (token && refreshToken) {
             await dispatch(
               loginWithSocialThunk({token, refreshToken}),
             ).unwrap();
 
-            // Închidem manual browserul pe iOS pentru a preveni blocajele vizuale
             if (Platform.OS === 'ios') {
               WebBrowser.dismissBrowser();
             }
 
-            // Redirecționăm către ecranul de preferințe
             router.replace('/(auth)/preferences');
-          } catch (error) {
-            console.error('Eroare la social login dispatch:', error);
-            Alert.alert('Eroare', 'Nu am putut finaliza autentificarea.');
+          } else {
+            console.warn('Callback apelat, dar lipsesc tokenii din URL:', url);
           }
-        } else {
-          console.warn('Callback apelat, dar lipsesc tokenii din URL:', url);
+        } catch (error) {
+          console.error('Eroare la social login dispatch:', error);
+          Alert.alert('Eroare', 'Nu am putut finaliza autentificarea.');
+        } finally {
+          // Always release the lock when done
+          isProcessing.current = false;
         }
       }
     },
@@ -58,7 +74,7 @@ export function useSocialAuth() {
     try {
       const result = await WebBrowser.openAuthSessionAsync(
         `${API_URL}/social/auth/google/mobile`,
-        'careerflow://auth/callback', // Am eliminat 'ui'
+        'careerflow://auth/callback',
       );
       if (result.type === 'success' && result.url) {
         handleRedirectUrl(result.url);
@@ -73,7 +89,7 @@ export function useSocialAuth() {
     try {
       const result = await WebBrowser.openAuthSessionAsync(
         `${API_URL}/social/auth/linkedin/mobile`,
-        'careerflow://auth/callback', // Am eliminat 'ui'
+        'careerflow://auth/callback',
       );
       if (result.type === 'success' && result.url) {
         handleRedirectUrl(result.url);
