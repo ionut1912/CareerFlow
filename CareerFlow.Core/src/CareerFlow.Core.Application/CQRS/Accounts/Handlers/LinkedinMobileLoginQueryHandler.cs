@@ -15,6 +15,6 @@ public class LinkedinMobileLoginQueryHandler
 
     public async Task<string> Handle(LinkedinMobileLoginQuery request, CancellationToken cancellationToken)
     {
-        return await Task.FromResult(_socialService.LinkedInMobileLogin(request.ReturnUrl));
+        return await _socialService.LinkedInMobileLogin(request.ReturnUrl);
     }
 }

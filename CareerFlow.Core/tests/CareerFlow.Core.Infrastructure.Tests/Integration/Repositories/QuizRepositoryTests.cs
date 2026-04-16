@@ -1,10 +1,10 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Persistance.Repositories;
-using CareerFlow.Core.Infrastructure.Tests.Setup;
+using CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Integration;
+namespace CareerFlow.Core.Infrastructure.Tests.Integration.Repositories;
 
 [Trait("Category", "Integration")]
 public class QuizRepositoryTests : BaseRepositoryTest, IAsyncLifetime
