@@ -16,8 +16,6 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
 public class SocialServiceTests
 {
-   
-
     private readonly Mock<IAuthService> _authServiceMock = new();
     private readonly FakeCacheService _cacheService = new();
     private readonly Mock<IRefreshTokenRepository> _refreshTokenRepositoryMock = new();
@@ -88,9 +86,7 @@ public class SocialServiceTests
     public async Task GoogleMobileLogin_ReturnsValidGoogleOAuthUrl()
     {
         var sut = CreateSut();
-
         var url = await sut.GoogleMobileLogin();
-
         Assert.StartsWith("https://accounts.google.com/o/oauth2/v2/auth", url);
     }
 
@@ -98,9 +94,7 @@ public class SocialServiceTests
     public async Task GoogleMobileLogin_ContainsClientId()
     {
         var sut = CreateSut();
-
         var url = await sut.GoogleMobileLogin();
-
         Assert.Contains($"client_id={_settings.Google.ClientId}", url);
     }
 
@@ -109,9 +103,7 @@ public class SocialServiceTests
     {
         var sut = CreateSut();
         var expected = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/google/mobile/callback");
-
         var url = await sut.GoogleMobileLogin();
-
         Assert.Contains($"redirect_uri={expected}", url);
     }
 
@@ -119,9 +111,7 @@ public class SocialServiceTests
     public async Task GoogleMobileLogin_ContainsStateParam()
     {
         var sut = CreateSut();
-
         var url = await sut.GoogleMobileLogin();
-
         Assert.Contains("state=", url);
     }
 
@@ -141,9 +131,7 @@ public class SocialServiceTests
     public async Task GoogleMobileLogin_StoresDefaultCallbackUrl_WhenReturnUrlIsNull()
     {
         var sut = CreateSut();
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
-
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out var cached));
         Assert.Equal("careerflow://auth/callback", cached);
     }
@@ -152,9 +140,7 @@ public class SocialServiceTests
     public async Task GoogleMobileLogin_StoresDefaultCallbackUrl_WhenReturnUrlIsWhitespace()
     {
         var sut = CreateSut();
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin("   "));
-
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out var cached));
         Assert.Equal("careerflow://auth/callback", cached);
     }
@@ -163,10 +149,8 @@ public class SocialServiceTests
     public async Task GoogleMobileLogin_GeneratesUniqueStateOnEachCall()
     {
         var sut = CreateSut();
-
         var state1 = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
         var state2 = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
-
         Assert.NotEqual(state1, state2);
     }
 
@@ -268,25 +252,27 @@ public class SocialServiceTests
     }
 
     [Fact]
-    public async Task GoogleMobileCallBackAsync_ThrowsInvalidOperationException_WhenStateIsInvalid()
+    public async Task GoogleMobileCallBackAsync_ReturnsErrorUrl_WhenStateIsInvalid()
     {
         var sut = CreateSut();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            sut.GoogleMobileCallBackAsync("code", "invalid-state", CancellationToken.None));
+        var result = await sut.GoogleMobileCallBackAsync("code", "invalid-state", CancellationToken.None);
+        
+        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     [Fact]
-    public async Task GoogleMobileCallBackAsync_ThrowsInvalidOperationException_WhenStateIsEmpty()
+    public async Task GoogleMobileCallBackAsync_ReturnsErrorUrl_WhenStateIsEmpty()
     {
         var sut = CreateSut();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            sut.GoogleMobileCallBackAsync("code", string.Empty, CancellationToken.None));
+        var result = await sut.GoogleMobileCallBackAsync("code", string.Empty, CancellationToken.None);
+
+        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     [Fact]
-    public async Task GoogleMobileCallBackAsync_ThrowsInvalidOperationException_WhenStateIsReused()
+    public async Task GoogleMobileCallBackAsync_ReturnsErrorUrl_WhenStateIsReused()
     {
         var sut = CreateSut();
         var account = MakeAccount();
@@ -294,10 +280,13 @@ public class SocialServiceTests
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
 
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
+        
+        // First call consumes the state successfully
         await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None));
+        // Second call with the same state should return the error URL
+        var result = await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
+        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     // ─── LinkedInMobileLogin ──────────────────────────────────────────────────
@@ -306,9 +295,7 @@ public class SocialServiceTests
     public async Task LinkedInMobileLogin_ReturnsValidLinkedInOAuthUrl()
     {
         var sut = CreateSut();
-
         var url = await sut.LinkedInMobileLogin();
-
         Assert.StartsWith("https://www.linkedin.com/oauth/v2/authorization", url);
     }
 
@@ -316,9 +303,7 @@ public class SocialServiceTests
     public async Task LinkedInMobileLogin_ContainsClientId()
     {
         var sut = CreateSut();
-
         var url = await sut.LinkedInMobileLogin();
-
         Assert.Contains($"client_id={_settings.LinkedIn.ClientId}", url);
     }
 
@@ -327,9 +312,7 @@ public class SocialServiceTests
     {
         var sut = CreateSut();
         var expected = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/linkedin/mobile/callback");
-
         var url = await sut.LinkedInMobileLogin();
-
         Assert.Contains($"redirect_uri={expected}", url);
     }
 
@@ -349,9 +332,7 @@ public class SocialServiceTests
     public async Task LinkedInMobileLogin_StoresDefaultCallback_WhenReturnUrlIsNull()
     {
         var sut = CreateSut();
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
-
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out var cached));
         Assert.Equal("careerflow://auth/callback", cached);
     }
@@ -360,10 +341,8 @@ public class SocialServiceTests
     public async Task LinkedInMobileLogin_GeneratesUniqueStateOnEachCall()
     {
         var sut = CreateSut();
-
         var state1 = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
         var state2 = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
-
         Assert.NotEqual(state1, state2);
     }
 
@@ -433,16 +412,17 @@ public class SocialServiceTests
     }
 
     [Fact]
-    public async Task LinkedInCallBackAsync_ThrowsInvalidOperationException_WhenStateIsInvalid()
+    public async Task LinkedInCallBackAsync_ReturnsErrorUrl_WhenStateIsInvalid()
     {
         var sut = CreateSut();
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            sut.LinkedInCallBackAsync("code", "tampered-state", CancellationToken.None));
+        
+        var result = await sut.LinkedInCallBackAsync("code", "tampered-state", CancellationToken.None);
+        
+        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     [Fact]
-    public async Task LinkedInCallBackAsync_ThrowsInvalidOperationException_WhenStateIsReused()
+    public async Task LinkedInCallBackAsync_ReturnsErrorUrl_WhenStateIsReused()
     {
         var sut = CreateSut();
         var account = MakeAccount();
@@ -450,16 +430,19 @@ public class SocialServiceTests
         SetupFullLinkedInFlow(account, MakeJwt(), refresh);
 
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
+        
+        // First call consumes the state successfully
         await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            sut.LinkedInCallBackAsync("code", state, CancellationToken.None));
+        // Second call should return the error URL
+        var result = await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
+        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     // ─── Cross-provider isolation ─────────────────────────────────────────────
 
     [Fact]
-    public async Task GoogleState_CannotBeReused_AfterGoogleCallbackConsumesIt()
+    public async Task GoogleState_ReturnsErrorUrl_AfterGoogleCallbackConsumesIt()
     {
         var sut = CreateSut();
         var account = MakeAccount();
@@ -469,8 +452,8 @@ public class SocialServiceTests
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
         await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            sut.LinkedInCallBackAsync("code", state, CancellationToken.None));
+        var result = await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
+        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     [Fact]
