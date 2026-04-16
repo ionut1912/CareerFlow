@@ -29,6 +29,7 @@ public class AccountConfiguration : IEntityTypeConfiguration<Account>
             .IsRequired();
 
         builder.HasIndex(a => a.Username).IsUnique();
+        builder.HasIndex(a => a.Email).IsUnique();
 
         builder.Property(a => a.IsFounder)
             .HasDefaultValue(false)
