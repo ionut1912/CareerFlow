@@ -23,10 +23,12 @@ public class UploadCourseDocumentCommandValidatorTests
         );
     }
 
-    private static List<UploadFileDto> CreateMockFiles(int count = 1) =>
-        Enumerable.Range(0, count)
+    private static List<UploadFileDto> CreateMockFiles(int count = 1)
+    {
+        return Enumerable.Range(0, count)
             .Select(i => CreateMockFile($"test{i}.pdf"))
             .ToList();
+    }
 
     // -------------------------------------------------------------------------
     // Happy path
@@ -55,7 +57,8 @@ public class UploadCourseDocumentCommandValidatorTests
     [Fact]
     public void Validate_MaxAllowedFileCount_PassesValidation()
     {
-        var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", CreateMockFiles(CourseConstants.MaxFiles));
+        var command =
+            new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", CreateMockFiles(CourseConstants.MaxFiles));
 
         var result = _sut.TestValidate(command);
 
