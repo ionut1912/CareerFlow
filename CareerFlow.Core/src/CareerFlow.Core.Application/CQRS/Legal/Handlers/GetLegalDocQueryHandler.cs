@@ -8,6 +8,9 @@ namespace CareerFlow.Core.Application.CQRS.Legal.Handlers;
 
 public class GetLegalDocQueryHandler
 {
+    private static readonly HashSet<string> ValidTypes =
+        new(StringComparer.OrdinalIgnoreCase) { "privacy", "terms" };
+
     private readonly ILegalService _legalService;
     private readonly ILogger<GetLegalDocQueryHandler> _logger;
 
@@ -21,18 +24,17 @@ public class GetLegalDocQueryHandler
 
     public async Task<LegalDocumentResponse> Handle(GetLegalDocQuery request, CancellationToken cancellationToken)
     {
-        if (!request.Type.Equals("privacy", StringComparison.OrdinalIgnoreCase) &&
-            !request.Type.Equals("terms", StringComparison.OrdinalIgnoreCase))
+        if (!ValidTypes.Contains(request.Type))
         {
-            _logger.LogError("Tipul precizat nu exista {type}", request.Type.ToLower());
+            _logger.LogError("Tipul precizat nu exista: {Type}", request.Type);
             throw new LegalDocInvalidTypeException("Tipul precizat nu exista");
         }
 
         var document = await _legalService.GetDocumentAsync(request.Type, cancellationToken);
 
-        if (document == null)
+        if (document is null)
         {
-            _logger.LogError("Documentul nu a fost gasit");
+            _logger.LogError("Documentul nu a fost gasit pentru tipul {Type}", request.Type);
             throw new LegalDocNotFoundException("Documentul nu a fost gasit");
         }
 
