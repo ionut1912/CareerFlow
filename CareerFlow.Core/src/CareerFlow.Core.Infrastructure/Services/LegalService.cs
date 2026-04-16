@@ -10,7 +10,6 @@ public class LegalService : ILegalService
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(6);
     private readonly ICacheService _cache;
     private readonly ILogger<LegalService> _logger;
-
     private readonly IGithubPagesRequestsSender _requestsSender;
 
     public LegalService(

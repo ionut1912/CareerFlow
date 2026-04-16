@@ -10,6 +10,8 @@ using CareerFlow.Core.Infrastructure.Persistance;
 using CareerFlow.Core.Rabbit.Events.Events;
 using Hangfire;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Shared.Application.Extensions;
@@ -28,6 +30,18 @@ builder.Services
     .AddInfrastructure(builder.Configuration, env)
     .AddApplicationServices(typeof(ValidationsAssemblyReference).Assembly)
     .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
+
+builder.Services.ConfigureAll<OpenApiOptions>(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Servers = new List<OpenApiServer>
+        {
+            new() { Url = "/core" }
+        };
+        return Task.CompletedTask;
+    });
+});
 
 builder.AddWolverineMessaging(
     typeof(EmailNotificationMessageHandler).Assembly,
