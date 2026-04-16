@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Setup;
+namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 
 [Collection("RepositoryCollection")]
 public abstract class BaseRepositoryTest : IAsyncLifetime
