@@ -8,7 +8,7 @@ using Moq;
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Unit;
+namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
 public class CoursePersistenceServiceTests
 {

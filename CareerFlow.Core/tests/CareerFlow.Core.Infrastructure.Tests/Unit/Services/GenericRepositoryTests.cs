@@ -4,7 +4,7 @@ using Shared.Infra.Services;
 using Shouldly;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Unit;
+namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
 public class GenericRepositoryTests : IDisposable
 {

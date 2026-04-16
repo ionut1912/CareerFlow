@@ -14,11 +14,10 @@ public class GithubPagesRequestsSender : IGithubPagesRequestsSender
     {
         ArgumentNullException.ThrowIfNull(httpClient);
         ArgumentNullException.ThrowIfNull(legalDocOptions);
-
         _httpClient = httpClient;
         var baseUrl = legalDocOptions.Value.GitHubPagesBaseUrl.TrimEnd('/');
         _privacyUrl = $"{baseUrl}/privacy.md";
-        _termsUrl   = $"{baseUrl}/terms.md";
+        _termsUrl = $"{baseUrl}/terms.md";
     }
 
     public Task<HttpResponseMessage> GetContentAsync(string type, CancellationToken cancellationToken)

@@ -15,7 +15,8 @@ public class LegalEndpointGroup : EndpointGroup
         group.MapGet(GetLegalDoc);
     }
 
-    private async Task<Ok<LegalDocumentResponse>> GetLegalDoc(IMessageBus bus, string type, CancellationToken cancellationToken)
+    private async Task<Ok<LegalDocumentResponse>> GetLegalDoc(IMessageBus bus, string type,
+        CancellationToken cancellationToken)
     {
         var getLegalDocQuery = new GetLegalDocQuery(type);
         var response = await bus.InvokeAsync<LegalDocumentResponse>(getLegalDocQuery, cancellationToken);

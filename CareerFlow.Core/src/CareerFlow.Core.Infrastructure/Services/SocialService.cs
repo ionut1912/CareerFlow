@@ -17,12 +17,12 @@ public class SocialService(
     IMemoryCache cache) : ISocialService
 {
     private readonly SocialAuthSettings _settings = options.Value;
-    
+
     public string GoogleMobileLogin(string? returnUrl = null)
     {
         var redirectUri = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/google/mobile/callback");
         var scope = Uri.EscapeDataString("openid email profile");
-        
+
         var state = GenerateAndStoreState(returnUrl);
 
         return
@@ -35,10 +35,10 @@ public class SocialService(
 
         var idToken = await authService.ExchangeGoogleCodeAsync(code, cancellationToken);
         var account = await authService.LoginWithGoogleAsync(idToken, cancellationToken);
-        
+
         return await ProcessAccountAndGenerateCallbackUriAsync(account, savedReturnUrl, cancellationToken);
     }
-    
+
     public string LinkedInMobileLogin(string? returnUrl = null)
     {
         var redirectUri = Uri.EscapeDataString($"{_settings.BaseUrl}/social/auth/linkedin/mobile/callback");
@@ -55,7 +55,7 @@ public class SocialService(
         var account = await authService.LoginWithLinkedInAsync(code, cancellationToken);
         return await ProcessAccountAndGenerateCallbackUriAsync(account, savedReturnUrl, cancellationToken);
     }
-    
+
 
     private async Task<string> ProcessAccountAndGenerateCallbackUriAsync(Account account, string returnUrl,
         CancellationToken cancellationToken)
@@ -65,7 +65,7 @@ public class SocialService(
 
         await refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await unitOfWork.SaveChangesAsync(cancellationToken);
-        
+
         var separator = returnUrl.Contains("?") ? "&" : "?";
         return $"{returnUrl}{separator}token={jwt.Token}&refreshToken={refreshToken.TokenHash}";
     }
@@ -77,9 +77,9 @@ public class SocialService(
             .Replace("+", "-")
             .Replace("/", "_")
             .TrimEnd('=');
-        
+
         var urlToSave = string.IsNullOrWhiteSpace(returnUrl) ? "careerflow://auth/callback" : returnUrl;
-        
+
         cache.Set(state, urlToSave, TimeSpan.FromMinutes(15));
 
         return state;
