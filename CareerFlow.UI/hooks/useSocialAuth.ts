@@ -17,6 +17,7 @@ export function useSocialAuth() {
 
       if (url.includes('auth/callback')) {
         isProcessing.current = true;
+        isProcessing.current = true;
 
         try {
           const parsed = Linking.parse(url);
