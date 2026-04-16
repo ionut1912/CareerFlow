@@ -27,22 +27,25 @@ public static class DependencyInjection
     {
         private IServiceCollection AddRedisCache(IConfiguration configuration)
         {
-            var options = configuration
-                              .GetSection(CacheSettings.SectionName)
-                              .Get<CacheSettings>()
-                          ?? throw new InvalidOperationException("Redis configuration is missing.");
-
             services.Configure<CacheSettings>(
                 configuration.GetSection(CacheSettings.SectionName));
 
-            services.AddSingleton<IConnectionMultiplexer>(_ =>
-                ConnectionMultiplexer.Connect(new ConfigurationOptions
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                var options = sp.GetRequiredService<IOptions<CacheSettings>>().Value;
+
+                if (string.IsNullOrWhiteSpace(options.ConnectionString))
+                    throw new InvalidOperationException(
+                        $"Redis ConnectionString is missing. Section: {CacheSettings.SectionName}");
+
+                return ConnectionMultiplexer.Connect(new ConfigurationOptions
                 {
                     EndPoints = { options.ConnectionString },
                     AbortOnConnectFail = options.AbortOnConnectFail,
                     ConnectRetry = 3,
                     ReconnectRetryPolicy = new ExponentialRetry(5000)
-                }));
+                });
+            });
 
             services.AddSingleton<ICacheService, RedisCacheService>();
 
@@ -105,7 +108,7 @@ public static class DependencyInjection
 
         private IServiceCollection AddSettings(IConfiguration configuration)
         {
-            services.AddMemoryCache()
+            services
                 .Configure<SocialAuthSettings>(configuration.GetSection(SocialAuthSettings.SectionName))
                 .Configure<PostmarkSettings>(configuration.GetSection(PostmarkSettings.SectionName))
                 .Configure<LegalDocSettings>(configuration.GetSection(LegalDocSettings.SectionName))
