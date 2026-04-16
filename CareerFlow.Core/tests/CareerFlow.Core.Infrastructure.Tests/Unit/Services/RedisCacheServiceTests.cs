@@ -1,4 +1,3 @@
-using System.Net;
 using System.Text.Json;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
@@ -15,10 +14,10 @@ public class RedisCacheServiceTests
 {
     private const string InstanceName = "myapp:";
     private const int DefaultExpiryMinutes = 60;
+
     private readonly Mock<IConnectionMultiplexer> _connectionMock = new();
     private readonly Mock<IDatabase> _dbMock = new();
     private readonly Mock<ILogger<RedisCacheService>> _loggerMock = new();
-    private readonly Mock<IServer> _serverMock = new();
 
     private readonly CacheSettings _settings = new()
     {
@@ -30,19 +29,10 @@ public class RedisCacheServiceTests
 
     public RedisCacheServiceTests()
     {
-        var endpoint = new DnsEndPoint("localhost", 6379);
-
+        // The service calls GetDatabase() which resolves to GetDatabase(-1, null)
         _connectionMock
             .Setup(x => x.GetDatabase(It.IsAny<int>(), It.IsAny<object?>()))
             .Returns(_dbMock.Object);
-
-        _connectionMock
-            .Setup(x => x.GetEndPoints(It.IsAny<bool>()))
-            .Returns(new EndPoint[] { endpoint });
-
-        _connectionMock
-            .Setup(x => x.GetServer(It.IsAny<EndPoint>(), It.IsAny<object?>()))
-            .Returns(_serverMock.Object);
 
         _sut = new RedisCacheService(
             _connectionMock.Object,
@@ -50,10 +40,12 @@ public class RedisCacheServiceTests
             _loggerMock.Object);
     }
 
-    private static string Key(string raw)
-    {
-        return $"{InstanceName}{raw}";
-    }
+    // Builds the prefixed key exactly as BuildKey() does internally
+    private static RedisKey PrefixedKey(string raw) => $"{InstanceName}{raw}";
+
+    // ---------------------------------------------------------------------------
+    // GetAsync
+    // ---------------------------------------------------------------------------
 
     [Fact]
     public async Task GetAsync_WhenKeyExists_ShouldReturnDeserializedValue()
@@ -63,7 +55,7 @@ public class RedisCacheServiceTests
         var json = JsonSerializer.Serialize(expected);
 
         _dbMock
-            .Setup(x => x.StringGetAsync(Key(key), It.IsAny<CommandFlags>()))
+            .Setup(x => x.StringGetAsync(PrefixedKey(key), It.IsAny<CommandFlags>()))
             .ReturnsAsync((RedisValue)json);
 
         var result = await _sut.GetAsync<SamplePayload>(key);
@@ -86,39 +78,6 @@ public class RedisCacheServiceTests
     }
 
     [Fact]
-    public async Task GetAsync_WhenRedisThrows_ShouldReturnDefaultWithoutRethrowing()
-    {
-        _dbMock
-            .Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-            .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
-
-        var result = await _sut.GetAsync<SamplePayload>("any-key");
-
-        result.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task GetAsync_WhenRedisThrows_ShouldLogError()
-    {
-        var exception = new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down");
-
-        _dbMock
-            .Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-            .ThrowsAsync(exception);
-
-        await _sut.GetAsync<SamplePayload>("any-key");
-
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("GET")),
-                It.IsAny<Exception>(),
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
-    }
-
-    [Fact]
     public async Task GetAsync_ShouldUseKeyWithInstanceNamePrefix()
     {
         const string rawKey = "session:99";
@@ -130,33 +89,95 @@ public class RedisCacheServiceTests
         await _sut.GetAsync<SamplePayload>(rawKey);
 
         _dbMock.Verify(
-            x => x.StringGetAsync(Key(rawKey), It.IsAny<CommandFlags>()),
+            x => x.StringGetAsync(PrefixedKey(rawKey), It.IsAny<CommandFlags>()),
             Times.Once);
     }
 
     [Fact]
-    public async Task SetAsync_WhenRedisThrows_ShouldNotRethrow()
+    public async Task GetAsync_WhenRedisThrows_ShouldRethrow()
     {
         _dbMock
-            .Setup(x => x.StringSetAsync(
-                It.IsAny<RedisKey>(), It.IsAny<RedisValue>(),
-                It.IsAny<TimeSpan?>(),
-                It.IsAny<When>(),
-                It.IsAny<CommandFlags>()))
-            .ThrowsAsync(new RedisException("write failure"));
+            .Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+            .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
 
-        await Should.NotThrowAsync(() => _sut.SetAsync("k", new SamplePayload("X", 0)));
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.GetAsync<SamplePayload>("any-key"));
     }
 
     [Fact]
-    public async Task RemoveAsync_WhenRedisThrows_ShouldNotRethrow()
+    public async Task GetAsync_WhenRedisThrows_ShouldLogError()
+    {
+        var exception = new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down");
+
+        _dbMock
+            .Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+            .ThrowsAsync(exception);
+
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.GetAsync<SamplePayload>("any-key"));
+
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Redis GET failed")),
+                exception,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    // ---------------------------------------------------------------------------
+    // RemoveAsync
+    // ---------------------------------------------------------------------------
+
+    [Fact]
+    public async Task RemoveAsync_ShouldDeleteKeyWithInstanceNamePrefix()
+    {
+        const string rawKey = "session:5";
+
+        _dbMock
+            .Setup(x => x.KeyDeleteAsync(PrefixedKey(rawKey), It.IsAny<CommandFlags>()))
+            .ReturnsAsync(true);
+
+        await _sut.RemoveAsync(rawKey);
+
+        _dbMock.Verify(
+            x => x.KeyDeleteAsync(PrefixedKey(rawKey), It.IsAny<CommandFlags>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task RemoveAsync_WhenRedisThrows_ShouldRethrow()
     {
         _dbMock
             .Setup(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisException("delete failure"));
 
-        await Should.NotThrowAsync(() => _sut.RemoveAsync("some-key"));
+        await Should.ThrowAsync<RedisException>(() => _sut.RemoveAsync("some-key"));
     }
+
+    [Fact]
+    public async Task RemoveAsync_WhenRedisThrows_ShouldLogError()
+    {
+        var exception = new RedisException("delete failure");
+
+        _dbMock
+            .Setup(x => x.KeyDeleteAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+            .ThrowsAsync(exception);
+
+        await Should.ThrowAsync<RedisException>(() => _sut.RemoveAsync("some-key"));
+
+        _loggerMock.Verify(
+            x => x.Log(
+                LogLevel.Error,
+                It.IsAny<EventId>(),
+                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Redis DELETE failed")),
+                exception,
+                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
+            Times.Once);
+    }
+
+    // ---------------------------------------------------------------------------
+    // ExistsAsync
+    // ---------------------------------------------------------------------------
 
     [Fact]
     public async Task ExistsAsync_WhenKeyExists_ShouldReturnTrue()
@@ -164,7 +185,7 @@ public class RedisCacheServiceTests
         const string key = "feature-flag:dark-mode";
 
         _dbMock
-            .Setup(x => x.KeyExistsAsync(Key(key), It.IsAny<CommandFlags>()))
+            .Setup(x => x.KeyExistsAsync(PrefixedKey(key), It.IsAny<CommandFlags>()))
             .ReturnsAsync(true);
 
         var result = await _sut.ExistsAsync(key);
@@ -185,35 +206,55 @@ public class RedisCacheServiceTests
     }
 
     [Fact]
-    public async Task ExistsAsync_WhenRedisThrows_ShouldReturnFalse()
+    public async Task ExistsAsync_ShouldUseKeyWithInstanceNamePrefix()
+    {
+        const string rawKey = "flag:beta";
+
+        _dbMock
+            .Setup(x => x.KeyExistsAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
+            .ReturnsAsync(false);
+
+        await _sut.ExistsAsync(rawKey);
+
+        _dbMock.Verify(
+            x => x.KeyExistsAsync(PrefixedKey(rawKey), It.IsAny<CommandFlags>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task ExistsAsync_WhenRedisThrows_ShouldRethrow()
     {
         _dbMock
             .Setup(x => x.KeyExistsAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
             .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.SocketFailure, "conn lost"));
 
-        var result = await _sut.ExistsAsync("any-key");
-
-        result.ShouldBeFalse();
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.ExistsAsync("any-key"));
     }
 
     [Fact]
     public async Task ExistsAsync_WhenRedisThrows_ShouldLogError()
     {
+        var exception = new RedisConnectionException(ConnectionFailureType.SocketFailure, "conn lost");
+
         _dbMock
             .Setup(x => x.KeyExistsAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-            .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.SocketFailure, "conn lost"));
+            .ThrowsAsync(exception);
 
-        await _sut.ExistsAsync("any-key");
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.ExistsAsync("any-key"));
 
         _loggerMock.Verify(
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("EXISTS")),
-                It.IsAny<Exception>(),
+                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Redis EXISTS failed")),
+                exception,
                 It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
             Times.Once);
     }
+
+    // ---------------------------------------------------------------------------
+    // Helper
+    // ---------------------------------------------------------------------------
 
     private sealed record SamplePayload(string Name, int Age);
 }

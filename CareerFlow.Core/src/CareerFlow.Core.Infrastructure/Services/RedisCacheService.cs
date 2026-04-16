@@ -18,7 +18,6 @@ public sealed class RedisCacheService : ICacheService
 
     private readonly ILogger<RedisCacheService> _logger;
     private readonly CacheSettings _options;
-    private readonly IServer _server;
 
     public RedisCacheService(
         IConnectionMultiplexer connection,
@@ -26,7 +25,6 @@ public sealed class RedisCacheService : ICacheService
         ILogger<RedisCacheService> logger)
     {
         _db = connection.GetDatabase();
-        _server = connection.GetServer(connection.GetEndPoints().First());
         _options = options.Value;
         _logger = logger;
     }
@@ -36,13 +34,12 @@ public sealed class RedisCacheService : ICacheService
         try
         {
             var value = await _db.StringGetAsync(BuildKey(key));
-
             return value.IsNullOrEmpty ? default : JsonSerializer.Deserialize<T>((string)value!, _jsonOptions);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Redis GET failed for key {Key}", key);
-            return default; // Cache-aside: degrade gracefully, don't throw
+            throw;
         }
     }
 
@@ -52,12 +49,12 @@ public sealed class RedisCacheService : ICacheService
         {
             var serialized = JsonSerializer.Serialize(value, _jsonOptions);
             var ttl = expiry ?? TimeSpan.FromMinutes(_options.DefaultExpiryMinutes);
-
             await _db.StringSetAsync(BuildKey(key), serialized, ttl);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Redis SET failed for key {Key}", key);
+            throw;
         }
     }
 
@@ -70,6 +67,7 @@ public sealed class RedisCacheService : ICacheService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Redis DELETE failed for key {Key}", key);
+            throw;
         }
     }
 
@@ -82,12 +80,9 @@ public sealed class RedisCacheService : ICacheService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Redis EXISTS failed for key {Key}", key);
-            return false;
+            throw;
         }
     }
 
-    private string BuildKey(string key)
-    {
-        return $"{_options.InstanceName}{key}";
-    }
+    private string BuildKey(string key) => $"{_options.InstanceName}{key}";
 }
