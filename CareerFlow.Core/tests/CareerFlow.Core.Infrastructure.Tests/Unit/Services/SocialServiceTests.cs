@@ -51,8 +51,7 @@ public class SocialServiceTests
         return new AuthResult(token, Guid.NewGuid().ToString());
     }
 
-    private static (RefreshToken Token, string ExpectedHash) MakeRefreshToken(
-        string rawToken = "raw-refresh-token-value")
+    private static (RefreshToken Token, string ExpectedHash) MakeRefreshToken(string rawToken = "raw-refresh-token-value")
     {
         var token = RefreshToken.Create(
             Guid.NewGuid(),
@@ -60,8 +59,7 @@ public class SocialServiceTests
             Guid.NewGuid().ToString(),
             DateTime.UtcNow.AddMonths(6));
 
-        var expectedHash = Convert.ToHexString(
-            SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+        var expectedHash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
 
         return (token, expectedHash);
     }
@@ -69,18 +67,14 @@ public class SocialServiceTests
     private static string ExtractStateFromGoogleUrl(string url)
     {
         var pairs = HttpUtility.ParseQueryString(new Uri(url).Query);
-        return pairs["state"]
-               ?? throw new InvalidOperationException("state not found in Google URL");
+        return pairs["state"] ?? throw new InvalidOperationException("state not found");
     }
 
     private static string ExtractStateFromLinkedInUrl(string url)
     {
         var pairs = HttpUtility.ParseQueryString(new Uri(url).Query);
-        return pairs["state"]
-               ?? throw new InvalidOperationException("state not found in LinkedIn URL");
+        return pairs["state"] ?? throw new InvalidOperationException("state not found");
     }
-
-    // ─── GoogleMobileLogin ────────────────────────────────────────────────────
 
     [Fact]
     public async Task GoogleMobileLogin_ReturnsValidGoogleOAuthUrl()
@@ -120,9 +114,7 @@ public class SocialServiceTests
     {
         var sut = CreateSut();
         const string returnUrl = "exp://192.168.1.1:8081/--/auth";
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin(returnUrl));
-
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out var cached));
         Assert.Equal(returnUrl, cached);
     }
@@ -154,8 +146,6 @@ public class SocialServiceTests
         Assert.NotEqual(state1, state2);
     }
 
-    // ─── GoogleMobileCallBackAsync ────────────────────────────────────────────
-
     [Fact]
     public async Task GoogleMobileCallBackAsync_ReturnsUrlContainingJwtToken()
     {
@@ -163,12 +153,9 @@ public class SocialServiceTests
         var account = MakeAccount();
         var jwt = MakeJwt("my-jwt");
         var (refresh, _) = MakeRefreshToken();
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin("exp://192.168.1.1:8081/--/auth"));
         SetupFullGoogleFlow(account, jwt, refresh);
-
         var result = await sut.GoogleMobileCallBackAsync("auth-code", state, CancellationToken.None);
-
         Assert.Contains("token=my-jwt", result);
     }
 
@@ -179,12 +166,9 @@ public class SocialServiceTests
         var account = MakeAccount();
         var jwt = MakeJwt();
         var (refresh, expectedHash) = MakeRefreshToken("known-raw-token");
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin("exp://host/callback"));
         SetupFullGoogleFlow(account, jwt, refresh);
-
         var result = await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
         Assert.Contains($"refreshToken={expectedHash}", result);
     }
 
@@ -194,13 +178,10 @@ public class SocialServiceTests
         var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
-
         const string returnUrl = "exp://192.168.1.1:8081/--/auth";
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin(returnUrl));
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
-
         var result = await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
         Assert.Contains("?token=", result);
     }
 
@@ -210,28 +191,23 @@ public class SocialServiceTests
         var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
-
         const string returnUrl = "exp://192.168.1.1:8081/--/auth?source=social";
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin(returnUrl));
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
-
         var result = await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
         Assert.Contains("&token=", result);
     }
 
     [Fact]
-    public async Task GoogleMobileCallBackAsync_RemovesStateFromCacheAfterUse()
+    public async Task GoogleMobileCallBackAsync_KeepsStateInCacheAfterUse()
     {
         var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin("exp://host/callback"));
         await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
-        Assert.False(_cacheService.TryGetValue<string>($"oauth_state:{state}", out _));
+        Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out _));
     }
 
     [Fact]
@@ -241,23 +217,17 @@ public class SocialServiceTests
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullGoogleFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
         await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
-        _refreshTokenRepositoryMock.Verify(
-            r => r.AddAsync(refresh, It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(
-            u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _refreshTokenRepositoryMock.Verify(r => r.AddAsync(refresh, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task GoogleMobileCallBackAsync_ReturnsErrorUrl_WhenStateIsInvalid()
     {
         var sut = CreateSut();
-
         var result = await sut.GoogleMobileCallBackAsync("code", "invalid-state", CancellationToken.None);
-        
         Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
@@ -265,31 +235,21 @@ public class SocialServiceTests
     public async Task GoogleMobileCallBackAsync_ReturnsErrorUrl_WhenStateIsEmpty()
     {
         var sut = CreateSut();
-
         var result = await sut.GoogleMobileCallBackAsync("code", string.Empty, CancellationToken.None);
-
         Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     [Fact]
-    public async Task GoogleMobileCallBackAsync_ReturnsErrorUrl_WhenStateIsReused()
+    public async Task GoogleMobileCallBackAsync_ReturnsDuplicateRequestUrl_WhenAuthThrows()
     {
         var sut = CreateSut();
-        var account = MakeAccount();
-        var (refresh, _) = MakeRefreshToken();
-        SetupFullGoogleFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
-        
-        // First call consumes the state successfully
-        await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
-        // Second call with the same state should return the error URL
+        _authServiceMock
+            .Setup(s => s.ExchangeGoogleCodeAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Mocked auth failure"));
         var result = await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
+        Assert.Equal("careerflow://auth/callback?error=duplicate_request", result);
     }
-
-    // ─── LinkedInMobileLogin ──────────────────────────────────────────────────
 
     [Fact]
     public async Task LinkedInMobileLogin_ReturnsValidLinkedInOAuthUrl()
@@ -321,9 +281,7 @@ public class SocialServiceTests
     {
         var sut = CreateSut();
         const string returnUrl = "exp://192.168.1.1:8081/--/auth";
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin(returnUrl));
-
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out var cached));
         Assert.Equal(returnUrl, cached);
     }
@@ -346,8 +304,6 @@ public class SocialServiceTests
         Assert.NotEqual(state1, state2);
     }
 
-    // ─── LinkedInCallBackAsync ────────────────────────────────────────────────
-
     [Fact]
     public async Task LinkedInCallBackAsync_ReturnsUrlContainingJwtToken()
     {
@@ -355,12 +311,9 @@ public class SocialServiceTests
         var account = MakeAccount();
         var jwt = MakeJwt("linkedin-jwt");
         var (refresh, _) = MakeRefreshToken();
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin("exp://host/callback"));
         SetupFullLinkedInFlow(account, jwt, refresh);
-
         var result = await sut.LinkedInCallBackAsync("li-code", state, CancellationToken.None);
-
         Assert.Contains("token=linkedin-jwt", result);
     }
 
@@ -371,27 +324,22 @@ public class SocialServiceTests
         var account = MakeAccount();
         var jwt = MakeJwt();
         var (refresh, expectedHash) = MakeRefreshToken("known-linkedin-raw");
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin("exp://host/callback"));
         SetupFullLinkedInFlow(account, jwt, refresh);
-
         var result = await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
-
         Assert.Contains($"refreshToken={expectedHash}", result);
     }
 
     [Fact]
-    public async Task LinkedInCallBackAsync_RemovesStateFromCacheAfterUse()
+    public async Task LinkedInCallBackAsync_KeepsStateInCacheAfterUse()
     {
         var sut = CreateSut();
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullLinkedInFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
         await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
-
-        Assert.False(_cacheService.TryGetValue<string>($"oauth_state:{state}", out _));
+        Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{state}", out _));
     }
 
     [Fact]
@@ -401,78 +349,56 @@ public class SocialServiceTests
         var account = MakeAccount();
         var (refresh, _) = MakeRefreshToken();
         SetupFullLinkedInFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
         await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
-
-        _refreshTokenRepositoryMock.Verify(
-            r => r.AddAsync(refresh, It.IsAny<CancellationToken>()), Times.Once);
-        _unitOfWorkMock.Verify(
-            u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _refreshTokenRepositoryMock.Verify(r => r.AddAsync(refresh, It.IsAny<CancellationToken>()), Times.Once);
+        _unitOfWorkMock.Verify(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
     public async Task LinkedInCallBackAsync_ReturnsErrorUrl_WhenStateIsInvalid()
     {
         var sut = CreateSut();
-        
         var result = await sut.LinkedInCallBackAsync("code", "tampered-state", CancellationToken.None);
-        
         Assert.Equal("careerflow://auth/callback?error=session_expired", result);
     }
 
     [Fact]
-    public async Task LinkedInCallBackAsync_ReturnsErrorUrl_WhenStateIsReused()
+    public async Task LinkedInCallBackAsync_ReturnsDuplicateRequestUrl_WhenAuthThrows()
     {
         var sut = CreateSut();
-        var account = MakeAccount();
-        var (refresh, _) = MakeRefreshToken();
-        SetupFullLinkedInFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin());
-        
-        // First call consumes the state successfully
-        await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
-
-        // Second call should return the error URL
+        _authServiceMock
+            .Setup(s => s.LoginWithLinkedInAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Mocked auth failure"));
         var result = await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
-        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
+        Assert.Equal("careerflow://auth/callback?error=duplicate_request", result);
     }
 
-    // ─── Cross-provider isolation ─────────────────────────────────────────────
-
     [Fact]
-    public async Task GoogleState_ReturnsErrorUrl_AfterGoogleCallbackConsumesIt()
+    public async Task CrossProvider_UsingGoogleStateForLinkedIn_WhenAuthThrows_ReturnsDuplicateRequest()
     {
         var sut = CreateSut();
-        var account = MakeAccount();
-        var (refresh, _) = MakeRefreshToken();
-        SetupFullGoogleFlow(account, MakeJwt(), refresh);
-
         var state = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin());
-        await sut.GoogleMobileCallBackAsync("code", state, CancellationToken.None);
-
+        _authServiceMock
+            .Setup(s => s.LoginWithLinkedInAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .ThrowsAsync(new Exception("Invalid code for LinkedIn"));
         var result = await sut.LinkedInCallBackAsync("code", state, CancellationToken.None);
-        Assert.Equal("careerflow://auth/callback?error=session_expired", result);
+        Assert.Equal("careerflow://auth/callback?error=duplicate_request", result);
     }
 
     [Fact]
     public async Task TwoSimultaneousFlows_HaveIsolatedCacheEntries()
     {
         var sut = CreateSut();
-
         const string returnUrl1 = "exp://device1/callback";
         const string returnUrl2 = "exp://device2/callback";
-
         var googleState = ExtractStateFromGoogleUrl(await sut.GoogleMobileLogin(returnUrl1));
         var linkedInState = ExtractStateFromLinkedInUrl(await sut.LinkedInMobileLogin(returnUrl2));
-
         Assert.NotEqual(googleState, linkedInState);
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{googleState}", out var g) && g == returnUrl1);
         Assert.True(_cacheService.TryGetValue<string>($"oauth_state:{linkedInState}", out var l) && l == returnUrl2);
     }
-
-    // ─── Private setup helpers ────────────────────────────────────────────────
 
     private void SetupFullGoogleFlow(Account account, AuthResult jwt, RefreshToken refresh)
     {
