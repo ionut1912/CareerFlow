@@ -9,23 +9,22 @@ import {Alert, Platform} from 'react-native';
 
 export function useSocialAuth() {
   const dispatch = useAppDispatch();
-
-  // Fix: Add a lock to prevent the app from processing the redirect twice simultaneously
   const isProcessing = useRef(false);
 
   const handleRedirectUrl = useCallback(
     async (url: string) => {
-      // Exit immediately if we are already handling a callback
       if (isProcessing.current) return;
 
       if (url.includes('auth/callback')) {
-        isProcessing.current = true; // Lock
+        isProcessing.current = true;
 
         try {
           const parsed = Linking.parse(url);
 
-          // Fix: Check if the backend sent us an error instead of a token
           if (parsed.queryParams?.error) {
+            if (parsed.queryParams?.error === 'duplicate_request') {
+              return;
+            }
             Alert.alert(
               'Sesiune Expirată',
               'Te rugăm să încerci să te autentifici din nou.',
@@ -46,14 +45,10 @@ export function useSocialAuth() {
             }
 
             router.replace('/(auth)/preferences');
-          } else {
-            console.warn('Callback apelat, dar lipsesc tokenii din URL:', url);
           }
-        } catch (error) {
-          console.error('Eroare la social login dispatch:', error);
+        } catch {
           Alert.alert('Eroare', 'Nu am putut finaliza autentificarea.');
         } finally {
-          // Always release the lock when done
           isProcessing.current = false;
         }
       }
@@ -79,8 +74,7 @@ export function useSocialAuth() {
       if (result.type === 'success' && result.url) {
         handleRedirectUrl(result.url);
       }
-    } catch (error: unknown) {
-      console.error(error);
+    } catch {
       Alert.alert('Eroare', 'Autentificarea cu Google a eșuat.');
     }
   }, [handleRedirectUrl]);
@@ -94,8 +88,7 @@ export function useSocialAuth() {
       if (result.type === 'success' && result.url) {
         handleRedirectUrl(result.url);
       }
-    } catch (error: unknown) {
-      console.error(error);
+    } catch {
       Alert.alert('Eroare', 'Autentificarea cu LinkedIn a eșuat.');
     }
   }, [handleRedirectUrl]);

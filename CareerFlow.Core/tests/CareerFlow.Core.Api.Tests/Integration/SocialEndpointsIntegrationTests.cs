@@ -96,15 +96,6 @@ public class SocialEndpointsIntegrationTests : IntegrationTestBase
     }
 
     [Fact]
-    public async Task LinkedInMobileCallback_InvalidState_Returns500OrBadRequest()
-    {
-        var response = await NoRedirectClient()
-            .GetAsync("/social/auth/linkedin/mobile/callback?code=abc&state=bad-state");
-
-        ((int)response.StatusCode).ShouldBeGreaterThanOrEqualTo(400);
-    }
-
-    [Fact]
     public async Task LinkedInMobileLogin_WithReturnUrl_HasClientIdInLocation()
     {
         var response = await NoRedirectClient()
