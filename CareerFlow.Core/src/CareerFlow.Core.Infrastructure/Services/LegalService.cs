@@ -8,10 +8,10 @@ namespace CareerFlow.Core.Infrastructure.Services;
 public class LegalService : ILegalService
 {
     private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(6);
-
-    private readonly IGithubPagesRequestsSender _requestsSender;
     private readonly ICacheService _cache;
     private readonly ILogger<LegalService> _logger;
+
+    private readonly IGithubPagesRequestsSender _requestsSender;
 
     public LegalService(
         IGithubPagesRequestsSender requestsSender,

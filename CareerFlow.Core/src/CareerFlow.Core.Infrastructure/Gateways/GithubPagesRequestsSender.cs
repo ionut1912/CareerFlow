@@ -6,9 +6,9 @@ namespace CareerFlow.Core.Infrastructure.Gateways;
 
 public class GithubPagesRequestsSender : IGithubPagesRequestsSender
 {
+    private readonly HttpClient _httpClient;
     private readonly string _privacyUrl;
     private readonly string _termsUrl;
-    private readonly HttpClient _httpClient;
 
     public GithubPagesRequestsSender(HttpClient httpClient, IOptions<LegalDocSettings> legalDocOptions)
     {
@@ -18,7 +18,7 @@ public class GithubPagesRequestsSender : IGithubPagesRequestsSender
         _httpClient = httpClient;
         var baseUrl = legalDocOptions.Value.GitHubPagesBaseUrl.TrimEnd('/');
         _privacyUrl = $"{baseUrl}/privacy.md";
-        _termsUrl   = $"{baseUrl}/terms.md";
+        _termsUrl = $"{baseUrl}/terms.md";
     }
 
     public Task<HttpResponseMessage> GetContentAsync(string type, CancellationToken cancellationToken)

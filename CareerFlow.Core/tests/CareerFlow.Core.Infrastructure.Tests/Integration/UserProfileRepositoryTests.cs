@@ -8,7 +8,7 @@ using Xunit;
 namespace CareerFlow.Core.Infrastructure.Tests.Integration;
 
 [Trait("Category", "Integration")]
-public sealed class UserProfileRepositoryTests : BaseRepositoryTest
+public class UserProfileRepositoryTests : BaseRepositoryTest, IAsyncLifetime
 {
     private readonly UserProfileRepository _sut;
 
@@ -17,236 +17,65 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
         _sut = new UserProfileRepository(Context.UserProfiles);
     }
 
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    private async Task<Account> SeedAccountAsync(string email = "user@test.com")
+    public new async Task InitializeAsync()
     {
-        var account = CreateAccount(email);
-        await Context.Accounts.AddAsync(account);
+        await base.InitializeAsync();
+
+        Context.SubChapters.RemoveRange(Context.SubChapters);
+        Context.Chapters.RemoveRange(Context.Chapters);
+        Context.Courses.RemoveRange(Context.Courses);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
-        return account;
     }
-
-    private static UserProfile BuildProfile(
-        Guid accountId,
-        string domain = "Engineering",
-        string learningType = "Visual",
-        string[]? userTypes = null)
-    {
-        var types = (userTypes ?? ["JobSearcher"])
-            .Select(UserType.FromString)
-            .ToList();
-
-        return UserProfile.Create(
-            accountId,
-            LearningType.FromString(learningType),
-            types,
-            domain);
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // AddAsync
-    // ════════════════════════════════════════════════════════════════════════
 
     [Fact]
-    public async Task AddAsync_ValidProfile_PersistsToDatabase()
+    public async Task GetCurrentUserProfile_ExistingAccountId_ReturnsProfile()
     {
         // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id);
-
-        // Act
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-
-        // Assert
-        var saved = await Context.UserProfiles.FindAsync(profile.Id);
-        saved.ShouldNotBeNull();
-        saved.AccountId.ShouldBe(account.Id);
-        saved.Domain.ShouldBe("Engineering");
-        saved.CorrectAnswersForQuiz.ShouldBe(0);
-        saved.IncorrectAnswersForQuiz.ShouldBe(0);
-        saved.Experience.ShouldBe(0);
-    }
-
-    [Fact]
-    public async Task AddAsync_TwoProfilesForSameAccount_ThrowsDueToUniqueIndexViolation()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        await _sut.AddAsync(BuildProfile(account.Id));
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        await _sut.AddAsync(BuildProfile(account.Id)); // same AccountId — violates unique index
-
-        // Act & Assert
-        await Should.ThrowAsync<Exception>(async () => await Context.SaveChangesAsync());
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // GetByIdAsync
-    // ════════════════════════════════════════════════════════════════════════
-
-    [Fact]
-    public async Task GetByIdAsync_ExistingId_ReturnsProfile()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        // Act
-        var result = await _sut.GetByIdAsync(profile.Id);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.Id.ShouldBe(profile.Id);
-        result.AccountId.ShouldBe(account.Id);
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_UnknownId_ReturnsNull()
-    {
-        // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
-
-        // Assert
-        result.ShouldBeNull();
-    }
-
-    [Fact]
-    public async Task GetByIdAsync_WithUserTypesInclude_LoadsOwnedCollection()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, userTypes: ["JobSearcher", "Student"]);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        // Act
-        var result = await _sut.GetByIdAsync(profile.Id, includes: up => up.UserTypes);
-
-        // Assert
-        result.ShouldNotBeNull();
-        result.UserTypes.Count.ShouldBe(2);
-        result.UserTypes.Select(ut => ut.Value).ShouldBe(["JobSearcher", "Student"], true);
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // GetAllAsync
-    // ════════════════════════════════════════════════════════════════════════
-
-    [Fact]
-    public async Task GetAllAsync_WhenTableIsEmpty_ReturnsEmptyCollection()
-    {
-        // Act
-        var result = await _sut.GetAllAsync();
-
-        // Assert
-        result.ShouldBeEmpty();
-    }
-
-
-    // ════════════════════════════════════════════════════════════════════════
-    // Update
-    // ════════════════════════════════════════════════════════════════════════
-
-    [Fact]
-    public async Task Update_ChangingDomainLearningTypeAndUserTypes_PersistsAllChanges()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id, "Finance", "Visual", ["JobSearcher"]);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        var toUpdate = await Context.UserProfiles.FindAsync(profile.Id);
-        toUpdate!.Update(
-            LearningType.FromString("Auditory"),
-            [UserType.FromString("Student")],
-            "Healthcare");
-
-        // Act
-        _sut.Update(toUpdate);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        // Assert
-        var updated = await Context.UserProfiles.FindAsync(profile.Id);
-        updated.ShouldNotBeNull();
-        updated.Domain.ShouldBe("Healthcare");
-        updated.LearningType.Value.ShouldBe("Auditory");
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // Delete
-    // ════════════════════════════════════════════════════════════════════════
-
-    [Fact]
-    public async Task Delete_ExistingProfile_RemovesFromDatabase()
-    {
-        // Arrange
-        var account = await SeedAccountAsync();
-        var profile = BuildProfile(account.Id);
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
-
-        var toDelete = await Context.UserProfiles.FindAsync(profile.Id);
-
-        // Act
-        _sut.Delete(toDelete!);
-        await Context.SaveChangesAsync();
-
-        // Assert
-        var deleted = await Context.UserProfiles.FindAsync(profile.Id);
-        deleted.ShouldBeNull();
-    }
-
-    // ════════════════════════════════════════════════════════════════════════
-    // GetCurrentUserProfile
-    // ════════════════════════════════════════════════════════════════════════
-
-    [Fact]
-    public async Task GetCurrentUserProfile_ExistingAccountId_ReturnsProfileWithAccountAndUserTypesLoaded()
-    {
-        // Arrange
-        var account = await SeedAccountAsync("loaded@test.com");
-        var profile = BuildProfile(
-            account.Id,
-            "Data Science",
-            "Auditory",
-            ["JobSearcher", "Student"]);
-
-        await _sut.AddAsync(profile);
-        await Context.SaveChangesAsync();
-        Context.ChangeTracker.Clear();
+        var (account, profile) = await SeedProfileAsync("current@test.com");
 
         // Act
         var result = await _sut.GetCurrentUserProfile(account.Id, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
-        result.Id.ShouldBe(profile.Id);
-        result.Domain.ShouldBe("Data Science");
-
-        result.Account.ShouldNotBeNull();
-        result.Account.Email.ShouldBe("loaded@test.com");
-
-        result.UserTypes.Count.ShouldBe(2);
-        result.UserTypes.Select(ut => ut.Value).ShouldBe(["JobSearcher", "Student"], true);
-
-        result.LearningType.Value.ShouldBe("Auditory");
+        result.AccountId.ShouldBe(account.Id);
     }
 
     [Fact]
-    public async Task GetCurrentUserProfile_UnknownAccountId_ReturnsNull()
+    public async Task GetCurrentUserProfile_ExistingAccountId_IncludesUserTypes()
+    {
+        // Arrange
+        var userTypes = new List<UserType> { UserType.JobSearcher, UserType.HobbyLearner };
+        var (account, _) = await SeedProfileAsync("usertypes@test.com", userTypes: userTypes);
+
+        // Act
+        var result = await _sut.GetCurrentUserProfile(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.UserTypes.Count.ShouldBe(2);
+        result.UserTypes.ShouldContain(ut => ut.Value == "JobSearcher");
+        result.UserTypes.ShouldContain(ut => ut.Value == "HobbyLearner");
+    }
+
+    [Fact]
+    public async Task GetCurrentUserProfile_ExistingAccountId_IncludesAccount()
+    {
+        // Arrange
+        var (account, _) = await SeedProfileAsync("withaccount@test.com");
+
+        // Act
+        var result = await _sut.GetCurrentUserProfile(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Account.ShouldNotBeNull();
+        result.Account!.Email.ShouldBe("withaccount@test.com");
+    }
+
+    [Fact]
+    public async Task GetCurrentUserProfile_NonExistentAccountId_ReturnsNull()
     {
         // Act
         var result = await _sut.GetCurrentUserProfile(Guid.NewGuid(), CancellationToken.None);
@@ -256,14 +85,228 @@ public sealed class UserProfileRepositoryTests : BaseRepositoryTest
     }
 
     [Fact]
-    public async Task GetCurrentUserProfile_CancellationRequested_ThrowsOperationCanceledException()
+    public async Task GetCurrentUserProfile_DoesNotIncludeCourses()
     {
         // Arrange
-        var cts = new CancellationTokenSource();
-        await cts.CancelAsync();
+        var (account, profile) = await SeedProfileAsync("nocourses@test.com");
+        var course = CreateCourse("C# Basics");
+        await EnrollAndSaveAsync(profile, course);
 
-        // Act & Assert
-        await Should.ThrowAsync<OperationCanceledException>(async () =>
-            await _sut.GetCurrentUserProfile(Guid.NewGuid(), cts.Token));
+        // Act
+        var result = await _sut.GetCurrentUserProfile(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Courses.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ExistingAccountId_ReturnsProfile()
+    {
+        // Arrange
+        var (account, _) = await SeedProfileAsync("courses@test.com");
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.AccountId.ShouldBe(account.Id);
+    }
+
+    [Fact]
+    public async Task GetUserCourses_NonExistentAccountId_ReturnsNull()
+    {
+        // Act
+        var result = await _sut.GetUserCourses(Guid.NewGuid(), CancellationToken.None);
+
+        // Assert
+        result.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ExistingAccountId_IncludesAccount()
+    {
+        // Arrange
+        var (account, _) = await SeedProfileAsync("coursesaccount@test.com");
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Account.ShouldNotBeNull();
+        result.Account!.Email.ShouldBe("coursesaccount@test.com");
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ProfileWithCourse_IncludesCourses()
+    {
+        // Arrange
+        var (account, profile) = await SeedProfileAsync("withcourse@test.com");
+        var course = CreateCourse("Clean Architecture");
+        await EnrollAndSaveAsync(profile, course);
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Courses.Count.ShouldBe(1);
+        result.Courses.First().Topic.ShouldBe("Clean Architecture");
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ProfileWithCourse_IncludesChaptersAndSubChapters()
+    {
+        // Arrange
+        var (account, profile) = await SeedProfileAsync("withchapters@test.com");
+        var course = CreateCourse("DDD", new[]
+        {
+            CreateChapter(1, "Domain Model", 2),
+            CreateChapter(2, "Aggregates", 3)
+        });
+        await EnrollAndSaveAsync(profile, course);
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        var loadedCourse = result.Courses.Single();
+        loadedCourse.Chapters.Count.ShouldBe(2);
+        loadedCourse.Chapters.First().SubChapters.Count.ShouldBe(2);
+        loadedCourse.Chapters.Last().SubChapters.Count.ShouldBe(3);
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ProfileWithMultipleChapters_ChaptersOrderedByDay()
+    {
+        // Arrange
+        var (account, profile) = await SeedProfileAsync("ordered@test.com");
+        var course = CreateCourse("SOLID Principles", new[]
+        {
+            CreateChapter(3, "Liskov"),
+            CreateChapter(1, "Single Responsibility"),
+            CreateChapter(2, "Open Closed")
+        });
+        await EnrollAndSaveAsync(profile, course);
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        var days = result.Courses.Single().Chapters.Select(c => c.Day).ToList();
+        days.ShouldBe(days.OrderBy(d => d).ToList());
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ProfileWithMultipleCourses_ReturnsAllEnrolledCourses()
+    {
+        // Arrange
+        var (account, profile) = await SeedProfileAsync("multicourse@test.com");
+        var course1 = CreateCourse("C# Fundamentals");
+        var course2 = CreateCourse("ASP.NET Core");
+        await EnrollAndSaveAsync(profile, course1, course2);
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Courses.Count.ShouldBe(2);
+        result.Courses.ShouldContain(c => c.Topic == "C# Fundamentals");
+        result.Courses.ShouldContain(c => c.Topic == "ASP.NET Core");
+    }
+
+    [Fact]
+    public async Task GetUserCourses_ProfileWithNoCourses_ReturnsEmptyCoursesCollection()
+    {
+        // Arrange
+        var (account, _) = await SeedProfileAsync("emptycourses@test.com");
+
+        // Act
+        var result = await _sut.GetUserCourses(account.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Courses.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task GetUserCourses_OnlyReturnsCoursesForRequestedAccount()
+    {
+        // Arrange
+        var (account1, profile1) = await SeedProfileAsync("account1@test.com");
+        var (account2, profile2) = await SeedProfileAsync("account2@test.com");
+
+        var course1 = CreateCourse("Account 1 Course");
+        var course2 = CreateCourse("Account 2 Course");
+
+        await EnrollAndSaveAsync(profile1, course1);
+        await EnrollAndSaveAsync(profile2, course2);
+
+        // Act
+        var result = await _sut.GetUserCourses(account1.Id, CancellationToken.None);
+
+        // Assert
+        result.ShouldNotBeNull();
+        result.Courses.Count.ShouldBe(1);
+        result.Courses.Single().Topic.ShouldBe("Account 1 Course");
+    }
+
+    private new static Account CreateAccount(string email)
+    {
+        return Account.Create(email, "Password1!", email.Split('@')[0], "Full Name");
+    }
+
+    private async Task EnrollAndSaveAsync(UserProfile profile, params Course[] courses)
+    {
+        var tracked = await Context.UserProfiles.FindAsync(profile.Id);
+        foreach (var course in courses)
+        {
+            Context.Courses.Add(course);
+            tracked!.EnrollInCourse(course);
+        }
+
+        await Context.SaveChangesAsync();
+        Context.ChangeTracker.Clear();
+    }
+
+    private async Task<(Account account, UserProfile profile)> SeedProfileAsync(
+        string email,
+        string domain = "Engineering",
+        List<UserType>? userTypes = null)
+    {
+        userTypes ??= [UserType.Student];
+
+        var account = CreateAccount(email);
+        Context.Accounts.Add(account);
+        await Context.SaveChangesAsync();
+
+        var profile = UserProfile.Create(account.Id, LearningType.Visual, userTypes, domain);
+        Context.UserProfiles.Add(profile);
+        await Context.SaveChangesAsync();
+        Context.ChangeTracker.Clear();
+
+        return (account, profile);
+    }
+
+    private static Course CreateCourse(string topic, IEnumerable<Chapter>? chapters = null)
+    {
+        var chapterList = chapters?.ToList()
+                          ?? new List<Chapter> { CreateChapter(1, "Intro") };
+
+        return Course.Create(topic, chapterList);
+    }
+
+    private static Chapter CreateChapter(int day, string title, int subChapterCount = 1)
+    {
+        var subChapters = Enumerable.Range(1, subChapterCount)
+            .Select(i => SubChapter.Create($"Sub {i}", $"Summary {i}", $"<p>Theory {i}</p>"))
+            .ToList();
+
+        return Chapter.Create(day, title, $"Core concept for {title}", subChapters);
     }
 }

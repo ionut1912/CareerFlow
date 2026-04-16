@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 using Moq;
 using Xunit;
 
-namespace CareerFlow.Core.Infrastructure.Tests.Unit;
+namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
 public class SocialServiceTests
 {

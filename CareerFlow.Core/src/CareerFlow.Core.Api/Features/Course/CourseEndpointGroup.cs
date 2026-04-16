@@ -32,7 +32,7 @@ public class CourseEndpointGroup : EndpointGroup
         if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = request.ToUploadCourseDocumentCommand(userId);
         var response = await messageBus.InvokeAsync<UploadCoursesResponse>(command, ct);
-        return TypedResults.Accepted((string?)null, value: response);
+        return TypedResults.Accepted((string?)null, response);
     }
 
     private static async Task<Results<NoContent, UnauthorizedHttpResult>> FinishChapterAsync(
