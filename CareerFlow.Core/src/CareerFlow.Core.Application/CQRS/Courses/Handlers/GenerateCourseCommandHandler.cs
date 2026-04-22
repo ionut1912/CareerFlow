@@ -1,6 +1,7 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.AI.Requests;
+using CareerFlow.Core.Domain.Models.AI.Responses;
 
 namespace CareerFlow.Core.Application.CQRS.Courses.Handlers;
 
@@ -17,7 +18,7 @@ public class GenerateCourseCommandHandler
     public async Task<Guid> Handle(GenerateCourseCommand request, CancellationToken cancellationToken)
     {
         var skeletonRequest = new CourseSkeletonRequest(request.Topic);
-        var skeletonResponse = await _courseService.GetCourseSkeletonAsync(skeletonRequest, cancellationToken);
+        CourseSkeletonResponse skeletonResponse = await _courseService.GetCourseSkeletonAsync(skeletonRequest, cancellationToken);
         return await _courseService.SaveCourseContentAsync(request.UserId, skeletonRequest.Topic, skeletonResponse,
             cancellationToken);
     }

@@ -2,6 +2,5 @@
 
 public interface IEmailService
 {
-    Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> placeholders,
-        CancellationToken cancellationToken);
+    Task<bool> SendEmailWithTemplateAsync(string receiver, int templateId, Dictionary<string, string> placeholders);
 }

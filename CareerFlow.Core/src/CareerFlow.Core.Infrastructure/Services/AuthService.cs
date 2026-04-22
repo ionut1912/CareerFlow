@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using System.Text.Json;
 using CareerFlow.Core.Domain.Abstractions.Gateways;
+using CareerFlow.Core.Domain.Abstractions.Gateways.Dtos;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
@@ -12,7 +13,7 @@ using Microsoft.Extensions.Options;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public class AuthService : IAuthService
+public partial class AuthService : IAuthService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly IGoogleTokenValidator _googleValidator;
@@ -42,8 +43,8 @@ public class AuthService : IAuthService
 
     public async Task<Account> LoginWithGoogleAsync(string idToken, CancellationToken cancellationToken = default)
     {
-        var googleUser = await _googleValidator.ValidateIdTokenAsync(idToken, _settings.Google.ClientId);
-        var account = await _accountRepository.GetAccountByEmailAsync(googleUser.Email, cancellationToken);
+        GoogleUserDto googleUser = await _googleValidator.ValidateIdTokenAsync(idToken, _settings.Google.ClientId);
+        Account? account = await _accountRepository.GetAccountByEmailAsync(googleUser.Email, cancellationToken);
 
         if (account == null) return await SaveUserAsync(googleUser.Email, googleUser.Name, cancellationToken);
         return account;
@@ -61,19 +62,17 @@ public class AuthService : IAuthService
             { "client_secret", _settings.LinkedIn.ClientSecret }
         });
 
-        var tokenResponse = await _httpClient.PostAsync("https://www.linkedin.com/oauth/v2/accessToken", tokenReq,
-            cancellationToken);
+        HttpResponseMessage tokenResponse = await _httpClient.PostAsync("https://www.linkedin.com/oauth/v2/accessToken", tokenReq, cancellationToken);
         tokenResponse.EnsureSuccessStatusCode();
 
-        var tokenData = await tokenResponse.Content.ReadFromJsonAsync<LIToken>(cancellationToken);
+        LiToken? tokenData = await tokenResponse.Content.ReadFromJsonAsync<LiToken>(cancellationToken);
         _httpClient.DefaultRequestHeaders.Authorization =
-            new AuthenticationHeaderValue("Bearer", tokenData!.access_token);
+            new AuthenticationHeaderValue("Bearer", tokenData!.AccessToken);
 
-        var userData =
-            await _httpClient.GetFromJsonAsync<LIUser>("https://api.linkedin.com/v2/userinfo", cancellationToken);
-        var account = await _accountRepository.GetAccountByEmailAsync(userData!.email, cancellationToken);
+        LiUser? userData = await _httpClient.GetFromJsonAsync<LiUser>("https://api.linkedin.com/v2/userinfo", cancellationToken);
+        Account? account = await _accountRepository.GetAccountByEmailAsync(userData!.Email, cancellationToken);
 
-        if (account == null) return await SaveUserAsync(userData.email, userData.name, cancellationToken);
+        if (account == null) return await SaveUserAsync(userData.Email, userData.Name, cancellationToken);
 
         return account;
     }
@@ -89,17 +88,17 @@ public class AuthService : IAuthService
             { "grant_type", "authorization_code" }
         });
 
-        var response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", tokenReq, cancellationToken);
+        HttpResponseMessage response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", tokenReq, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var data = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
+        JsonElement data = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);
         return data.GetProperty("id_token").GetString()!;
     }
 
     private async Task<Account> SaveUserAsync(string email, string name, CancellationToken cancellationToken)
     {
-        _logger.LogInformation("No account found for email {Email}", email);
-        var account = CreateAccount(email, name);
+        LogNoAccountFound(email);
+        Account account = CreateAccount(email, name);
         await _accountRepository.AddAsync(account, cancellationToken);
         return account;
     }
@@ -111,4 +110,7 @@ public class AuthService : IAuthService
         account.AcceptPrivacyPolicy();
         return account;
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "No account found for email {Email}")]
+    private partial void LogNoAccountFound(string email);
 }

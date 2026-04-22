@@ -10,7 +10,7 @@ namespace CareerFlow.Core.Infrastructure.Services;
 
 public class DocsAnalyzerService : IDocumentAnalyzerService
 {
-    private static readonly JsonSerializerOptions SnakeCaseOptions = new()
+    private static readonly JsonSerializerOptions _snakeCaseOptions = new()
     {
         PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
         PropertyNameCaseInsensitive = true
@@ -26,16 +26,16 @@ public class DocsAnalyzerService : IDocumentAnalyzerService
 
     public async Task<DocumentProcessingResponse> AnalyzeDocumentAsync(UploadFileDto document, CancellationToken ct)
     {
-        using var content = CreateMultipartContent(document);
+        using MultipartFormDataContent content = CreateMultipartContent(document);
         return await PostAsync<DocumentProcessingResponse>("/document-courses/upload-and-analyze", content, ct);
     }
 
     public async Task<ChapterDetailResponse> ExpandAnalyzedDocument(DocumentChapterRequest documentChapterRequest,
         CancellationToken ct)
     {
-        var response = await _http.PostAsJsonAsync("/document-courses/chapters/expand", documentChapterRequest, ct);
+        HttpResponseMessage response = await _http.PostAsJsonAsync("/document-courses/chapters/expand", documentChapterRequest, ct);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<ChapterDetailResponse>(SnakeCaseOptions, ct)
+        return await response.Content.ReadFromJsonAsync<ChapterDetailResponse>(_snakeCaseOptions, ct)
                ?? throw new InvalidOperationException("Null response from endpoint");
     }
 
@@ -43,16 +43,16 @@ public class DocsAnalyzerService : IDocumentAnalyzerService
     {
         var content = new MultipartFormDataContent();
         var streamContent = new StreamContent(file.Content);
-        streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
         content.Add(streamContent, "file", file.FileName);
         return content;
     }
 
     private async Task<T> PostAsync<T>(string endpoint, MultipartFormDataContent content, CancellationToken ct)
     {
-        var response = await _http.PostAsync(endpoint, content, ct);
+        HttpResponseMessage response = await _http.PostAsync(endpoint, content, ct);
         response.EnsureSuccessStatusCode();
-        return await response.Content.ReadFromJsonAsync<T>(SnakeCaseOptions, ct)
+        return await response.Content.ReadFromJsonAsync<T>(_snakeCaseOptions, ct)
                ?? throw new InvalidOperationException($"Null response from {endpoint}");
     }
 }

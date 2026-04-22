@@ -36,6 +36,4 @@ namespace CareerFlow.Core.Application.Serialization;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-public partial class CareerFlowJsonContext : JsonSerializerContext
-{
-}
+public partial class CareerFlowJsonContext : JsonSerializerContext;

@@ -37,7 +37,7 @@ public class LegalServiceTests
         var cachedDocument = new LegalDocumentResponse("Cached Content", "GitHub Pages", DateTime.UtcNow);
 
         _cacheMock
-            .Setup(x => x.GetAsync<LegalDocumentResponse>($"legal:{docType}", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAsync<LegalDocumentResponse>($"legal:{docType}"))
             .ReturnsAsync(cachedDocument);
 
         // Act
@@ -59,7 +59,7 @@ public class LegalServiceTests
         var cacheKey = $"legal:{docType}";
 
         _cacheMock
-            .Setup(x => x.GetAsync<LegalDocumentResponse>(cacheKey, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAsync<LegalDocumentResponse>(cacheKey))
             .ReturnsAsync((LegalDocumentResponse?)null);
 
         var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
@@ -80,7 +80,7 @@ public class LegalServiceTests
         result.Source.ShouldBe("GitHub Pages");
 
         _cacheMock.Verify(x =>
-                x.SetAsync(cacheKey, result, TimeSpan.FromHours(6), It.IsAny<CancellationToken>()),
+                x.SetAsync(cacheKey, result, TimeSpan.FromHours(6)),
             Times.Once);
     }
 
@@ -89,7 +89,7 @@ public class LegalServiceTests
     {
         // Arrange
         _cacheMock
-            .Setup(x => x.GetAsync<LegalDocumentResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAsync<LegalDocumentResponse>(It.IsAny<string>()))
             .ReturnsAsync((LegalDocumentResponse?)null);
 
         var httpResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError);
@@ -104,8 +104,7 @@ public class LegalServiceTests
         // Assert
         result.ShouldBeNull();
         _cacheMock.Verify(x =>
-                x.SetAsync(It.IsAny<string>(), It.IsAny<LegalDocumentResponse>(), It.IsAny<TimeSpan>(),
-                    It.IsAny<CancellationToken>()),
+                x.SetAsync(It.IsAny<string>(), It.IsAny<LegalDocumentResponse>(), It.IsAny<TimeSpan>()),
             Times.Never);
     }
 

@@ -19,8 +19,8 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
         _accountRepositoryMock = new Mock<IAccountRepository>();
         _handler = new AcceptLegalDocCommandHandler(
             _accountRepositoryMock.Object,
-            _unitOfWorkMock.Object,
-            _loggerMock.Object);
+            UnitOfWorkMock.Object,
+            LoggerMock.Object);
     }
 
     [Theory]
@@ -37,7 +37,7 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
 
         _accountRepositoryMock
             .Verify(x => x.Update(account), Times.Once);
-        _unitOfWorkMock
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(Ct), Times.Once);
     }
 
@@ -53,8 +53,8 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
         exception.Message.ShouldBe($"Contul cu id-ul {command.AccountId} nu a fost gasit");
         _accountRepositoryMock
             .Verify(x => x.Update(It.IsAny<Account>()), Times.Never);
-        _loggerMock.VerifyLogError(command.AccountId.ToString(), Times.Once());
-        _unitOfWorkMock
+        LoggerMock.VerifyLogError(command.AccountId.ToString(), Times.Once());
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -71,7 +71,7 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
         exception.Message.ShouldBe("Invalid legal document type");
         _accountRepositoryMock
             .Verify(x => x.Update(It.IsAny<Account>()), Times.Never);
-        _unitOfWorkMock
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
@@ -89,7 +89,7 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
 
         await Should.ThrowAsync<ArgumentNullException>(() => new AcceptLegalDocCommandHandler(
             isRepoNull ? null! : _accountRepositoryMock.Object,
-            isUnitOfWorkNull ? null! : _unitOfWorkMock.Object,
-            isLoggerNull ? null! : _loggerMock.Object).Handle(command, Ct));
+            isUnitOfWorkNull ? null! : UnitOfWorkMock.Object,
+            isLoggerNull ? null! : LoggerMock.Object).Handle(command, Ct));
     }
 }

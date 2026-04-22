@@ -21,9 +21,10 @@ public static class CourseAssembler
     {
         var questions = new List<QuizQuestion>();
 
-        foreach (var (chData, chapter) in data.Zip(course.Chapters))
+        foreach ((ChapterAssemblyModel chData, Chapter chapter) in data.Zip(course.Chapters))
         {
             if (chData.RecapQuiz is { Count: > 0 })
+            {
                 questions.AddRange(chData.RecapQuiz.Select(q =>
                     QuizQuestion.Create(
                         Truncate(q.Question, 500),
@@ -31,9 +32,12 @@ public static class CourseAssembler
                         Truncate(q.Options.FirstOrDefault(o => o.IsCorrect)?.Label),
                         chapter.Id,
                         null)));
+            }
 
-            foreach (var (sub, subChapter) in chData.Subchapters.Zip(chapter.SubChapters))
+            foreach ((SubchapterAssemblyModel sub, SubChapter subChapter) in chData.Subchapters.Zip(chapter.SubChapters))
+            {
                 if (sub.Quiz is { Count: > 0 })
+                {
                     questions.AddRange(sub.Quiz.Select(q =>
                         QuizQuestion.Create(
                             Truncate(q.Question, 500),
@@ -41,6 +45,8 @@ public static class CourseAssembler
                             Truncate(q.Options.FirstOrDefault(o => o.IsCorrect)?.Label),
                             null,
                             subChapter.Id)));
+                }
+            }
         }
 
         return questions;
@@ -51,8 +57,8 @@ public static class CourseAssembler
         if (string.IsNullOrEmpty(value) || value.Length <= max)
             return value ?? string.Empty;
 
-        var truncated = value[..max];
-        var lastSpace = truncated.LastIndexOf(' ');
+        string truncated = value[..max];
+        int lastSpace = truncated.LastIndexOf(' ');
         return lastSpace > 0 ? truncated[..lastSpace] : truncated;
     }
 }

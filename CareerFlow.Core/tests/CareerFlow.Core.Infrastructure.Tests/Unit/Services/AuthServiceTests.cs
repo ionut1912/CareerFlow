@@ -15,7 +15,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
-public class AuthServiceTests
+public class AuthServiceTests:IDisposable
 {
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
     private readonly Mock<IGoogleTokenValidator> _googleValidatorMock;
@@ -33,7 +33,7 @@ public class AuthServiceTests
 
         _settings = Options.Create(new SocialAuthSettings
         {
-            Google = new GoogleSettings { ClientId = "google-client-id" },
+            Google = new GoogleSettings { ClientId = "google-client-id", ClientSecret = "google-client-secret"},
             LinkedIn = new LinkedInSettings
             {
                 ClientId = "li-client-id",
@@ -107,7 +107,7 @@ public class AuthServiceTests
             .ReturnsAsync(existingAccount);
 
         // Act
-        var result = await _sut.LoginWithGoogleAsync("id-token");
+        Account result = await _sut.LoginWithGoogleAsync("id-token");
 
         // Assert
         result.ShouldBe(existingAccount);
@@ -130,7 +130,7 @@ public class AuthServiceTests
             .ReturnsAsync((Account?)null);
 
         // Act
-        var result = await _sut.LoginWithGoogleAsync("id-token");
+        Account result = await _sut.LoginWithGoogleAsync("id-token");
 
         // Assert
         result.ShouldNotBeNull();
@@ -154,7 +154,7 @@ public class AuthServiceTests
             .ReturnsAsync((Account?)null);
 
         // Act
-        var result = await _sut.LoginWithGoogleAsync("token");
+        Account result = await _sut.LoginWithGoogleAsync("token");
 
         // Assert
         result.TermsAccepted.ShouldBeTrue();
@@ -174,7 +174,7 @@ public class AuthServiceTests
             .ReturnsAsync((Account?)null);
 
         // Act
-        var result = await _sut.LoginWithGoogleAsync("token");
+        Account result = await _sut.LoginWithGoogleAsync("token");
 
         // Assert
         result.ShouldNotBeNull();
@@ -206,7 +206,7 @@ public class AuthServiceTests
             .ReturnsAsync(existing);
 
         // Act
-        var result = await _sut.LoginWithLinkedInAsync("auth-code");
+        Account result = await _sut.LoginWithLinkedInAsync("auth-code");
 
         // Assert
         result.ShouldBe(existing);
@@ -227,7 +227,7 @@ public class AuthServiceTests
             .ReturnsAsync((Account?)null);
 
         // Act
-        var result = await _sut.LoginWithLinkedInAsync("auth-code");
+        Account result = await _sut.LoginWithLinkedInAsync("auth-code");
 
         // Assert
         result.ShouldNotBeNull();
@@ -273,18 +273,21 @@ public class AuthServiceTests
     {
         private readonly Queue<HttpResponseMessage> _responses = new();
 
-        public void Enqueue(HttpResponseMessage response)
-        {
-            _responses.Enqueue(response);
-        }
+        public void Enqueue(HttpResponseMessage response) => _responses.Enqueue(response);
 
         protected override Task<HttpResponseMessage> SendAsync(
             HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            if (_responses.Count == 0)
-                throw new InvalidOperationException("No responses queued.");
-
-            return Task.FromResult(_responses.Dequeue());
+            return _responses.Count == 0
+                ? throw new InvalidOperationException("No responses queued.")
+                : Task.FromResult(_responses.Dequeue());
         }
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        _httpClient.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

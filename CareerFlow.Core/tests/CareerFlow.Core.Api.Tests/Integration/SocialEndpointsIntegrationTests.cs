@@ -7,12 +7,8 @@ using Xunit;
 namespace CareerFlow.Core.Api.Tests.Integration;
 
 [Trait("Category", "Integration")]
-public class SocialEndpointsIntegrationTests : IntegrationTestBase
+public class SocialEndpointsIntegrationTests(TestWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
-    public SocialEndpointsIntegrationTests(TestWebApplicationFactory factory) : base(factory)
-    {
-    }
-
     private HttpClient NoRedirectClient()
     {
         return Factory.CreateClient(
@@ -71,7 +67,7 @@ public class SocialEndpointsIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task LinkedInMobileLogin_NoParams_Returns302Redirect()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/linkedin/mobile");
+        HttpResponseMessage response = await NoRedirectClient().GetAsync("/social/auth/linkedin/mobile");
 
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
     }

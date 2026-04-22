@@ -1,11 +1,13 @@
 using CareerFlow.Core.Domain.Exceptions;
+using JetBrains.Annotations;
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
 
 public class SystemDocument : Entity
 {
-    private SystemDocument()
+    [UsedImplicitly]
+    private SystemDocument()// For EfCore
     {
     }
 
@@ -23,10 +25,7 @@ public class SystemDocument : Entity
     public string DocumentType { get; private set; } = string.Empty;
     public string CurrentETag { get; private set; } = string.Empty;
 
-    public static SystemDocument Create(string documentType, string currentETag)
-    {
-        return new SystemDocument(documentType, currentETag);
-    }
+    public static SystemDocument Create(string documentType, string currentETag) => new(documentType, currentETag);
 
     public void Update(string currentEtag)
     {

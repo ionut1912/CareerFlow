@@ -1,5 +1,3 @@
 ﻿namespace CareerFlow.Core.Domain.Exceptions;
 
-public class InvalidRefreshTokenException(string message) : Exception(message)
-{
-}
+public class InvalidRefreshTokenException(string message) : Exception(message);

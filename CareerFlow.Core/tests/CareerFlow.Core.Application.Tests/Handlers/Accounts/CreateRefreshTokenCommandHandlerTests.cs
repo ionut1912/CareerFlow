@@ -25,11 +25,11 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         _tokenServiceMock = new Mock<ITokenService>();
 
         _handler = new CreateRefreshTokenCommandHandler(
-            _loggerMock.Object,
+            LoggerMock.Object,
             _accountRepositoryMock.Object,
             _tokenServiceMock.Object,
             _refreshTokenRepositoryMock.Object,
-            _unitOfWorkMock.Object);
+            UnitOfWorkMock.Object);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         result.RefreshToken.ShouldBe(newRefreshToken.TokenHash);
         _refreshTokenRepositoryMock.Verify(x => x.Update(storedToken), Times.Once);
         _refreshTokenRepositoryMock.Verify(x => x.AddAsync(newRefreshToken, Ct), Times.Once);
-        _unitOfWorkMock.VerifySaveChanges(Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
     }
 
     [Fact]
@@ -71,7 +71,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         await Should.ThrowAsync<InvalidRefreshTokenException>(() => _handler.Handle(command, Ct));
 
         //Assert
-        _loggerMock.VerifyLogError(command.RefreshToken, Times.Once());
+        LoggerMock.VerifyLogError(command.RefreshToken, Times.Once());
     }
 
     [Fact]
@@ -86,10 +86,10 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
             .ReturnsAsync(storedToken);
 
         //Act
-        await Should.ThrowAsync<TokenAlreadyUsedExcception>(() => _handler.Handle(command, Ct));
+        await Should.ThrowAsync<TokenAlreadyUsedException>(() => _handler.Handle(command, Ct));
 
         //Assert
-        _loggerMock.VerifyLogError(command.RefreshToken, Times.Once());
+        LoggerMock.VerifyLogError(command.RefreshToken, Times.Once());
     }
 
     [Fact]
@@ -107,7 +107,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         await Should.ThrowAsync<TokenRevokedException>(() => _handler.Handle(command, Ct));
 
         //Assert
-        _loggerMock.VerifyLogError(command.RefreshToken, Times.Once());
+        LoggerMock.VerifyLogError(command.RefreshToken, Times.Once());
     }
 
     [Fact]
@@ -125,7 +125,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         //Assert
-        _loggerMock.VerifyLogError(storedToken.UserId.ToString(), Times.Once());
+        LoggerMock.VerifyLogError(storedToken.UserId.ToString(), Times.Once());
     }
 
     [Theory]
@@ -142,11 +142,11 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         var command = new CreateRefreshTokenCommand("token", "refresh");
 
         // Map the boolean flags to either the mock object or a null-forgiven null
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var logger = isLoggerNull ? null! : LoggerMock.Object;
         var accountRepo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
         var tokenService = isTokenServiceNull ? null! : _tokenServiceMock.Object;
         var refreshRepo = isRefreshRepoNull ? null! : _refreshTokenRepositoryMock.Object;
-        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
+        var uow = isUowNull ? null! : UnitOfWorkMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

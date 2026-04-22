@@ -22,8 +22,8 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
         _handler = new CreateUserProfileCommandHandler(
             _userProfileRepositroyMock.Object,
             _accountRepositoryMock.Object,
-            _loggerMock.Object,
-            _unitOfWorkMock.Object);
+            LoggerMock.Object,
+            UnitOfWorkMock.Object);
     }
 
     [Fact]
@@ -43,7 +43,7 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .Verify(x => x.GetByIdAsync(request.AccountId, Ct), Times.Once);
 
         _userProfileRepositroyMock.Verify(x => x.AddAsync(It.IsAny<UserProfile>()), Times.Once);
-        _unitOfWorkMock
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(Ct), Times.Once);
     }
 
@@ -63,9 +63,9 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .Verify(x => x.GetByIdAsync(request.AccountId, Ct), Times.Once);
 
         _userProfileRepositroyMock.Verify(x => x.AddAsync(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(Ct), Times.Never);
-        _loggerMock.VerifyLogError(request.AccountId.ToString(), Times.Once());
+        LoggerMock.VerifyLogError(request.AccountId.ToString(), Times.Once());
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .Verify(x => x.GetByIdAsync(request.AccountId, Ct), Times.Once);
 
         _userProfileRepositroyMock.Verify(x => x.AddAsync(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(Ct), Times.Never);
     }
 
@@ -109,7 +109,7 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .Verify(x => x.GetByIdAsync(request.AccountId, Ct), Times.Once);
 
         _userProfileRepositroyMock.Verify(x => x.AddAsync(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock
+        UnitOfWorkMock
             .Verify(x => x.SaveChangesAsync(Ct), Times.Never);
     }
 }

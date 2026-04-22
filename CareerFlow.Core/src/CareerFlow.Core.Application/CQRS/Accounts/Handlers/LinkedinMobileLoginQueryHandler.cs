@@ -1,8 +1,10 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using JetBrains.Annotations;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 
+[UsedImplicitly]
 public class LinkedinMobileLoginQueryHandler
 {
     private readonly ISocialService _socialService;
@@ -13,8 +15,6 @@ public class LinkedinMobileLoginQueryHandler
         _socialService = socialService;
     }
 
-    public async Task<string> Handle(LinkedinMobileLoginQuery request, CancellationToken cancellationToken)
-    {
-        return await _socialService.LinkedInMobileLogin(request.ReturnUrl);
-    }
+    [UsedImplicitly]
+    public async Task<string> Handle(LinkedinMobileLoginQuery request, CancellationToken cancellationToken) => await _socialService.LinkedInMobileLogin(request.ReturnUrl);
 }

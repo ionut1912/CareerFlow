@@ -1,11 +1,15 @@
 ﻿using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
+
+using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
 
 public class Account : Entity
 {
+    [UsedImplicitly]
     private Account() //for EF core
     {
     }
@@ -41,22 +45,14 @@ public class Account : Entity
     public bool PrivacyPolicyAccepted { get; private set; }
     public string ResetPasswordToken { get; private set; } = string.Empty;
     public DateTime ResetPasswordTokenExpiresAt { get; private set; }
+    [UsedImplicitly]
     public UserProfile? UserProfile { get; private set; }
 
-    public static Account Create(string email, string password, string username, string name)
-    {
-        return new Account(email, password, username, name);
-    }
+    public static Account Create(string email, string password, string username, string name) => new(email, password, username, name);
 
-    public void SetResetPasswordExipiresAt(DateTime expiresAt)
-    {
-        ResetPasswordTokenExpiresAt = expiresAt;
-    }
+    public void SetResetPasswordExpiresAt(DateTime expiresAt) => ResetPasswordTokenExpiresAt = expiresAt;
 
-    public void HashPassword(IPasswordService passwordService)
-    {
-        Password = passwordService.HashPassword(Password);
-    }
+    public void HashPassword(IPasswordService passwordService) => Password = passwordService.HashPassword(Password);
 
     public void ResetPassword(string newPassword, IPasswordService passwordService)
     {

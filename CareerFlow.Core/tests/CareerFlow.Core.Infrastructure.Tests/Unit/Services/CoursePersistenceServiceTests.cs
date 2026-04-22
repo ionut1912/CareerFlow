@@ -74,7 +74,7 @@ public class CoursePersistenceServiceTests
         var profile = UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
         SetupSuccessfulPersist(userId, profile);
 
-        var result = await _sut.PersistAsync(userId, "Topic", CreateValidAssemblyData());
+        Guid result = await _sut.PersistAsync(userId, "Topic", CreateValidAssemblyData());
 
         result.ShouldNotBe(Guid.Empty);
     }
@@ -149,10 +149,10 @@ public class CoursePersistenceServiceTests
             .ReturnsAsync(profile);
         _uowMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _courseRepoMock.Setup(r => r.AddAsync(It.IsAny<Course>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ThrowsAsync(new InvalidOperationException("DB error"));
         _uowMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        await Should.ThrowAsync<Exception>(() =>
+        await Should.ThrowAsync<InvalidOperationException>(() =>
             _sut.PersistAsync(userId, "Topic", CreateValidAssemblyData()));
 
         _uowMock.Verify(u => u.RollbackAsync(It.IsAny<CancellationToken>()), Times.Once);
@@ -168,10 +168,10 @@ public class CoursePersistenceServiceTests
             .ReturnsAsync(profile);
         _uowMock.Setup(u => u.BeginTransactionAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
         _courseRepoMock.Setup(r => r.AddAsync(It.IsAny<Course>(), It.IsAny<CancellationToken>()))
-            .ThrowsAsync(new Exception("DB error"));
+            .ThrowsAsync(new InvalidOperationException("DB error"));
         _uowMock.Setup(u => u.RollbackAsync(It.IsAny<CancellationToken>())).Returns(Task.CompletedTask);
 
-        await Should.ThrowAsync<Exception>(() =>
+        await Should.ThrowAsync<InvalidOperationException>(() =>
             _sut.PersistAsync(userId, "Topic", CreateValidAssemblyData()));
 
         _uowMock.Verify(u => u.CommitAsync(It.IsAny<CancellationToken>()), Times.Never);

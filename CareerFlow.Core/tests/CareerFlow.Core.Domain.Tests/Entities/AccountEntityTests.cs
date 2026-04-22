@@ -13,15 +13,13 @@ public class AccountEntityTests
         string email = "test@test.com",
         string password = "Password1!",
         string username = "username",
-        string name = "Full Name")
-    {
-        return Account.Create(email, password, username, name);
-    }
+        string name = "Full Name") =>
+        Account.Create(email, password, username, name);
 
     [Fact]
     public void Create_ValidParameters_ReturnsAccount()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.ShouldNotBeNull();
         account.Email.ShouldBe("test@test.com");
@@ -33,7 +31,7 @@ public class AccountEntityTests
     [Fact]
     public void Create_ValidParameters_SetsDefaultFlagsToFalse()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.IsFounder.ShouldBeFalse();
         account.TermsAccepted.ShouldBeFalse();
@@ -43,9 +41,9 @@ public class AccountEntityTests
     [Fact]
     public void Create_ValidParameters_SetsCreatedAtToNow()
     {
-        var before = DateTime.UtcNow.AddSeconds(-1);
+        DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.CreatedAt.ShouldBeInRange(before, DateTime.UtcNow.AddSeconds(1));
     }
@@ -93,7 +91,8 @@ public class AccountEntityTests
     [Fact]
     public void HashPassword_ValidService_UpdatesPasswordToHash()
     {
-        var account = CreateValidAccount();
+
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword("Password1!")).Returns("hashed_password");
 
@@ -212,7 +211,7 @@ public class AccountEntityTests
 
         account.GenerateResetPasswordToken("raw-token", passwordService.Object);
 
-        account.ResetPasswordTokenExpiresAt!.ShouldBeGreaterThan(expectedExpiry);
+        account.ResetPasswordTokenExpiresAt.ShouldBeGreaterThan(expectedExpiry);
     }
 
     [Theory]
@@ -221,7 +220,7 @@ public class AccountEntityTests
     [InlineData(null)]
     public void GenerateResetPasswordToken_InvalidToken_ThrowsInvalidFieldException(string? token)
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
 
         Should.Throw<InvalidFieldException>(() =>
@@ -247,7 +246,7 @@ public class AccountEntityTests
         var account = CreateValidAccount();
         var expiry = DateTime.UtcNow.AddHours(2);
 
-        account.SetResetPasswordExipiresAt(expiry);
+        account.SetResetPasswordExpiresAt(expiry);
 
         account.ResetPasswordTokenExpiresAt.ShouldBe(expiry);
     }

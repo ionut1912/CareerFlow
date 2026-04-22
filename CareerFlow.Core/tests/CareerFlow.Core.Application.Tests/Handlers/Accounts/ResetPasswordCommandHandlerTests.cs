@@ -21,10 +21,10 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         _accountRepositoryMock = new Mock<IAccountRepository>();
         _passwordServiceMock = new Mock<IPasswordService>();
         _handler = new ResetPasswordCommandHandler(
-            _loggerMock.Object,
+            LoggerMock.Object,
             _accountRepositoryMock.Object,
             _passwordServiceMock.Object,
-            _unitOfWorkMock.Object);
+            UnitOfWorkMock.Object);
     }
 
     [Fact]
@@ -32,7 +32,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     {
         // Arrange
         var account = TestDataFactory.CreateAccount();
-        account.SetResetPasswordExipiresAt(DateTime.UtcNow.AddHours(1));
+        account.SetResetPasswordExpiresAt(DateTime.UtcNow.AddHours(1));
         var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
         _passwordServiceMock.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
@@ -44,7 +44,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         _passwordServiceMock.Verify(x => x.HashPassword(command.NewPassword),
             Times.Once);
         _accountRepositoryMock.Verify(x => x.Update(account), Times.Once);
-        _unitOfWorkMock.VerifySaveChanges(Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
     }
 
     [Fact]
@@ -58,8 +58,8 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError(command.Email, Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError(command.Email, Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
 
         //Assert
         exception.Message.ShouldBe("Tokenurile nu sunt la fel");
-        _loggerMock.VerifyLogError("Tokenurile nu sunt la fel", Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError("Tokenurile nu sunt la fel", Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
     {
         //Arrange
         var account = TestDataFactory.CreateAccount();
-        account.SetResetPasswordExipiresAt(DateTime.Now.AddDays(-1));
+        account.SetResetPasswordExpiresAt(DateTime.Now.AddDays(-1));
         var command = new ResetPasswordCommand(account.Email, "newPassword", "token");
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
         _passwordServiceMock.Setup(x => x.VerifyPassword(It.IsAny<string>(), It.IsAny<string>()))
@@ -97,8 +97,8 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
 
         //Assert
         exception.Message.ShouldBe("Tokenul e expirat");
-        _loggerMock.VerifyLogError("Tokenul e expirat", Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError("Tokenul e expirat", Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Theory]
@@ -111,10 +111,10 @@ public class ResetPasswordCommandHandlerTests : BaseHandlerTest<ResetPasswordCom
         bool isAccountRepoNull, bool isPasswordServiceNull, bool isUnitOfWorkNull)
     {
         // Arrange
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var logger = isLoggerNull ? null! : LoggerMock.Object;
         var repo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
         var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
-        var uow = isUnitOfWorkNull ? null! : _unitOfWorkMock.Object;
+        var uow = isUnitOfWorkNull ? null! : UnitOfWorkMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

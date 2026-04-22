@@ -1,16 +1,16 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 
-public class AcceptLegalDocCommandHandler
+public partial class AcceptLegalDocCommandHandler
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ILogger<AcceptLegalDocCommandHandler> _logger;
     private readonly IUnitOfWork _unitOfWork;
-
 
     public AcceptLegalDocCommandHandler(IAccountRepository accountRepository, IUnitOfWork unitOfWork,
         ILogger<AcceptLegalDocCommandHandler> logger)
@@ -26,20 +26,20 @@ public class AcceptLegalDocCommandHandler
 
     public async Task Handle(AcceptLegalDocCommand request, CancellationToken cancellationToken)
     {
-        var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
+        Account? account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account == null)
         {
-            _logger.LogError("Contul cu  {Id} nu exista", request.AccountId);
+            LogAccountNotFound(request.AccountId);
             throw new AccountNotFoundException($"Contul cu id-ul {request.AccountId} nu a fost gasit");
         }
 
-        var normalizedType = request.Type?.Trim();
+        string normalizedType = request.Type.Trim();
         switch (normalizedType)
         {
-            case var t when string.Equals(t, "Terms", StringComparison.OrdinalIgnoreCase):
+            case var _ when string.Equals(normalizedType, "Terms", StringComparison.OrdinalIgnoreCase):
                 account.AcceptTerms();
                 break;
-            case var t when string.Equals(t, "Privacy", StringComparison.OrdinalIgnoreCase):
+            case var _ when string.Equals(normalizedType, "Privacy", StringComparison.OrdinalIgnoreCase):
                 account.AcceptPrivacyPolicy();
                 break;
             default:
@@ -49,4 +49,7 @@ public class AcceptLegalDocCommandHandler
         _accountRepository.Update(account);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Contul cu {Id} nu exista")]
+    private partial void LogAccountNotFound(Guid id);
 }

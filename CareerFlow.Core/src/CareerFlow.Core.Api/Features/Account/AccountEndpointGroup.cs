@@ -15,9 +15,9 @@ namespace CareerFlow.Core.Api.Features.Account;
 
 public class AccountEndpointGroup : EndpointGroup
 {
-    public override void Map(IEndpointRouteBuilder endpoints)
+    public override void Map(IEndpointRouteBuilder app)
     {
-        var group = endpoints.MapGroup(this);
+        RouteGroupBuilder group = app.MapGroup(this);
         group.MapPost(Register, "/register");
         group.MapPost(Login, "/login");
         group.MapPost(RefreshToken, "/refresh-token");
@@ -33,8 +33,8 @@ public class AccountEndpointGroup : EndpointGroup
         CreateAccountRequest createAccountRequest,
         CancellationToken cancellationToken)
     {
-        var createAccountCommand = createAccountRequest.ToCreateCommand();
-        var createdAccount = await bus.InvokeAsync<Guid>(createAccountCommand, cancellationToken);
+        CreateAccountCommand createAccountCommand = createAccountRequest.ToCreateCommand();
+        Guid createdAccount = await bus.InvokeAsync<Guid>(createAccountCommand, cancellationToken);
         return TypedResults.Ok(createdAccount);
     }
 
@@ -44,7 +44,7 @@ public class AccountEndpointGroup : EndpointGroup
         CancellationToken cancellationToken)
     {
         var loginQuery = loginRequest.ToLoginQuery();
-        var result = await bus.InvokeAsync<AccountDto>(loginQuery, cancellationToken);
+        AccountDto result = await bus.InvokeAsync<AccountDto>(loginQuery, cancellationToken);
         return TypedResults.Ok(result);
     }
 
@@ -53,9 +53,9 @@ public class AccountEndpointGroup : EndpointGroup
         ForgotPasswordRequest forgotPasswordRequest,
         CancellationToken cancellationToken)
     {
-        var resetToken = Guid.NewGuid().ToString();
-        var resetPasswordLink = "https://carerflow-api.ro/reset-password";
-        var finalLink = $"{resetPasswordLink}?token={resetToken}";
+        string resetToken = Guid.NewGuid().ToString();
+        const string resetPasswordLink = "https://carerflow-api.ro/reset-password";
+        string finalLink = $"{resetPasswordLink}?token={resetToken}";
         var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink, resetToken);
         await bus.InvokeAsync(command, cancellationToken);
         return TypedResults.NoContent();
@@ -79,7 +79,7 @@ public class AccountEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var accountId = httpContext.GetAccountId();
+        Guid accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return TypedResults.Unauthorized();
 
         var acceptLegalDocCommand = acceptLegalDocRequest.ToAcceptLegalDocCommand(accountId);
@@ -94,7 +94,7 @@ public class AccountEndpointGroup : EndpointGroup
         CancellationToken cancellationToken)
     {
         var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();
-        var result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, cancellationToken);
+        RefreshTokenDto result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, cancellationToken);
         return TypedResults.Ok(result);
     }
 
@@ -104,11 +104,11 @@ public class AccountEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var accountId = httpContext.GetAccountId();
+        Guid accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return TypedResults.Unauthorized();
 
         var currentUserQuery = new GetCurrentAccountQuery(accountId);
-        var result = await bus.InvokeAsync<AccountDto>(currentUserQuery, cancellationToken);
+        AccountDto result = await bus.InvokeAsync<AccountDto>(currentUserQuery, cancellationToken);
         return TypedResults.Ok(result);
     }
 
@@ -118,7 +118,7 @@ public class AccountEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var accountId = httpContext.GetAccountId();
+        Guid accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return TypedResults.Unauthorized();
 
         var deleteAccountCommand = new DeleteAccountCommand(accountId);

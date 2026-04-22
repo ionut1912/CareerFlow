@@ -15,7 +15,7 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
     protected readonly HttpClient AnonymousClient;
     protected readonly TestWebApplicationFactory Factory;
 
-    protected IntegrationTestBase(TestWebApplicationFactory factory)
+    public IntegrationTestBase(TestWebApplicationFactory factory)
     {
         Factory = factory;
         AnonymousClient = Factory.CreateClient();

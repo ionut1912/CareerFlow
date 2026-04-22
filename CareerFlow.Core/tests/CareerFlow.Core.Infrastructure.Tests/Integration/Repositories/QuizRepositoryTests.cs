@@ -1,5 +1,5 @@
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Infrastructure.Persistance.Repositories;
+using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 using Shouldly;
 using Xunit;
@@ -44,7 +44,7 @@ public class QuizRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         saved.ShouldNotBeNull();
         saved!.Question.ShouldBe("What is DI?");
         saved.CorrectAnswer.ShouldBe("Dependency Injection");
-        saved.Options.ShouldBe(new List<string> { "Dependency Injection", "Direct Invocation" });
+        saved.Options.ShouldBe(["Dependency Injection", "Direct Invocation"]);
     }
 
     [Fact]
@@ -148,11 +148,11 @@ public class QuizRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         var question = await SeedQuestionAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(question.Id);
+        QuizQuestion? result = await _sut.GetByIdAsync(question.Id);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.Id.ShouldBe(question.Id);
+        result.Id.ShouldBe(question.Id);
         result.Question.ShouldBe(question.Question);
     }
 

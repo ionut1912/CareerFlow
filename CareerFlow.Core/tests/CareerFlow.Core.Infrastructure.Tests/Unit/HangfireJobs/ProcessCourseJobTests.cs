@@ -122,10 +122,10 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_AnalyzerThrows_SetsJobToFailed()
     {
-        var (job, jobId, userId) = SetupJobWithUpload();
+        (CourseJob job, Guid jobId, Guid userId) = SetupJobWithUpload();
         SetupCacheMiss();
         _storageMock.Setup(s => s.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MemoryStream(new byte[] { 1 }));
+            .ReturnsAsync(new MemoryStream([1]));
         _analyzerMock
             .Setup(a => a.AnalyzeDocumentAsync(It.IsAny<UploadFileDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("AI down"));
@@ -140,18 +140,18 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_AnalyzerThrows_SetsErrorMessage()
     {
-        var (job, jobId, userId) = SetupJobWithUpload();
-        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        (CourseJob job, Guid jobId, Guid userId) = SetupJobWithUpload();
+        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>()))
             .ReturnsAsync((DocumentProcessingResponse)null!);
         _storageMock.Setup(s => s.DownloadAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new MemoryStream(new byte[] { 1 }));
+            .ReturnsAsync(new MemoryStream([1]));
         _analyzerMock
             .Setup(a => a.AnalyzeDocumentAsync(It.IsAny<UploadFileDto>(), It.IsAny<CancellationToken>()))
             .ThrowsAsync(new HttpRequestException("AI service down"));
         _uowMock.Setup(u => u.SaveChangesAsync(It.IsAny<CancellationToken>()))
             .ReturnsAsync(1);
 
-        var exception = await Should.ThrowAsync<HttpRequestException>(() =>
+        HttpRequestException exception = await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.ExecuteAsync(jobId, userId, CancellationToken.None));
 
         exception.Message.ShouldBe("AI service down");
@@ -162,13 +162,13 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_DocumentCacheHit_SkipsStorage()
     {
-        var (_, jobId, userId) = SetupJobWithUpload();
-        var docResponse = BuildDocumentResponse();
-        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        (_, Guid jobId, Guid userId) = SetupJobWithUpload();
+        DocumentProcessingResponse docResponse = BuildDocumentResponse();
+        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>()))
             .ReturnsAsync(docResponse);
         _cacheMock.Setup(c =>
-                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ExpandedChapterDataDto>());
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>()))
+            .ReturnsAsync((List<ExpandedChapterDataDto>)[]);
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
                 It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
@@ -183,11 +183,11 @@ public class ProcessCourseJobTests
     public async Task ExecuteAsync_SuccessfulExecution_SetsCourseIdOnJob()
     {
         var courseId = Guid.NewGuid();
-        var (job, jobId, userId) = SetupJobWithUpload();
-        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        (CourseJob job, Guid jobId, Guid userId) = SetupJobWithUpload();
+        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>()))
             .ReturnsAsync(BuildDocumentResponse());
         _cacheMock.Setup(c =>
-                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>()))
             .ReturnsAsync(new List<ExpandedChapterDataDto>());
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
                 It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
@@ -203,12 +203,12 @@ public class ProcessCourseJobTests
     [Fact]
     public async Task ExecuteAsync_SuccessfulExecution_CallsPersistenceService()
     {
-        var (_, jobId, userId) = SetupJobWithUpload();
-        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        (_, Guid jobId, Guid userId) = SetupJobWithUpload();
+        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>()))
             .ReturnsAsync(BuildDocumentResponse());
         _cacheMock.Setup(c =>
-                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new List<ExpandedChapterDataDto>());
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>()))
+            .ReturnsAsync([]);
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
                 It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
@@ -241,10 +241,10 @@ public class ProcessCourseJobTests
 
     private void SetupCacheMiss()
     {
-        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+        _cacheMock.Setup(c => c.GetAsync<DocumentProcessingResponse>(It.IsAny<string>()))
             .ReturnsAsync((DocumentProcessingResponse?)null);
         _cacheMock.Setup(c =>
-                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>()))
             .ReturnsAsync((List<ExpandedChapterDataDto>?)null);
     }
 

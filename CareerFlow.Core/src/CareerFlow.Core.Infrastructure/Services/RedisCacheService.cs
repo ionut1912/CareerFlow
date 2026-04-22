@@ -7,82 +7,76 @@ using StackExchange.Redis;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public sealed class RedisCacheService : ICacheService
+public sealed partial class RedisCacheService(
+    IConnectionMultiplexer connection,
+    IOptions<CacheSettings> options,
+    ILogger<RedisCacheService> logger)
+    : ICacheService
 {
-    private readonly IDatabase _db;
-
-    private readonly JsonSerializerOptions _jsonOptions = new()
+    private static readonly JsonSerializerOptions _jsonOptions = new()
     {
         PropertyNameCaseInsensitive = true
     };
 
-    private readonly ILogger<RedisCacheService> _logger;
-    private readonly CacheSettings _options;
+    private readonly IDatabase _db = connection.GetDatabase();
+    private readonly CacheSettings _options = options.Value;
 
-    public RedisCacheService(
-        IConnectionMultiplexer connection,
-        IOptions<CacheSettings> options,
-        ILogger<RedisCacheService> logger)
-    {
-        _db = connection.GetDatabase();
-        _options = options.Value;
-        _logger = logger;
-    }
-
-    public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
+    public async Task<T?> GetAsync<T>(string key)
     {
         try
         {
-            var value = await _db.StringGetAsync(BuildKey(key));
+            RedisValue value = await _db.StringGetAsync(BuildKey(key));
             return value.IsNullOrEmpty ? default : JsonSerializer.Deserialize<T>((string)value!, _jsonOptions);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Redis GET failed for key {Key}", key);
+            LogGetFailed(ex, key);
             throw;
         }
     }
 
-    public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null, CancellationToken ct = default)
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null)
     {
         try
         {
-            var serialized = JsonSerializer.Serialize(value, _jsonOptions);
-            var ttl = expiry ?? TimeSpan.FromMinutes(_options.DefaultExpiryMinutes);
+            string serialized = JsonSerializer.Serialize(value, _jsonOptions);
+            TimeSpan ttl = expiry ?? TimeSpan.FromMinutes(_options.DefaultExpiryMinutes);
             await _db.StringSetAsync(BuildKey(key), serialized, ttl);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Redis SET failed for key {Key}", key);
+            LogSetFailed(ex, key);
             throw;
         }
     }
 
-    public async Task RemoveAsync(string key, CancellationToken ct = default)
+    public async Task RemoveByPatternAsync(string pattern)
     {
         try
         {
-            await _db.KeyDeleteAsync(BuildKey(key));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Redis DELETE failed for key {Key}", key);
-            throw;
-        }
-    }
+            IServer server = _db.Multiplexer.GetServers().FirstOrDefault()
+                             ?? throw new InvalidOperationException("No Redis server available");
 
-    public async Task<bool> ExistsAsync(string key, CancellationToken ct = default)
-    {
-        try
-        {
-            return await _db.KeyExistsAsync(BuildKey(key));
+            IAsyncEnumerable<RedisKey> keys = server.KeysAsync(pattern: BuildKey(pattern) + "*");
+
+            await foreach (RedisKey key in keys)
+                await _db.KeyDeleteAsync(key);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Redis EXISTS failed for key {Key}", key);
+            LogDeleteByPatternFailed(ex, pattern);
             throw;
         }
     }
 
     private string BuildKey(string key) => $"{_options.InstanceName}{key}";
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Redis GET failed for key {Key}")]
+    private partial void LogGetFailed(Exception ex, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Redis SET failed for key {Key}")]
+    private partial void LogSetFailed(Exception ex, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Redis DELETE by pattern failed for pattern {Pattern}")]
+    private partial void LogDeleteByPatternFailed(Exception ex, string pattern);
 }

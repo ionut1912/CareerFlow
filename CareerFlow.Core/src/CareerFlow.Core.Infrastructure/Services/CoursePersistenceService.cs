@@ -34,14 +34,14 @@ public sealed class CoursePersistenceService : ICoursePersistenceService
     public async Task<Guid> PersistAsync(Guid userId, string topic, List<ChapterAssemblyModel> assemblyData,
         CancellationToken ct = default)
     {
-        var chapters = CourseAssembler.BuildChapters(assemblyData);
+        List<Chapter> chapters = CourseAssembler.BuildChapters(assemblyData);
         var course = Course.Create(topic, chapters);
 
-        foreach (var chapter in course.Chapters)
+        foreach (Chapter chapter in course.Chapters)
             chapter.SetCourseId(course.Id);
 
-        var profile = await _userProfileRepository.GetCurrentUserProfile(userId, ct)
-                      ?? throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
+        UserProfile profile = await _userProfileRepository.GetCurrentUserProfile(userId, ct)
+                              ?? throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
 
         profile.EnrollInCourse(course);
 
@@ -53,7 +53,7 @@ public sealed class CoursePersistenceService : ICoursePersistenceService
             _userProfileRepository.Update(profile);
             await _uow.SaveChangesAsync(ct);
 
-            var quizQuestions = CourseAssembler.BuildQuizQuestions(assemblyData, course);
+            List<QuizQuestion> quizQuestions = CourseAssembler.BuildQuizQuestions(assemblyData, course);
             await _quizRepository.AddRangeAsync(quizQuestions, ct);
             await _uow.SaveChangesAsync(ct);
 

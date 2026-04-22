@@ -1,4 +1,5 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
@@ -6,11 +7,12 @@ using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Account;
 
+[UsedImplicitly]
 public class SocialEndpointGroup : EndpointGroup
 {
-    public override void Map(IEndpointRouteBuilder endpoints)
+    public override void Map(IEndpointRouteBuilder app)
     {
-        var group = endpoints.MapGroup(this);
+        RouteGroupBuilder group = app.MapGroup(this);
         group.MapGet("/auth/google/mobile", GoogleMobileLogin);
         group.MapGet("/auth/google/mobile/callback", GoogleMobileCallback);
         group.MapGet("/auth/linkedin/mobile", LinkedInMobileLogin);
@@ -22,7 +24,7 @@ public class SocialEndpointGroup : EndpointGroup
         IMessageBus messageBus,
         CancellationToken ct)
     {
-        var url = await messageBus.InvokeAsync<string>(request, ct);
+        string url = await messageBus.InvokeAsync<string>(request, ct);
         return TypedResults.Redirect(url);
     }
 
@@ -31,7 +33,7 @@ public class SocialEndpointGroup : EndpointGroup
         IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        var url = await messageBus.InvokeAsync<string>(query, cancellationToken);
+        string url = await messageBus.InvokeAsync<string>(query, cancellationToken);
         return TypedResults.Redirect(url);
     }
 
@@ -40,7 +42,7 @@ public class SocialEndpointGroup : EndpointGroup
         IMessageBus messageBus,
         CancellationToken ct)
     {
-        var url = await messageBus.InvokeAsync<string>(query, ct);
+        string url = await messageBus.InvokeAsync<string>(query, ct);
         return TypedResults.Redirect(url);
     }
 
@@ -49,7 +51,7 @@ public class SocialEndpointGroup : EndpointGroup
         IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        var url = await messageBus.InvokeAsync<string>(query, cancellationToken);
+        string url = await messageBus.InvokeAsync<string>(query, cancellationToken);
         return TypedResults.Redirect(url);
     }
 }

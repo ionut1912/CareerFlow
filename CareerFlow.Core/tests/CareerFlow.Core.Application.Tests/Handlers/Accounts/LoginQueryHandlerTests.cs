@@ -31,8 +31,8 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
             _passwordServiceMock.Object,
             _tokenServiceMock.Object,
             _refreshTokenRepositoryMock.Object,
-            _unitOfWorkMock.Object,
-            _loggerMock.Object);
+            UnitOfWorkMock.Object,
+            LoggerMock.Object);
     }
 
     [Fact]
@@ -56,7 +56,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         result.Token.ShouldBe(authResult.Token);
         result.RefreshToken.ShouldBe(refreshToken.TokenHash);
         _refreshTokenRepositoryMock.Verify(x => x.AddAsync(refreshToken, Ct), Times.Once);
-        _unitOfWorkMock.VerifySaveChanges(Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
     }
 
     [Fact]
@@ -70,7 +70,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError(query.Email, Times.Once());
+        LoggerMock.VerifyLogError(query.Email, Times.Once());
     }
 
     [Fact]
@@ -87,7 +87,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(query, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError("parola", Times.Once());
+        LoggerMock.VerifyLogError("parola", Times.Once());
     }
 
     [Theory]
@@ -107,7 +107,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
             isPasswordServiceNull ? null! : _passwordServiceMock.Object,
             isTokenServiceNull ? null! : _tokenServiceMock.Object,
             isRefreshTokenServiceNull ? null! : _refreshTokenRepositoryMock.Object,
-            isUnitOfWorkNull ? null! : _unitOfWorkMock.Object,
-            isLoggerNull ? null! : _loggerMock.Object));
+            isUnitOfWorkNull ? null! : UnitOfWorkMock.Object,
+            isLoggerNull ? null! : LoggerMock.Object));
     }
 }

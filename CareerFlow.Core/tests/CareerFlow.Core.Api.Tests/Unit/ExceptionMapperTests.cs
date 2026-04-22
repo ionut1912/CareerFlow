@@ -265,7 +265,7 @@ public class ExceptionMapperTests
     [Fact]
     public void TryMap_TokenAlreadyUsedExcception_Returns400()
     {
-        var ex = new TokenAlreadyUsedExcception("used");
+        var ex = new TokenAlreadyUsedException("used");
 
         var result = _sut.TryMap(ex, out var pd);
 

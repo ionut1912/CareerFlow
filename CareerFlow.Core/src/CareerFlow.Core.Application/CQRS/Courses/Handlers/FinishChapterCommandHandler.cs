@@ -13,8 +13,5 @@ public class FinishChapterCommandHandler
         _courseService = courseService;
     }
 
-    public async Task Handle(FinishChapterCommand request, CancellationToken cancellationToken)
-    {
-        await _courseService.FinishChapterAsync(request.UserId, request.CourseId, request.ChapterId, cancellationToken);
-    }
+    public async Task Handle(FinishChapterCommand request, CancellationToken cancellationToken) => await _courseService.FinishChapterAsync(request.UserId, request.CourseId, request.ChapterId, cancellationToken);
 }

@@ -1,6 +1,7 @@
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests.Course;
 using CareerFlow.Core.Domain.Models.Course.Response;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Api.Endpoints;
@@ -10,11 +11,12 @@ using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Course;
 
+[UsedImplicitly]
 public class CourseEndpointGroup : EndpointGroup
 {
-    public override void Map(IEndpointRouteBuilder endpoints)
+    public override void Map(IEndpointRouteBuilder app)
     {
-        var group = endpoints.MapGroup(this)
+        RouteGroupBuilder group = app.MapGroup(this)
             .RequireAuthorization();
 
         group.MapPost("/upload", UploadAsync).DisableAntiforgery();
@@ -28,10 +30,10 @@ public class CourseEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken ct)
     {
-        var userId = httpContext.GetAccountId();
+        Guid userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = request.ToUploadCourseDocumentCommand(userId);
-        var response = await messageBus.InvokeAsync<UploadCoursesResponse>(command, ct);
+        UploadCoursesResponse response = await messageBus.InvokeAsync<UploadCoursesResponse>(command, ct);
         return TypedResults.Accepted((string?)null, response);
     }
 
@@ -41,7 +43,7 @@ public class CourseEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken ct)
     {
-        var userId = httpContext.GetAccountId();
+        Guid userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = request.ToFinishChapterCommand(userId);
         await messageBus.InvokeAsync(command, ct);
@@ -54,10 +56,10 @@ public class CourseEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken ct)
     {
-        var userId = httpContext.GetAccountId();
+        Guid userId = httpContext.GetAccountId();
         if (userId == Guid.Empty) return TypedResults.Unauthorized();
         var command = courseRequest.ToGenerateCourseCommand(userId);
-        var result = await messageBus.InvokeAsync<Guid>(command, ct);
+        Guid result = await messageBus.InvokeAsync<Guid>(command, ct);
         return TypedResults.Ok(result);
     }
 }

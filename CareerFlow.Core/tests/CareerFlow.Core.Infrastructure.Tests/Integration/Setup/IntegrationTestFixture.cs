@@ -1,8 +1,10 @@
-﻿using Testcontainers.PostgreSql;
+﻿using JetBrains.Annotations;
+using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 
+[UsedImplicitly]
 public class IntegrationTestFixture : IAsyncLifetime
 {
     // FIX: Pass the image directly into the constructor

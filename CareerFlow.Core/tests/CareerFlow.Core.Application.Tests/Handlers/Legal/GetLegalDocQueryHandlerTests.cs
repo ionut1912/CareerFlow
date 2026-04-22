@@ -17,7 +17,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
     public GetLegalDocQueryHandlerTests()
     {
         _legalServiceMock = new Mock<ILegalService>();
-        _handler = new GetLegalDocQueryHandler(_legalServiceMock.Object, _loggerMock.Object);
+        _handler = new GetLegalDocQueryHandler(_legalServiceMock.Object, LoggerMock.Object);
     }
 
     [Theory]
@@ -58,7 +58,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
         exception.Message.ShouldBe("Tipul precizat nu exista");
         _legalServiceMock.Verify(x => x.GetDocumentAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
-        _loggerMock.VerifyLogError("Tipul precizat nu exista", Times.Once());
+        LoggerMock.VerifyLogError("Tipul precizat nu exista", Times.Once());
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
         // Assert
         exception.Message.ShouldBe("Documentul nu a fost gasit");
         _legalServiceMock.Verify(x => x.GetDocumentAsync(query.Type, Ct), Times.Once);
-        _loggerMock.VerifyLogError("Documentul nu a fost gasit", Times.Once());
+        LoggerMock.VerifyLogError("Documentul nu a fost gasit", Times.Once());
     }
 
     [Theory]
@@ -89,7 +89,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
 
         // Use the null-forgiving operator (!) to satisfy the compiler while testing null guards
         var service = isServiceNull ? null! : _legalServiceMock.Object;
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

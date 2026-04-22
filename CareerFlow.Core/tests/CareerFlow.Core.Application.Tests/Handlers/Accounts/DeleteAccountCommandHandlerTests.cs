@@ -19,8 +19,8 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
         _accountRepositoryMock = new Mock<IAccountRepository>();
         _handler = new DeleteAccountCommandHandler(
             _accountRepositoryMock.Object,
-            _unitOfWorkMock.Object,
-            _loggerMock.Object);
+            UnitOfWorkMock.Object,
+            LoggerMock.Object);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
 
         // Assert
         _accountRepositoryMock.Verify(x => x.Delete(account), Times.Once);
-        _unitOfWorkMock.VerifySaveChanges(Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
     }
 
     [Fact]
@@ -50,9 +50,9 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
         var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError(command.Id.ToString(), Times.Once());
+        LoggerMock.VerifyLogError(command.Id.ToString(), Times.Once());
         _accountRepositoryMock.Verify(x => x.Delete(It.IsAny<Account>()), Times.Never);
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Theory]
@@ -68,8 +68,8 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
 
         // Use ! to suppress the possible null reference argument warning
         var repo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
-        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var uow = isUowNull ? null! : UnitOfWorkMock.Object;
+        var logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

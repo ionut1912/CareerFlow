@@ -6,12 +6,7 @@ namespace CareerFlow.Core.Application.Tests.Validators.UserProfiles;
 
 public class UpdateUserProfileCommandValidatorTests
 {
-    private readonly UpdateUserProfileCommandValidator _validator;
-
-    public UpdateUserProfileCommandValidatorTests()
-    {
-        _validator = new UpdateUserProfileCommandValidator();
-    }
+    private readonly UpdateUserProfileCommandValidator _validator = new();
 
     [Fact]
     public void Validate_ValidCommand_ShouldNotHaveValidationError()

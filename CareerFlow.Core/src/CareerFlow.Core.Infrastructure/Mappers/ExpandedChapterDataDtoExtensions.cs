@@ -15,9 +15,9 @@ public static class ExpandedChapterDataDtoExtensions
                 s.Title,
                 s.ContentSummary,
                 s.TheoryHtml,
-                s.Quiz?.Select(ToQuizItem).ToList() ?? []
+                s.Quiz.Select(ToQuizItem).ToList() 
             )).ToList(),
-            ch.Details.RecapQuiz?.Select(ToQuizItem).ToList() ?? []
+            ch.Details.RecapQuiz.Select(ToQuizItem).ToList()
         )).ToList();
     }
 

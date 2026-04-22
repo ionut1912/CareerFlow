@@ -6,14 +6,9 @@ using Shared.Domain.Exceptions;
 
 namespace CareerFlow.Core.Api.Mappers;
 
-public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
+public sealed partial class ExceptionMapper(ILogger<ExceptionMapper> logger) : IExceptionProblemDetailsMapper
 {
-    private readonly ILogger<ExceptionMapper> _logger;
-
-    public ExceptionMapper(ILogger<ExceptionMapper> logger)
-    {
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    }
+    private readonly ILogger<ExceptionMapper> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public bool TryMap(Exception exception, out ProblemDetails problemDetails)
     {
@@ -24,7 +19,6 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             ValidationException ex => CreateFromFluent(ex),
             InvalidLearningTypeException ex => Create(400, "Invalid Learning Type", ex.Message),
             InvalidJobStatusException ex => Create(400, "Invalid Job Status", ex.Message),
-            UserTypeAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
             DomainAlreadyExistsException ex => Create(400, "Domain Already Exists", ex.Message),
             UserProfileNotFoundException ex => Create(404, "User Profile Not Found", ex.Message),
             InvalidUserTypeException ex => Create(400, "Invalid User Type", ex.Message),
@@ -35,41 +29,32 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             PasswordNotMatchException ex => Create(400, "Password Not Match", ex.Message),
             UserAlreadyExistsException ex => Create(400, "User Already Exists", ex.Message),
             InvalidRefreshTokenException ex => Create(401, "Invalid Refresh Token", ex.Message),
-            TokenAlreadyUsedExcception ex => Create(400, "Token Already Used", ex.Message),
+            TokenAlreadyUsedException ex => Create(400, "Token Already Used", ex.Message),
             TokenRevokedException ex => Create(400, "Token Revoked", ex.Message),
             LegalDocInvalidTypeException ex => Create(400, "Legal Doc Invalid Type", ex.Message),
             LegalDocNotFoundException ex => Create(404, "Legal Doc Not Found", ex.Message),
             ChapterNotFoundException ex => Create(404, "Chapter Not Found", ex.Message),
             CustomValidationException ex => CreateValidation(ex),
-
             _ => Create(500, "Internal Server Error", "An unexpected error occurred")
         };
 
-        _logger.LogError(
-            exception,
-            "Mapped exception {ExceptionType} to ProblemDetails {Status} - {Title}",
-            exception.GetType().Name,
-            problemDetails.Status,
-            problemDetails.Title);
+        LogMappedException(_logger, exception, exception.GetType().Name, problemDetails.Status, problemDetails.Title);
 
-        return problemDetails != null;
+        return true;
     }
 
-    private static ProblemDetails Create(int status, string title, string detail)
-    {
-        return new ProblemDetails { Status = status, Title = title, Detail = detail };
-    }
+    private static ProblemDetails Create(int status, string title, string detail) => new() { Status = status, Title = title, Detail = detail };
 
     private static ProblemDetails CreateValidation(CustomValidationException ex)
     {
-        var pd = Create(400, "Validation Error", "One or more validation errors occurred.");
+        ProblemDetails pd = Create(400, "Validation Error", "One or more validation errors occurred.");
         pd.Extensions["errors"] = ex.ValidationErrors;
         return pd;
     }
 
     private static ProblemDetails CreateFromFluent(ValidationException ex)
     {
-        var pd = Create(400, "Validation Error", "One or more validation errors occurred.");
+        ProblemDetails pd = Create(400, "Validation Error", "One or more validation errors occurred.");
         pd.Extensions["errors"] = ex.Errors
             .GroupBy(x => string.IsNullOrEmpty(x.PropertyName) ? "_general" : x.PropertyName)
             .ToDictionary(
@@ -78,4 +63,15 @@ public sealed class ExceptionMapper : IExceptionProblemDetailsMapper
             );
         return pd;
     }
+
+    [LoggerMessage(
+        EventId = 2,
+        Level = LogLevel.Error,
+        Message = "Mapped exception {ExceptionType} to ProblemDetails {Status} - {Title}")]
+    private static partial void LogMappedException(
+        ILogger logger,
+        Exception exception,
+        string exceptionType,
+        int? status,
+        string? title);
 }

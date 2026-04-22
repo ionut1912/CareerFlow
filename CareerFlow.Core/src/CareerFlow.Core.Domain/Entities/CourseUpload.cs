@@ -1,11 +1,15 @@
 using CareerFlow.Core.Domain.Exceptions;
+
+using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
 
 public sealed class CourseUpload : Entity
 {
-    private CourseUpload()
+    [UsedImplicitly]
+    private CourseUpload()//For EfCore
     {
     }
 
@@ -33,10 +37,8 @@ public sealed class CourseUpload : Entity
     public string FileName { get; private set; } = string.Empty;
     public string FileKey { get; private set; } = string.Empty;
     public string FileType { get; private set; } = string.Empty;
+    [UsedImplicitly]
     public CourseJob? Job { get; private set; }
 
-    public static CourseUpload Create(Guid userId, string title, string fileName, string fileKey, string fileType)
-    {
-        return new CourseUpload(userId, title, fileName, fileKey, fileType);
-    }
+    public static CourseUpload Create(Guid userId, string title, string fileName, string fileKey, string fileType) => new(userId, title, fileName, fileKey, fileType);
 }

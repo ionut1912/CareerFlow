@@ -1,5 +1,5 @@
 ﻿using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Infrastructure.Persistance.Repositories;
+using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 using Shouldly;
 using Xunit;

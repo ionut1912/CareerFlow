@@ -256,6 +256,7 @@ public class AccountEndpointsTests : IntegrationTestBase
             var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
             var account = await repo.GetAccountByEmailAsync(email, default);
+            account.ShouldNotBeNull();
             account.GenerateResetPasswordToken(rawToken, passwordService);
             repo.Update(account);
             await uow.SaveChangesAsync();
@@ -288,6 +289,7 @@ public class AccountEndpointsTests : IntegrationTestBase
             var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
             var account = await repo.GetAccountByEmailAsync(email, default);
+            account.ShouldNotBeNull();
             account.GenerateResetPasswordToken(rawToken, passwordService);
 
             var field = account.GetType().GetProperty("ResetPasswordTokenExpiresAt");

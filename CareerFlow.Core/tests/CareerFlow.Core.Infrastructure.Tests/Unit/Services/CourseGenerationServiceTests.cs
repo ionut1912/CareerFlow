@@ -10,7 +10,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
-public class CourseGenerationServiceTests
+public class CourseGenerationServiceTests:IDisposable
 {
     private static readonly JsonSerializerOptions SnakeCaseOptions = new()
     {
@@ -80,7 +80,7 @@ public class CourseGenerationServiceTests
     public void Constructor_ShouldSetTimeoutToTenMinutes()
     {
         var client = new HttpClient(_handler) { BaseAddress = new Uri("https://api.test.com") };
-        new CourseGenerationService(client);
+        _=new CourseGenerationService(client);
         client.Timeout.ShouldBe(TimeSpan.FromMinutes(10));
     }
 
@@ -102,7 +102,7 @@ public class CourseGenerationServiceTests
 
         await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
 
-        var body = await _handler.LastRequest!.Content!.ReadAsStringAsync();
+        string body = await _handler.LastRequest!.Content!.ReadAsStringAsync();
         body.ShouldContain("\"topic\"");
         body.ShouldContain("C# Basics");
     }
@@ -110,10 +110,10 @@ public class CourseGenerationServiceTests
     [Fact]
     public async Task GetCourseSkeletonAsync_WhenSuccessResponse_ShouldReturnDeserializedSkeleton()
     {
-        var expected = BuildSkeletonResponse();
+        CourseSkeletonResponse expected = BuildSkeletonResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        var result = await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
+        CourseSkeletonResponse result = await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
 
         result.ShouldNotBeNull();
         result.EstimatedDays.ShouldBe(expected.EstimatedDays);
@@ -124,12 +124,12 @@ public class CourseGenerationServiceTests
     [Fact]
     public async Task GetCourseSkeletonAsync_WhenSuccessResponse_ShouldDeserializeChaptersCorrectly()
     {
-        var expected = BuildSkeletonResponse();
+        CourseSkeletonResponse expected = BuildSkeletonResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        var result = await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
+        CourseSkeletonResponse result = await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
 
-        var first = result.Skeleton.Chapters[0];
+        ChapterDto first = result.Skeleton.Chapters[0];
         first.Title.ShouldBe("Intro");
         first.CoreConcept.ShouldBe("Overview");
         first.Day.ShouldBe(1);
@@ -184,7 +184,7 @@ public class CourseGenerationServiceTests
             new ChapterRequest("C# Basics", "OOP", "Classes"),
             CancellationToken.None);
 
-        var body = await _handler.LastRequest!.Content!.ReadAsStringAsync();
+        string body = await _handler.LastRequest!.Content!.ReadAsStringAsync();
         body.ShouldContain("\"topic\"");
         body.ShouldContain("\"chapter_title\"");
         body.ShouldContain("\"core_concept\"");
@@ -196,10 +196,10 @@ public class CourseGenerationServiceTests
     [Fact]
     public async Task GetExpandedChapterAsync_WhenSuccessResponse_ShouldReturnDeserializedChapter()
     {
-        var expected = BuildChapterExpandResponse();
+        ChapterExpandResponse expected = BuildChapterExpandResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        var result = await _sut.GetExpandedChapterAsync(
+        ChapterExpandResponse result = await _sut.GetExpandedChapterAsync(
             new ChapterRequest("C# Basics", "OOP", "Classes"),
             CancellationToken.None);
 
@@ -212,10 +212,10 @@ public class CourseGenerationServiceTests
     [Fact]
     public async Task GetExpandedChapterAsync_WhenSuccessResponse_ShouldDeserializeExpandedContentCorrectly()
     {
-        var expected = BuildChapterExpandResponse();
+        ChapterExpandResponse expected = BuildChapterExpandResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        var result = await _sut.GetExpandedChapterAsync(
+        ChapterExpandResponse result = await _sut.GetExpandedChapterAsync(
             new ChapterRequest("C# Basics", "OOP", "Classes"),
             CancellationToken.None);
 
@@ -227,10 +227,10 @@ public class CourseGenerationServiceTests
     [Fact]
     public async Task GetExpandedChapterAsync_WhenSuccessResponse_ShouldDeserializeSubchapterContentsCorrectly()
     {
-        var expected = BuildChapterExpandResponse();
+        ChapterExpandResponse expected = BuildChapterExpandResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        var result = await _sut.GetExpandedChapterAsync(
+        ChapterExpandResponse result = await _sut.GetExpandedChapterAsync(
             new ChapterRequest("C# Basics", "OOP", "Classes"),
             CancellationToken.None);
 
@@ -243,10 +243,10 @@ public class CourseGenerationServiceTests
     [Fact]
     public async Task GetExpandedChapterAsync_WhenSuccessResponse_ShouldDeserializeFinalQuizCorrectly()
     {
-        var expected = BuildChapterExpandResponse();
+        ChapterExpandResponse expected = BuildChapterExpandResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        var result = await _sut.GetExpandedChapterAsync(
+        ChapterExpandResponse result = await _sut.GetExpandedChapterAsync(
             new ChapterRequest("C# Basics", "OOP", "Classes"),
             CancellationToken.None);
 
@@ -309,5 +309,11 @@ public class CourseGenerationServiceTests
             LastRequest = request;
             return Task.FromResult(new HttpResponseMessage(_statusCode) { Content = _content });
         }
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

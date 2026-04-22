@@ -11,7 +11,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
-public class DocsAnalyzerServiceTests
+public class DocsAnalyzerServiceTests : IDisposable
 {
     private static readonly JsonSerializerOptions SnakeCaseOptions = new()
     {
@@ -26,6 +26,12 @@ public class DocsAnalyzerServiceTests
     {
         var client = new HttpClient(_handler) { BaseAddress = new Uri("https://api.test.com") };
         _sut = new DocsAnalyzerService(client);
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private static StringContent JsonContent<T>(T value)
@@ -91,7 +97,7 @@ public class DocsAnalyzerServiceTests
     public void Constructor_ShouldSetTimeoutToTenMinutes()
     {
         var client = new HttpClient(_handler) { BaseAddress = new Uri("https://api.test.com") };
-        new DocsAnalyzerService(client);
+        _ = new DocsAnalyzerService(client);
         client.Timeout.ShouldBe(TimeSpan.FromMinutes(10));
     }
 
@@ -123,9 +129,9 @@ public class DocsAnalyzerServiceTests
 
         await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
-        var filePart = _handler.MultipartParts.FirstOrDefault(p => p.Name == "file");
-        filePart.Name.ShouldNotBeNull();
-        filePart.FileName.ShouldBe("test.pdf");
+        CapturedPart? filePart = _handler.MultipartParts.FirstOrDefault(p => p.Name == "file");
+        filePart?.Name.ShouldNotBeNull();
+        filePart?.FileName.ShouldBe("test.pdf");
     }
 
     [Fact]
@@ -135,7 +141,7 @@ public class DocsAnalyzerServiceTests
 
         await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
-        var filePart = _handler.MultipartParts.First(p => p.Name == "file");
+        CapturedPart filePart = _handler.MultipartParts.First(p => p.Name == "file");
         filePart.ContentType.ShouldBe("application/pdf");
     }
 
@@ -151,7 +157,7 @@ public class DocsAnalyzerServiceTests
 
         await _sut.AnalyzeDocumentAsync(dto, CancellationToken.None);
 
-        var filePart = _handler.MultipartParts.First(p => p.Name == "file");
+        CapturedPart filePart = _handler.MultipartParts.First(p => p.Name == "file");
         filePart.ContentType.ShouldBe("application/octet-stream");
     }
 
@@ -160,7 +166,7 @@ public class DocsAnalyzerServiceTests
     {
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
-        var result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
+        DocumentProcessingResponse result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
         result.DocumentId.ShouldBe("doc-123");
     }
@@ -170,7 +176,7 @@ public class DocsAnalyzerServiceTests
     {
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
-        var result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
+        DocumentProcessingResponse result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
         result.Analysis.Title.ShouldBe("C# Guide");
         result.Analysis.Summary.ShouldBe("A comprehensive guide");
@@ -182,7 +188,7 @@ public class DocsAnalyzerServiceTests
     {
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
-        var result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
+        DocumentProcessingResponse result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
         result.Skeleton.Topic.ShouldBe("C# Programming");
         result.Skeleton.Chapters.Count.ShouldBe(2);
@@ -240,12 +246,12 @@ public class DocsAnalyzerServiceTests
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
-        _handler.LastRequestBody.ShouldContain("\"chapter_title\"");
-        _handler.LastRequestBody.ShouldContain("\"core_concept\"");
-        _handler.LastRequestBody.ShouldContain("\"document_id\"");
-        _handler.LastRequestBody.ShouldNotContain("ChapterTitle");
-        _handler.LastRequestBody.ShouldNotContain("CoreConcept");
-        _handler.LastRequestBody.ShouldNotContain("DocumentId");
+        _handler.LastRequestBody?.ShouldContain("\"chapter_title\"");
+        _handler.LastRequestBody?.ShouldContain("\"core_concept\"");
+        _handler.LastRequestBody?.ShouldContain("\"document_id\"");
+        _handler.LastRequestBody?.ShouldNotContain("ChapterTitle");
+        _handler.LastRequestBody?.ShouldNotContain("CoreConcept");
+        _handler.LastRequestBody?.ShouldNotContain("DocumentId");
     }
 
     [Fact]
@@ -253,7 +259,7 @@ public class DocsAnalyzerServiceTests
     {
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
-        var result = await _sut.ExpandAnalyzedDocument(
+        ChapterDetailResponse result = await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
@@ -268,11 +274,11 @@ public class DocsAnalyzerServiceTests
     {
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
-        var result = await _sut.ExpandAnalyzedDocument(
+        ChapterDetailResponse result = await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
-        var quiz = result.Subchapters[0].Quiz;
+        List<QuestionDto> quiz = result.Subchapters[0].Quiz;
         quiz.Count.ShouldBe(1);
         quiz[0].Question.ShouldBe("What is a class?");
         quiz[0].Options.Single(o => o.IsCorrect).Label.ShouldBe("A blueprint");
@@ -283,7 +289,7 @@ public class DocsAnalyzerServiceTests
     {
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
-        var result = await _sut.ExpandAnalyzedDocument(
+        ChapterDetailResponse result = await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
@@ -349,12 +355,14 @@ public class DocsAnalyzerServiceTests
             if (request.Content is MultipartFormDataContent multipart)
             {
                 MultipartParts = [];
-                foreach (var part in multipart)
+                foreach (HttpContent part in multipart)
+                {
                     MultipartParts.Add(new CapturedPart(
                         part.Headers.ContentDisposition?.Name?.Trim('"'),
                         part.Headers.ContentDisposition?.FileName?.Trim('"'),
                         part.Headers.ContentType?.MediaType,
                         await part.ReadAsByteArrayAsync(cancellationToken)));
+                }
             }
             else if (request.Content is not null)
             {

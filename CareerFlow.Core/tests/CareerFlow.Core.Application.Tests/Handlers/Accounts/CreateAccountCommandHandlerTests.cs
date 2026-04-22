@@ -23,8 +23,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
         _handler = new CreateAccountCommandHandler(
             _accountRepositoryMock.Object,
             _passwordServiceMock.Object,
-            _unitOfWorkMock.Object,
-            _loggerMock.Object);
+            UnitOfWorkMock.Object,
+            LoggerMock.Object);
     }
 
     [Fact]
@@ -42,7 +42,7 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
         result.ShouldNotBe(Guid.Empty);
         _passwordServiceMock.Verify(x => x.HashPassword(command.Password), Times.Once);
         _accountRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Account>(), Ct), Times.Once);
-        _unitOfWorkMock.VerifySaveChanges(Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
     }
 
     [Fact]
@@ -60,8 +60,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
 
         // Assert
         exception.Message.ShouldContain(command.Email);
-        _loggerMock.VerifyLogError(command.Email, Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError(command.Email, Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Fact]
@@ -77,8 +77,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
 
         // Assert
         exception.Message.ShouldBe("Parolele nu corespund");
-        _loggerMock.VerifyLogError("nu corespund", Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError("nu corespund", Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Theory]
@@ -95,8 +95,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
 
         var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
         var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
-        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var uow = isUowNull ? null! : UnitOfWorkMock.Object;
+        var logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

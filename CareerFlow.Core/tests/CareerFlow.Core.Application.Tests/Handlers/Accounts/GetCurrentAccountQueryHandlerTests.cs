@@ -17,7 +17,7 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
     public GetCurrentAccountQueryHandlerTests()
     {
         _accountRepositoryMock = new Mock<IAccountRepository>();
-        _handler = new GetCurrentAccountQueryHandler(_accountRepositoryMock.Object, _loggerMock.Object);
+        _handler = new GetCurrentAccountQueryHandler(_accountRepositoryMock.Object, LoggerMock.Object);
     }
 
     [Fact]
@@ -47,7 +47,7 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
         var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
+        LoggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
     }
 
     [Theory]
@@ -62,7 +62,7 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
 
         // Use the null-forgiving operator (!) to suppress CS8604
         var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        var logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

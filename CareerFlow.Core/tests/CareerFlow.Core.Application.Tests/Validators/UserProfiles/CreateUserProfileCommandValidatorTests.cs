@@ -6,15 +6,10 @@ namespace CareerFlow.Core.Application.Tests.Validators.UserProfiles;
 
 public class CreateUserProfileCommandValidatorTests
 {
-    private readonly CreateUserProfileCommandValidator _validator;
-
-    public CreateUserProfileCommandValidatorTests()
-    {
-        _validator = new CreateUserProfileCommandValidator();
-    }
+    private readonly CreateUserProfileCommandValidator _validator = new();
 
     [Fact]
-    public void Validate_ValidCommand_ShouldNotHaveValidationError()
+    public void ValidateValidCommandShouldNotHaveValidationError()
     {
         //Arrange
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student"], "test");

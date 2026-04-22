@@ -1,12 +1,14 @@
-﻿using CareerFlow.Core.Api.Features.Account;
+﻿using CareerFlow.Core.Api;
+using CareerFlow.Core.Api.Features.Account;
 using CareerFlow.Core.Api.Filters;
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Application.Messages;
 using CareerFlow.Core.Application.Serialization;
 using CareerFlow.Core.Application.Validators;
+using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Infrastructure.Extensions;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
-using CareerFlow.Core.Infrastructure.Persistance;
+using CareerFlow.Core.Infrastructure.Persistence;
 using CareerFlow.Core.Rabbit.Events.Events;
 using Hangfire;
 using Microsoft.AspNetCore.HttpOverrides;
@@ -18,14 +20,15 @@ using Shared.Application.Extensions;
 using Shared.Infra.Extensions;
 using Wolverine.RabbitMQ;
 
-var builder = WebApplication.CreateBuilder(args);
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, CareerFlowJsonContext.Default);
 });
 
-var env = builder.Environment.IsProduction() ? "prod" : "dev";
+string env = builder.Environment.IsProduction() ? "prod" : "dev";
+
 builder.Services
     .AddInfrastructure(builder.Configuration, env)
     .AddApplicationServices(typeof(ValidationsAssemblyReference).Assembly)
@@ -33,31 +36,25 @@ builder.Services
 
 builder.Services.ConfigureAll<OpenApiOptions>(options =>
 {
-    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    options.AddDocumentTransformer((document, _, _) =>
     {
-        document.Servers = new List<OpenApiServer>
-        {
-            new() { Url = "/core" }
-        };
+        document.Servers = new List<OpenApiServer> { new() { Url = "/core" } };
         return Task.CompletedTask;
     });
 });
 
 builder.AddWolverineMessaging(
     typeof(EmailNotificationMessageHandler).Assembly,
-    (appBuilder, opt) =>
+    (_, opt) =>
     {
-        var emailQueueName = "email-notifications-queue";
-        opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
-        opt.ListenToRabbitQueue(emailQueueName).UseDurableInbox();
+        opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(QueueNames.EmailNotifications);
+        opt.ListenToRabbitQueue(QueueNames.EmailNotifications).UseDurableInbox();
     });
 
-builder.Services.AddAuthorization(options =>
-{
-    options.AddPolicy("HangfirePolicy", policy => { policy.RequireAuthenticatedUser(); });
-});
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("HangfirePolicy", policy => policy.RequireAuthenticatedUser());
 
-var app = builder.Build();
+WebApplication app = builder.Build();
 
 app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
@@ -76,11 +73,11 @@ app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
 app.MapClientEndpoints();
 
-app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
+app.Logger.LogStartup("CareerFlowCore", env);
 
 app.MapHangfireDashboard("/hangfire", new DashboardOptions
 {
-    Authorization = new[] { new HangfireAuthFilter() }
+    Authorization = [new HangfireAuthFilter()]
 }).RequireAuthorization("HangfirePolicy");
 
 RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
@@ -97,7 +94,15 @@ app.Run();
 
 namespace CareerFlow.Core.Api
 {
-    public class Program
+    // ReSharper disable once PartialTypeWithSinglePart
+    public abstract partial class Program;
+
+    public static partial class LoggerExtensions
     {
+        [LoggerMessage(
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "{ServiceName} starting up in {Environment} environment")]
+        public static partial void LogStartup(this ILogger logger, string serviceName, string environment);
     }
 }

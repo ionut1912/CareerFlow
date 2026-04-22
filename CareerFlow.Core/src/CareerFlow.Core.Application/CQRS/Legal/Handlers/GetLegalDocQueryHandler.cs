@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Legal.Handlers;
 
-public class GetLegalDocQueryHandler
+public partial class GetLegalDocQueryHandler
 {
-    private static readonly HashSet<string> ValidTypes =
+    private static readonly HashSet<string> _validTypes =
         new(StringComparer.OrdinalIgnoreCase) { "privacy", "terms" };
 
     private readonly ILegalService _legalService;
@@ -24,20 +24,22 @@ public class GetLegalDocQueryHandler
 
     public async Task<LegalDocumentResponse> Handle(GetLegalDocQuery request, CancellationToken cancellationToken)
     {
-        if (!ValidTypes.Contains(request.Type))
+        if (!_validTypes.Contains(request.Type))
         {
-            _logger.LogError("Tipul precizat nu exista: {Type}", request.Type);
+            LogInvalidType(request.Type);
             throw new LegalDocInvalidTypeException("Tipul precizat nu exista");
         }
 
-        var document = await _legalService.GetDocumentAsync(request.Type, cancellationToken);
+        LegalDocumentResponse? document = await _legalService.GetDocumentAsync(request.Type, cancellationToken);
 
-        if (document is null)
-        {
-            _logger.LogError("Documentul nu a fost gasit pentru tipul {Type}", request.Type);
-            throw new LegalDocNotFoundException("Documentul nu a fost gasit");
-        }
-
-        return document;
+        if (document is not null) return document;
+        LogDocumentNotFound(request.Type);
+        throw new LegalDocNotFoundException("Documentul nu a fost gasit");
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Tipul precizat nu exista: {Type}")]
+    private partial void LogInvalidType(string type);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Documentul nu a fost gasit pentru tipul {Type}")]
+    private partial void LogDocumentNotFound(string type);
 }

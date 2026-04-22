@@ -20,7 +20,7 @@ public class GetCurrentUserProfileQueryHandlerTests : BaseHandlerTest<GetCurrent
         _userProfileRepositoryMock = new Mock<IUserProfileRepository>();
         _handler = new GetCurrentUserProfileQueryHandler(
             _userProfileRepositoryMock.Object,
-            _loggerMock.Object);
+            LoggerMock.Object);
     }
 
     [Fact]
@@ -56,6 +56,6 @@ public class GetCurrentUserProfileQueryHandlerTests : BaseHandlerTest<GetCurrent
 
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {query.AccountId} nu a fost gasit");
-        _loggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
+        LoggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
     }
 }

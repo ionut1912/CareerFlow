@@ -15,7 +15,7 @@ using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public sealed class CourseService : ICourseService
+public sealed partial class CourseService : ICourseService
 {
     private readonly IAnalyzerService _analyzer;
     private readonly ICacheService _cacheService;
@@ -71,7 +71,7 @@ public sealed class CourseService : ICourseService
         Guid userId, IEnumerable<UploadFileDto> files, string title, CancellationToken ct = default)
     {
         var fileList = files.ToList();
-        var (valid, errors) = ValidateFiles(fileList);
+        (List<UploadFileDto> valid, List<string> errors) = ValidateFiles(fileList);
 
         if (valid.Count == 0)
             return new UploadCoursesResponse([], fileList.Count, 0, fileList.Count, errors);
@@ -79,9 +79,9 @@ public sealed class CourseService : ICourseService
         var uploads = new List<CourseUpload>();
         var jobs = new List<CourseJob>();
 
-        foreach (var file in valid)
+        foreach (UploadFileDto file in valid)
         {
-            var (fileName, fileKey, extension) = await UploadSingleAsync(file, ct);
+            (string fileName, string fileKey, string extension) = await UploadSingleAsync(file, ct);
             var upload = CourseUpload.Create(userId, title, fileName, fileKey, extension);
             var job = CourseJob.Create(upload.Id, "pending");
 
@@ -93,7 +93,7 @@ public sealed class CourseService : ICourseService
         await _courseJobRepository.AddRangeAsync(jobs, ct);
         await _uow.SaveChangesAsync(ct);
 
-        foreach (var job in jobs)
+        foreach (CourseJob job in jobs)
             _jobClient.Enqueue<ProcessCourseJob>(p => p.ExecuteAsync(job.Id, userId, CancellationToken.None));
 
         var summaries = jobs
@@ -105,13 +105,13 @@ public sealed class CourseService : ICourseService
 
     public async Task FinishChapterAsync(Guid userId, Guid courseId, Guid chapterId, CancellationToken ct = default)
     {
-        var profile = await _userProfileRepository.GetCurrentUserProfile(userId, ct)
-                      ?? throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
+        UserProfile profile = await _userProfileRepository.GetCurrentUserProfile(userId, ct)
+                              ?? throw new UserProfileNotFoundException($"Profilul cu id-ul {userId} nu a fost gasit");
 
         if (!await _chapterRepository.ExistsAsync(chapterId, courseId, ct))
             throw new ChapterNotFoundException($"Capitolul {chapterId} nu a fost gasit in cursul {courseId}");
 
-        if (!profile.Courses.Any(c => c.Id == courseId))
+        if (profile.Courses.All(c => c.Id != courseId))
             throw new InvalidFieldException("Nu esti inscris in acest curs.");
 
         profile.FinishChapter(chapterId.ToString());
@@ -121,36 +121,36 @@ public sealed class CourseService : ICourseService
     public async Task<CourseSkeletonResponse> GetCourseSkeletonAsync(
         CourseSkeletonRequest request, CancellationToken ct = default)
     {
-        var cacheKey = $"course:skeleton:{request.Topic}";
-        var cached = await _cacheService.GetAsync<CourseSkeletonResponse>(cacheKey, ct);
+        string cacheKey = CacheKeyConstants.CacheKeySkeleton(request.Topic);
+        CourseSkeletonResponse? cached = await _cacheService.GetAsync<CourseSkeletonResponse>(cacheKey);
 
         if (cached is not null)
         {
-            _logger.LogInformation("Cache hit for skeleton of {Topic}", request.Topic);
+            LogCacheHitSkeleton(request.Topic);
             return cached;
         }
 
-        var response = await _analyzer.GetCourseSkeletonAsync(request, ct);
-        await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(2), ct);
+        CourseSkeletonResponse response = await _analyzer.GetCourseSkeletonAsync(request, ct);
+        await _cacheService.SetAsync(cacheKey, response, TimeSpan.FromHours(2));
         return response;
     }
 
     public async Task<Guid> SaveCourseContentAsync(
         Guid userId, string topic, CourseSkeletonResponse response, CancellationToken ct = default)
     {
-        var expandedChapters = await GetOrCacheExpandedChaptersAsync(topic, response, ct);
+        List<ChapterExpandResponse> expandedChapters = await GetOrCacheExpandedChaptersAsync(topic, response, ct);
         return await _coursePersistenceService.PersistAsync(userId, topic, expandedChapters.ToAssemblyModels(), ct);
     }
 
     private async Task<List<ChapterExpandResponse>> GetOrCacheExpandedChaptersAsync(
         string topic, CourseSkeletonResponse response, CancellationToken ct)
     {
-        var cacheKey = $"course:expand:{topic}";
-        var cached = await _cacheService.GetAsync<List<ChapterExpandResponse>>(cacheKey, ct);
+        string cacheKey = CacheKeyConstants.CacheKeyExpand(topic);
+        List<ChapterExpandResponse>? cached = await _cacheService.GetAsync<List<ChapterExpandResponse>>(cacheKey);
 
         if (cached is not null)
         {
-            _logger.LogInformation("Cache hit for chapter expand of {Topic}", topic);
+            LogCacheHitExpand(topic);
             return cached;
         }
 
@@ -164,7 +164,7 @@ public sealed class CourseService : ICourseService
         });
 
         var result = concurrentChapters.ToList();
-        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromHours(2), ct);
+        await _cacheService.SetAsync(cacheKey, result, TimeSpan.FromHours(2));
         return result;
     }
 
@@ -173,9 +173,9 @@ public sealed class CourseService : ICourseService
         var valid = new List<UploadFileDto>();
         var errors = new List<string>();
 
-        foreach (var file in files)
+        foreach (UploadFileDto file in files)
         {
-            var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+            string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
 
             if (file.Content.Length == 0)
                 errors.Add($"{file.FileName}: file is empty.");
@@ -195,8 +195,14 @@ public sealed class CourseService : ICourseService
     private async Task<(string FileName, string FileKey, string Extension)> UploadSingleAsync(
         UploadFileDto file, CancellationToken ct)
     {
-        var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
-        var key = await _storage.UploadAsync(file.Content, file.FileName, file.ContentType, ct);
+        string extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+        string key = await _storage.UploadAsync(file.Content, file.FileName, file.ContentType, ct);
         return (file.FileName, key, extension);
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Cache hit for skeleton of {Topic}")]
+    private partial void LogCacheHitSkeleton(string topic);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Cache hit for chapter expand of {Topic}")]
+    private partial void LogCacheHitExpand(string topic);
 }

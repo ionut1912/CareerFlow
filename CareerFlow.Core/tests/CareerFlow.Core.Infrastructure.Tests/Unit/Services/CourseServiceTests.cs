@@ -98,7 +98,7 @@ public class CourseServiceTests
 
     private static Course CreateCourseWithId(Guid courseId)
     {
-        var subChapter = CreateSubChapter();
+        SubChapter subChapter = CreateSubChapter();
         var chapter = Chapter.Create(1, "Intro", "Introduction concept", [subChapter]);
         var course = Course.Create("Test Topic", [chapter]);
         SetEntityId(course, courseId);
@@ -392,7 +392,7 @@ public class CourseServiceTests
         var request = new CourseSkeletonRequest("Python");
         var cached = EmptySkeleton();
         _cacheService.Setup(c => c.GetAsync<CourseSkeletonResponse>(
-                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                It.IsAny<string>()))
             .ReturnsAsync(cached);
 
         var result = await _sut.GetCourseSkeletonAsync(request);
@@ -402,7 +402,7 @@ public class CourseServiceTests
             It.IsAny<CourseSkeletonRequest>(), It.IsAny<CancellationToken>()), Times.Never);
         _cacheService.Verify(c => c.SetAsync(
             It.IsAny<string>(), It.IsAny<CourseSkeletonResponse>(),
-            It.IsAny<TimeSpan>(), It.IsAny<CancellationToken>()), Times.Never);
+            It.IsAny<TimeSpan>()), Times.Never);
     }
 
     [Fact]
@@ -411,7 +411,7 @@ public class CourseServiceTests
         var request = new CourseSkeletonRequest("Python");
         var skeleton = EmptySkeleton();
         _cacheService.Setup(c => c.GetAsync<CourseSkeletonResponse>(
-                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                It.IsAny<string>()))
             .ReturnsAsync((CourseSkeletonResponse?)null);
         _analyzer.Setup(a => a.GetCourseSkeletonAsync(request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(skeleton);
@@ -423,8 +423,7 @@ public class CourseServiceTests
         _cacheService.Verify(c => c.SetAsync(
             It.Is<string>(k => k.Contains("Python")),
             skeleton,
-            TimeSpan.FromHours(2),
-            It.IsAny<CancellationToken>()), Times.Once);
+            TimeSpan.FromHours(2)), Times.Once);
     }
 
     // -------------------------------------------------------------------------
@@ -437,7 +436,7 @@ public class CourseServiceTests
         var userId = Guid.NewGuid();
         var expectedId = Guid.NewGuid();
         _cacheService.Setup(c => c.GetAsync<List<ChapterExpandResponse>>(
-                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                It.IsAny<string>()))
             .ReturnsAsync([]);
         _coursePersistenceService.Setup(p => p.PersistAsync(
                 userId, "Python", It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
@@ -459,7 +458,7 @@ public class CourseServiceTests
         var response = SkeletonWithChapters(new ChapterDto("Day 1", "Intro", 1));
 
         _cacheService.Setup(c => c.GetAsync<List<ChapterExpandResponse>>(
-                It.IsAny<string>(), It.IsAny<CancellationToken>()))
+                It.IsAny<string>()))
             .ReturnsAsync((List<ChapterExpandResponse>?)null);
         _analyzer.Setup(a => a.GetExpandedChapterAsync(
                 It.IsAny<ChapterRequest>(), It.IsAny<CancellationToken>()))
@@ -476,7 +475,6 @@ public class CourseServiceTests
         _cacheService.Verify(c => c.SetAsync(
             It.Is<string>(k => k.Contains("Python")),
             It.IsAny<List<ChapterExpandResponse>>(),
-            TimeSpan.FromHours(2),
-            It.IsAny<CancellationToken>()), Times.Once);
+            TimeSpan.FromHours(2)), Times.Once);
     }
 }

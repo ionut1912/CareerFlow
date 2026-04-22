@@ -36,29 +36,6 @@ public class EmailServiceTests
         Should.Throw<ArgumentNullException>(() => new EmailService(_mailClientMock.Object, null!));
     }
 
-    [Fact]
-    public async Task SendEmailWithTemplateAsync_CancelledToken_ReturnsFalse()
-    {
-        // Arrange
-        using var cts = new CancellationTokenSource();
-        await cts.CancelAsync();
-        var model = new Dictionary<string, string>();
-
-        // Act
-        var result = await _sut.SendEmailWithTemplateAsync("test@example.com", 1, model, cts.Token);
-
-        // Assert
-        result.ShouldBeFalse();
-
-        // Verify that the method was never called
-        _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(
-                It.IsAny<string>(),
-                It.IsAny<int>(),
-                It.IsAny<Dictionary<string, string>>(),
-                It.IsAny<CancellationToken>()),
-            Times.Never);
-    }
-
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -69,7 +46,7 @@ public class EmailServiceTests
         var model = new Dictionary<string, string>();
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync(to!, 1, model, CancellationToken.None);
+        var result = await _sut.SendEmailWithTemplateAsync(to!, 1, model);
 
         // Assert
         result.ShouldBeFalse();
@@ -77,8 +54,7 @@ public class EmailServiceTests
         _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
-                It.IsAny<Dictionary<string, string>>(),
-                It.IsAny<CancellationToken>()),
+                It.IsAny<Dictionary<string, string>>()),
             Times.Never);
     }
 
@@ -89,11 +65,11 @@ public class EmailServiceTests
         var model = new Dictionary<string, string> { { "key", "value" } };
 
         _mailClientMock
-            .Setup(x => x.SendTemplatedEmailAsync("to@example.com", 42, model, CancellationToken.None))
+            .Setup(x => x.SendTemplatedEmailAsync("to@example.com", 42, model))
             .ReturnsAsync(true);
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 42, model, CancellationToken.None);
+        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 42, model);
 
         // Assert
         result.ShouldBeTrue();
@@ -109,12 +85,12 @@ public class EmailServiceTests
             .Setup(x => x.SendTemplatedEmailAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
-                It.IsAny<Dictionary<string, string>>(),
-                It.IsAny<CancellationToken>()))
+                It.IsAny<Dictionary<string, string>>()
+            ))
             .ReturnsAsync(false);
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model, CancellationToken.None);
+        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model);
 
         // Assert
         result.ShouldBeFalse();
@@ -130,12 +106,11 @@ public class EmailServiceTests
             .Setup(x => x.SendTemplatedEmailAsync(
                 It.IsAny<string>(),
                 It.IsAny<int>(),
-                It.IsAny<Dictionary<string, string>>(),
-                It.IsAny<CancellationToken>()))
+                It.IsAny<Dictionary<string, string>>()))
             .ThrowsAsync(new HttpRequestException("Provider down"));
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model, CancellationToken.None);
+        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model);
 
         // Assert
         result.ShouldBeFalse();
@@ -150,14 +125,14 @@ public class EmailServiceTests
         var model = new Dictionary<string, string> { { "name", "Alice" } };
 
         _mailClientMock
-            .Setup(x => x.SendTemplatedEmailAsync(to, templateId, model, CancellationToken.None))
+            .Setup(x => x.SendTemplatedEmailAsync(to, templateId, model))
             .ReturnsAsync(true);
 
         // Act
-        await _sut.SendEmailWithTemplateAsync(to, templateId, model, CancellationToken.None);
+        await _sut.SendEmailWithTemplateAsync(to, templateId, model);
 
         // Assert
-        _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(to, templateId, model, CancellationToken.None),
+        _mailClientMock.Verify(x => x.SendTemplatedEmailAsync(to, templateId, model),
             Times.Once);
     }
 }

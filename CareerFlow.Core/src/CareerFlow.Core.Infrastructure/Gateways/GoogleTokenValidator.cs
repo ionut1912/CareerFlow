@@ -2,9 +2,12 @@
 using CareerFlow.Core.Domain.Abstractions.Gateways.Dtos;
 using Google.Apis.Auth;
 
+using JetBrains.Annotations;
+
 namespace CareerFlow.Core.Infrastructure.Gateways;
 
-public class GoogleTokenValidator : IGoogleTokenValidator
+[UsedImplicitly]
+public  class GoogleTokenValidator : IGoogleTokenValidator
 {
     public async Task<GoogleUserDto> ValidateIdTokenAsync(string idToken, string clientId)
     {
@@ -13,7 +16,7 @@ public class GoogleTokenValidator : IGoogleTokenValidator
             Audience = [clientId]
         };
 
-        var payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
+        GoogleJsonWebSignature.Payload? payload = await GoogleJsonWebSignature.ValidateAsync(idToken, settings);
 
         return new GoogleUserDto(payload.Email, payload.GivenName);
     }

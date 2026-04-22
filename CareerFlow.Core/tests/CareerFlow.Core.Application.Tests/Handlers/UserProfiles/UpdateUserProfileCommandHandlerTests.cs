@@ -20,8 +20,8 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
         _userProfileRepositoryMock = new Mock<IUserProfileRepository>();
         _handler = new UpdateUserProfileCommandHandler(
             _userProfileRepositoryMock.Object,
-            _loggerMock.Object,
-            _unitOfWorkMock.Object);
+            LoggerMock.Object,
+            UnitOfWorkMock.Object);
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
         //Assert
         _userProfileRepositoryMock
             .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Once);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
+        UnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
     }
 
     [Fact]
@@ -60,8 +60,8 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
         exception.Message.ShouldBe($"Profilul cu id-ul {request.Id} nu a fost gasit");
         _userProfileRepositoryMock
             .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
-        _loggerMock.VerifyLogError(request.Id.ToString(), Times.Once());
+        UnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        LoggerMock.VerifyLogError(request.Id.ToString(), Times.Once());
     }
 
     [Fact]
@@ -82,7 +82,7 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
         exception.Message.ShouldBe($"Tipul de invatare {request.LearningType} e invalid");
         _userProfileRepositoryMock
             .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        UnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 
     [Fact]
@@ -103,6 +103,6 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
         exception.Message.ShouldBe($"Tipul {request.UserTypes[0]} este invalid");
         _userProfileRepositoryMock
             .Verify(x => x.Update(It.IsAny<UserProfile>()), Times.Never);
-        _unitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
+        UnitOfWorkMock.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Never);
     }
 }

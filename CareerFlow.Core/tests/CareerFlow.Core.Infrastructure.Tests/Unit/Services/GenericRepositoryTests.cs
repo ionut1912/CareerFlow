@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.ComponentModel.DataAnnotations;
+
+using Microsoft.EntityFrameworkCore;
 using Shared.Domain.Common;
 using Shared.Infra.Services;
 using Shouldly;
@@ -13,7 +15,7 @@ public class GenericRepositoryTests : IDisposable
 
     public GenericRepositoryTests()
     {
-        var options = new DbContextOptionsBuilder<TestDbContext>()
+        DbContextOptions<TestDbContext> options = new DbContextOptionsBuilder<TestDbContext>()
             .UseInMemoryDatabase(Guid.NewGuid().ToString())
             .Options;
 
@@ -24,6 +26,7 @@ public class GenericRepositoryTests : IDisposable
     public void Dispose()
     {
         _context.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -44,7 +47,7 @@ public class GenericRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Assert
-        var found = await _context.Entities.FindAsync(entity.Id);
+        TestEntity? found = await _context.Entities.FindAsync([entity.Id], CancellationToken.None);
         found.ShouldNotBeNull();
         found.Name.ShouldBe("Test");
     }
@@ -58,10 +61,10 @@ public class GenericRepositoryTests : IDisposable
 
         // Act
         await _sut.AddAsync(entity, cts.Token);
-        await _context.SaveChangesAsync();
+        await _context.SaveChangesAsync(cts.Token);
 
         // Assert
-        var found = await _context.Entities.FindAsync(entity.Id);
+        TestEntity? found = await _context.Entities.FindAsync([entity.Id], cts.Token);
         found.ShouldNotBeNull();
     }
 
@@ -78,7 +81,7 @@ public class GenericRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Assert
-        var found = await _context.Entities.FindAsync(entity.Id);
+        TestEntity? found = await _context.Entities.FindAsync([entity.Id], CancellationToken.None);
         found.ShouldBeNull();
     }
 
@@ -91,7 +94,7 @@ public class GenericRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
         _context.ChangeTracker.Clear();
 
-        var loaded = (await _context.Entities.FindAsync(entity.Id))!;
+        TestEntity loaded = (await _context.Entities.FindAsync([entity.Id], CancellationToken.None))!;
         loaded.Name = "Updated";
 
         // Act
@@ -100,7 +103,7 @@ public class GenericRepositoryTests : IDisposable
 
         // Assert
         _context.ChangeTracker.Clear();
-        var updated = await _context.Entities.FindAsync(entity.Id);
+        TestEntity? updated = await _context.Entities.FindAsync([entity.Id], CancellationToken.None);
         updated!.Name.ShouldBe("Updated");
     }
 
@@ -114,18 +117,19 @@ public class GenericRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _sut.GetAllAsync();
+        IEnumerable<TestEntity> result = await _sut.GetAllAsync();
 
         // Assert
-        result.ShouldNotBeNull();
-        result.Count().ShouldBe(2);
+        IEnumerable<TestEntity> testEntities = result as TestEntity[] ?? result.ToArray();
+        testEntities.ShouldNotBeNull();
+        testEntities.Count().ShouldBe(2);
     }
 
     [Fact]
     public async Task GetAllAsync_EmptyTable_ReturnsEmptyCollection()
     {
         // Act
-        var result = await _sut.GetAllAsync();
+        IEnumerable<TestEntity> result = await _sut.GetAllAsync();
 
         // Assert
         result.ShouldBeEmpty();
@@ -139,7 +143,7 @@ public class GenericRepositoryTests : IDisposable
         await _context.SaveChangesAsync();
 
         // Act
-        var result = await _sut.GetAllAsync(CancellationToken.None, null!);
+        IEnumerable<TestEntity> result = await _sut.GetAllAsync(CancellationToken.None, null!);
 
         // Assert
         result.Count().ShouldBe(1);
@@ -147,6 +151,7 @@ public class GenericRepositoryTests : IDisposable
 
     public class TestEntity : Entity
     {
+        [MaxLength(50)]
         public string Name { get; set; } = string.Empty;
     }
 

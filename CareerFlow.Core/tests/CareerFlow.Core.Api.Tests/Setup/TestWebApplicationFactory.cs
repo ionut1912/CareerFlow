@@ -1,8 +1,9 @@
 using System.Net.Http.Headers;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Infrastructure.Persistance;
+using CareerFlow.Core.Infrastructure.Persistence;
 using DotNet.Testcontainers.Builders;
+using JetBrains.Annotations;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -16,6 +17,7 @@ using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Setup;
 
+[UsedImplicitly]
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine").Build();
@@ -27,7 +29,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     private readonly RedisContainer _redisContainer = new RedisBuilder("redis:alpine").Build();
 
-    public string DbConnectionString => _dbContainer.GetConnectionString();
+    private string DbConnectionString => _dbContainer.GetConnectionString();
 
     public async Task InitializeAsync()
     {
@@ -64,8 +66,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         // Analyzer Settings
         Environment.SetEnvironmentVariable("Analyzer__BaseUrl", "http://localhost:8080/ai");
 
-        using var scope = Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        using IServiceScope scope = Services.CreateScope();
+        ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
     }
 

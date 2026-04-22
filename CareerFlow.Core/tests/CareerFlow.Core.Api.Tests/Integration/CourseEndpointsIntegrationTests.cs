@@ -9,12 +9,8 @@ using Xunit;
 namespace CareerFlow.Core.Api.Tests.Integration;
 
 [Trait("Category", "Integration")]
-public class CourseEndpointsIntegrationTests : IntegrationTestBase
+public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
-    public CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task UploadCourse_UnauthenticatedUser_Returns401()
     {
@@ -28,9 +24,9 @@ public class CourseEndpointsIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task UploadCourse_AuthenticatedUserMissingTitle_Returns400BadRequest()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         using var content = new MultipartFormDataContent();
-        var fileBytes = CreateMinimalPdf();
+        byte[] fileBytes = CreateMinimalPdf();
         var fileContent = new ByteArrayContent(fileBytes);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
         content.Add(fileContent, "files", "course.pdf");
