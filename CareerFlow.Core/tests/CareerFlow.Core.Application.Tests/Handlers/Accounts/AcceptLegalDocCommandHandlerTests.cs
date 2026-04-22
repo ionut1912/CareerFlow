@@ -29,7 +29,7 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
     public async Task Handle_WhenAccountExistsAndValidType_Should_Modify(string type)
     {
         var command = new AcceptLegalDocCommand(Guid.NewGuid(), type);
-        var account = TestDataFactory.CreateAccount();
+        Account account = TestDataFactory.CreateAccount();
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(command.AccountId, Ct))
             .ReturnsAsync(account);
 
@@ -48,7 +48,7 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(command.AccountId, Ct))
             .ReturnsAsync((Account?)null);
 
-        var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
+        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         exception.Message.ShouldBe($"Contul cu id-ul {command.AccountId} nu a fost gasit");
         _accountRepositoryMock
@@ -62,11 +62,11 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
     public async Task Handle_WhenInvalidType_TrowsLegalDocInvalidTypeException()
     {
         var command = new AcceptLegalDocCommand(Guid.NewGuid(), "invalid");
-        var account = TestDataFactory.CreateAccount();
+        Account account = TestDataFactory.CreateAccount();
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(command.AccountId, Ct))
             .ReturnsAsync(account);
 
-        var exception = await Should.ThrowAsync<LegalDocInvalidTypeException>(() => _handler.Handle(command, Ct));
+        LegalDocInvalidTypeException exception = await Should.ThrowAsync<LegalDocInvalidTypeException>(() => _handler.Handle(command, Ct));
 
         exception.Message.ShouldBe("Invalid legal document type");
         _accountRepositoryMock

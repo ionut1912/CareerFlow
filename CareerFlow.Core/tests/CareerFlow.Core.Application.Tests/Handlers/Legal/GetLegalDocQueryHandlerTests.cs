@@ -4,6 +4,9 @@ using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.Legal;
+
+using Microsoft.Extensions.Logging;
+
 using Moq;
 using Shouldly;
 
@@ -33,7 +36,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
             .ReturnsAsync(document);
 
         // Act
-        var response = await _handler.Handle(query, Ct);
+        LegalDocumentResponse response = await _handler.Handle(query, Ct);
 
         // Assert
         response.ShouldNotBeNull();
@@ -51,7 +54,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
         var query = new GetLegalDocQuery(type);
 
         // Act
-        var exception =
+        LegalDocInvalidTypeException exception =
             await Should.ThrowAsync<LegalDocInvalidTypeException>(async () => await _handler.Handle(query, Ct));
 
         // Assert
@@ -70,7 +73,7 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
             .ReturnsAsync((LegalDocumentResponse?)null);
 
         // Act
-        var exception =
+        LegalDocNotFoundException exception =
             await Should.ThrowAsync<LegalDocNotFoundException>(async () => await _handler.Handle(query, Ct));
 
         // Assert
@@ -88,8 +91,8 @@ public class GetLegalDocQueryHandlerTests : BaseHandlerTest<GetLegalDocQueryHand
         var query = new GetLegalDocQuery("privacy");
 
         // Use the null-forgiving operator (!) to satisfy the compiler while testing null guards
-        var service = isServiceNull ? null! : _legalServiceMock.Object;
-        var logger = isLoggerNull ? null! : LoggerMock.Object;
+        ILegalService service = isServiceNull ? null! : _legalServiceMock.Object;
+        ILogger<GetLegalDocQueryHandler> logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

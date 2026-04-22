@@ -188,7 +188,7 @@ public class ProcessCourseJobTests
             .ReturnsAsync(BuildDocumentResponse());
         _cacheMock.Setup(c =>
                 c.GetAsync<List<ExpandedChapterDataDto>>(It.IsAny<string>()))
-            .ReturnsAsync(new List<ExpandedChapterDataDto>());
+            .ReturnsAsync([]);
         _persistenceMock.Setup(p => p.PersistAsync(userId, It.IsAny<string>(),
                 It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(courseId);

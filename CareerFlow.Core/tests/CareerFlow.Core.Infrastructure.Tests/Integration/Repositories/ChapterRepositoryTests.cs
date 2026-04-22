@@ -31,10 +31,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task ExistsAsync_MatchingChapterIdAndCourseId_ReturnsTrue()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
+        (_, Chapter chapter) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.ExistsAsync(chapter.Id, chapter.CourseId, CancellationToken.None);
+        bool result = await _sut.ExistsAsync(chapter.Id, chapter.CourseId, CancellationToken.None);
 
         // Assert
         result.ShouldBeTrue();
@@ -44,10 +44,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task ExistsAsync_NonExistentChapterId_ReturnsFalse()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
+        (_, Chapter chapter) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.ExistsAsync(Guid.NewGuid(), chapter.CourseId, CancellationToken.None);
+        bool result = await _sut.ExistsAsync(Guid.NewGuid(), chapter.CourseId, CancellationToken.None);
 
         // Assert
         result.ShouldBeFalse();
@@ -57,10 +57,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task ExistsAsync_NonExistentCourseId_ReturnsFalse()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
+        (_, Chapter chapter) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.ExistsAsync(chapter.Id, Guid.NewGuid(), CancellationToken.None);
+        bool result = await _sut.ExistsAsync(chapter.Id, Guid.NewGuid(), CancellationToken.None);
 
         // Assert
         result.ShouldBeFalse();
@@ -70,11 +70,11 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task ExistsAsync_ChapterIdBelongsToDifferentCourse_ReturnsFalse()
     {
         // Arrange
-        var (_, chapter1) = await SeedChapterAsync();
-        var (course2, _) = await SeedChapterAsync();
+        (_, Chapter chapter1) = await SeedChapterAsync();
+        (Course course2, _) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.ExistsAsync(chapter1.Id, course2.Id, CancellationToken.None);
+        bool result = await _sut.ExistsAsync(chapter1.Id, course2.Id, CancellationToken.None);
 
         // Assert
         result.ShouldBeFalse();
@@ -84,7 +84,7 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task ExistsAsync_BothIdsEmpty_ReturnsFalse()
     {
         // Act
-        var result = await _sut.ExistsAsync(Guid.Empty, Guid.Empty, CancellationToken.None);
+        bool result = await _sut.ExistsAsync(Guid.Empty, Guid.Empty, CancellationToken.None);
 
         // Assert
         result.ShouldBeFalse();
@@ -94,14 +94,14 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task AddAsync_Chapter_PersistsToDatabase()
     {
         // Arrange
-        var chapter = CreateChapter();
-        var course = Course.Create("Topic", new List<Chapter> { chapter });
+        Chapter chapter = CreateChapter();
+        var course = Course.Create("Topic", [chapter]);
         Context.Courses.Add(course);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
         // Act
-        var saved = await Context.Chapters.FindAsync(chapter.Id);
+        Chapter? saved = await Context.Chapters.FindAsync(chapter.Id);
 
         // Assert
         saved.ShouldNotBeNull();
@@ -112,10 +112,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_ExistingId_ReturnsChapter()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
+        (_, Chapter chapter) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(chapter.Id);
+        Chapter? result = await _sut.GetByIdAsync(chapter.Id);
 
         // Assert
         result.ShouldNotBeNull();
@@ -126,7 +126,7 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_NonExistentId_ReturnsNull()
     {
         // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+        Chapter? result = await _sut.GetByIdAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeNull();
@@ -136,10 +136,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_WithSubChaptersInclude_ReturnsChapterWithSubChapters()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
+        (_, Chapter chapter) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(chapter.Id, CancellationToken.None, c => c.SubChapters);
+        Chapter? result = await _sut.GetByIdAsync(chapter.Id, CancellationToken.None, c => c.SubChapters);
 
         // Assert
         result.ShouldNotBeNull();
@@ -150,10 +150,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_WithCourseInclude_ReturnsChapterWithCourseId()
     {
         // Arrange
-        var (course, chapter) = await SeedChapterAsync();
+        (Course course, Chapter chapter) = await SeedChapterAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(chapter.Id);
+        Chapter? result = await _sut.GetByIdAsync(chapter.Id);
 
         // Assert
         result.ShouldNotBeNull();
@@ -164,11 +164,10 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetAllAsync_MultipleChapters_ReturnsAll()
     {
         // Arrange
-        var course = Course.Create("Topic", new List<Chapter>
-        {
+        var course = Course.Create("Topic", [
             CreateChapter(1, "Chapter 1"),
             CreateChapter(2, "Chapter 2")
-        });
+        ]);
         Context.Courses.Add(course);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
@@ -197,7 +196,7 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetAllAsync_EmptyTable_ReturnsEmptyCollection()
     {
         // Act
-        var result = await _sut.GetAllAsync();
+        IEnumerable<Chapter> result = await _sut.GetAllAsync();
 
         // Assert
         result.ShouldBeEmpty();
@@ -207,8 +206,8 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Delete_ExistingChapter_RemovesFromDatabase()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
-        var tracked = await Context.Chapters.FindAsync(chapter.Id);
+        (_, Chapter chapter) = await SeedChapterAsync();
+        Chapter? tracked = await Context.Chapters.FindAsync(chapter.Id);
 
         // Act
         _sut.Delete(tracked!);
@@ -216,7 +215,7 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var deleted = await Context.Chapters.FindAsync(chapter.Id);
+        Chapter? deleted = await Context.Chapters.FindAsync(chapter.Id);
         deleted.ShouldBeNull();
     }
 
@@ -224,8 +223,8 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Update_ChangesArePersisted()
     {
         // Arrange
-        var (_, chapter) = await SeedChapterAsync();
-        var tracked = await Context.Chapters.FindAsync(chapter.Id);
+        (_, Chapter chapter) = await SeedChapterAsync();
+        Chapter? tracked = await Context.Chapters.FindAsync(chapter.Id);
         tracked!.SetCourseId(tracked.CourseId);
 
         // Act
@@ -234,9 +233,9 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var refreshed = await Context.Chapters.FindAsync(chapter.Id);
+        Chapter? refreshed = await Context.Chapters.FindAsync(chapter.Id);
         refreshed.ShouldNotBeNull();
-        refreshed!.CourseId.ShouldBe(chapter.CourseId);
+        refreshed.CourseId.ShouldBe(chapter.CourseId);
     }
 
     private static Chapter CreateChapter(int day = 1, string title = "Chapter Title")
@@ -255,13 +254,13 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
             SubChapter.Create("Sub 1", "Summary 1", "<p>Theory 1</p>")
         };
         var chapter = Chapter.Create(1, "Chapter Title", "Core Concept", subChapters);
-        var course = Course.Create("Topic", new List<Chapter> { chapter });
+        var course = Course.Create("Topic", [chapter]);
 
         Context.Courses.Add(course);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
-        var savedChapter = await Context.Chapters.FindAsync(chapter.Id);
+        Chapter? savedChapter = await Context.Chapters.FindAsync(chapter.Id);
         return (course, savedChapter!);
     }
 }

@@ -4,14 +4,9 @@ using FluentValidation.TestHelper;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Accounts;
 
-public class LoginQueryValidatorTest
+public class LoginQueryValidatorTests
 {
-    private readonly LoginQueryValidator _validator;
-
-    public LoginQueryValidatorTest()
-    {
-        _validator = new LoginQueryValidator();
-    }
+    private readonly LoginQueryValidator _validator = new();
 
     [Fact]
     public void Validate_WhenQueryIsValid_ShouldNotHaveErrors()
@@ -20,7 +15,7 @@ public class LoginQueryValidatorTest
         var query = new LoginQuery("test@email.com", "Password123!");
 
         // Act
-        var result = _validator.TestValidate(query);
+        TestValidationResult<LoginQuery>? result = _validator.TestValidate(query);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -33,12 +28,12 @@ public class LoginQueryValidatorTest
     public void Validate_WhenEmailIsEmpty_ShouldHaveError(string? email)
     {
         // Arrange
-        // We use ! here because the Query likely expects a non-null string, 
+        // We use ! here because the Query likely expects a non-null string,
         // but we are intentionally passing null to test validation.
         var query = new LoginQuery(email!, "pass");
 
         // Act
-        var result = _validator.TestValidate(query);
+        TestValidationResult<LoginQuery>? result = _validator.TestValidate(query);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
@@ -55,7 +50,7 @@ public class LoginQueryValidatorTest
         var query = new LoginQuery(email, "pass");
 
         // Act
-        var result = _validator.TestValidate(query);
+        TestValidationResult<LoginQuery>? result = _validator.TestValidate(query);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
@@ -71,7 +66,7 @@ public class LoginQueryValidatorTest
         var query = new LoginQuery("test@test.com", password!);
 
         // Act
-        var result = _validator.TestValidate(query);
+        TestValidationResult<LoginQuery>? result = _validator.TestValidate(query);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Password)

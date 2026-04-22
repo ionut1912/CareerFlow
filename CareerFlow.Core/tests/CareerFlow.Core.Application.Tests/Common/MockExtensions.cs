@@ -17,8 +17,5 @@ public static class MockExtensions
             times);
     }
 
-    public static void VerifySaveChanges(this Mock<IUnitOfWork> unitOfWork, Times times)
-    {
-        unitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), times);
-    }
+    public static void VerifySaveChanges(this Mock<IUnitOfWork> unitOfWork, Times times) => unitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), times);
 }

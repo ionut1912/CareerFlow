@@ -15,7 +15,7 @@ public class CreateUserProfileCommandValidatorTests
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -27,11 +27,10 @@ public class CreateUserProfileCommandValidatorTests
     public void Validate_EmptyLearningType_ShouldHaveError(string? learningType)
     {
         //Arrange
-        // Use ! to pass the null/empty string to the non-nullable command property for testing
         var command = new CreateUserProfileCommand(Guid.NewGuid(), learningType!, ["Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.LearningType)
@@ -45,7 +44,7 @@ public class CreateUserProfileCommandValidatorTests
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "invalidType", ["Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.LearningType)
@@ -55,13 +54,13 @@ public class CreateUserProfileCommandValidatorTests
 
     [Theory]
     [MemberData(nameof(EmptyUserTypeData))]
-    public void Validate_EmptyUserType_ShouldHaveError(List<string>? userTypes)
+    public void Validate_EmptyUserType_ShouldHaveError(string[]? userTypes)
     {
         //Arrange
-        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", userTypes!, "test");
+        var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", userTypes?.ToList()!, "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -76,7 +75,7 @@ public class CreateUserProfileCommandValidatorTests
             ["Student", "JobSearcher", "HobbyLearner", "test"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -90,7 +89,7 @@ public class CreateUserProfileCommandValidatorTests
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["test"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -105,7 +104,7 @@ public class CreateUserProfileCommandValidatorTests
         var command = new CreateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student", "Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -120,16 +119,16 @@ public class CreateUserProfileCommandValidatorTests
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.Domain)
             .WithErrorMessage("Domeniul nu trebuie sa aiba mai mult de 100 caractere.");
     }
 
-    public static IEnumerable<object?[]> EmptyUserTypeData()
-    {
-        yield return [new List<string>()];
-        yield return [null]; // Testing null lists as well
-    }
+    public static TheoryData<string[]?> EmptyUserTypeData() =>
+    [
+        [],
+        null
+    ];
 }

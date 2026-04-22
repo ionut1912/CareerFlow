@@ -33,7 +33,7 @@ public class LegalServiceTests
     public async Task GetDocumentAsync_WhenCacheHit_ShouldReturnCachedDocumentWithoutCallingGithub()
     {
         // Arrange
-        var docType = "terms-of-service";
+        const string docType = "terms-of-service";
         var cachedDocument = new LegalDocumentResponse("Cached Content", "GitHub Pages", DateTime.UtcNow);
 
         _cacheMock
@@ -41,7 +41,7 @@ public class LegalServiceTests
             .ReturnsAsync(cachedDocument);
 
         // Act
-        var result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
+        LegalDocumentResponse? result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -54,9 +54,9 @@ public class LegalServiceTests
     public async Task GetDocumentAsync_WhenCacheMissAndResponseIsSuccess_ShouldReturnDocumentAndCacheIt()
     {
         // Arrange
-        var docType = "terms-of-service";
-        var content = "Standard Legal Text";
-        var cacheKey = $"legal:{docType}";
+        const string docType = "terms-of-service";
+        const string content = "Standard Legal Text";
+        const string cacheKey = $"legal:{docType}";
 
         _cacheMock
             .Setup(x => x.GetAsync<LegalDocumentResponse>(cacheKey))
@@ -72,7 +72,7 @@ public class LegalServiceTests
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
+        LegalDocumentResponse? result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -99,7 +99,7 @@ public class LegalServiceTests
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _sut.GetDocumentAsync("any-type", CancellationToken.None);
+        LegalDocumentResponse? result = await _sut.GetDocumentAsync("any-type", CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();

@@ -1,5 +1,6 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
@@ -39,10 +40,10 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
     public async Task Handle_WhenCredentialsValid_ReturnsAuthResult()
     {
         // Arrange
-        var account = TestDataFactory.CreateAccount();
+        Account account = TestDataFactory.CreateAccount();
         var query = new LoginQuery(account.Email, "password");
         var authResult = new AuthResult("token", "expiry");
-        var refreshToken = TestDataFactory.CreateRefreshToken(account.Id);
+        RefreshToken refreshToken = TestDataFactory.CreateRefreshToken(account.Id);
 
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);
         _passwordServiceMock.Setup(x => x.VerifyPassword(query.Password, account.Password)).Returns(true);
@@ -50,7 +51,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         _tokenServiceMock.Setup(x => x.GenerateRefreshToken(account.Id, authResult.Token)).Returns(refreshToken);
 
         // Act
-        var result = await _handler.Handle(query, Ct);
+        AccountDto result = await _handler.Handle(query, Ct);
 
         // Assert
         result.Token.ShouldBe(authResult.Token);
@@ -67,9 +68,10 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(query.Email, Ct)).ReturnsAsync((Account?)null);
 
         // Act
-        var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
+        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
 
         // Assert
+        exception.Message.ShouldContain(query.Email);
         LoggerMock.VerifyLogError(query.Email, Times.Once());
     }
 
@@ -77,7 +79,7 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
     public async Task Handle_WhenPasswordInvalid_ThrowsPasswordNotMatchException()
     {
         // Arrange
-        var account = TestDataFactory.CreateAccount();
+        Account account = TestDataFactory.CreateAccount();
         var query = new LoginQuery(account.Email, "wrongpass");
 
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(account.Email, Ct)).ReturnsAsync(account);

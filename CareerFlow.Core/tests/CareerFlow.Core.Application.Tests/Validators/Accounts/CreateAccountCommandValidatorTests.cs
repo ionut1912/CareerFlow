@@ -6,12 +6,7 @@ namespace CareerFlow.Core.Application.Tests.Validators.Accounts;
 
 public class CreateAccountCommandValidatorTests
 {
-    private readonly CreateAccountCommandValidator _validator;
-
-    public CreateAccountCommandValidatorTests()
-    {
-        _validator = new CreateAccountCommandValidator();
-    }
+    private readonly CreateAccountCommandValidator _validator = new();
 
     [Fact]
     public void Validate_WhenCommandIsValid_ShouldNotHaveErrors()
@@ -21,7 +16,7 @@ public class CreateAccountCommandValidatorTests
             new CreateAccountCommand("test@email.com", "Password123!", "Password123!", "username", "Test Name");
 
         // Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         // Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -37,7 +32,7 @@ public class CreateAccountCommandValidatorTests
         var command = new CreateAccountCommand(email!, "pass", "pass", "user", "name");
 
         // Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
@@ -54,7 +49,7 @@ public class CreateAccountCommandValidatorTests
         var command = new CreateAccountCommand(email, "pass", "pass", "user", "name");
 
         // Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Email)
@@ -70,7 +65,7 @@ public class CreateAccountCommandValidatorTests
         var command = new CreateAccountCommand("test@test.com", password!, password!, "user", "name");
 
         // Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Password)
@@ -86,7 +81,7 @@ public class CreateAccountCommandValidatorTests
         var command = new CreateAccountCommand("test@test.com", "testPassword", "testPassword", username!, "name");
 
         // Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Username)
@@ -102,7 +97,7 @@ public class CreateAccountCommandValidatorTests
         var command = new CreateAccountCommand("test@test.com", "testPassword", "testPassword", "test", name!);
 
         // Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         // Assert
         result.ShouldHaveValidationErrorFor(x => x.Name)
@@ -118,7 +113,7 @@ public class CreateAccountCommandValidatorTests
         var command = new CreateAccountCommand("test@test.com", "testPassword", confirmPassword!, "test", "name");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<CreateAccountCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.ConfirmPassword)

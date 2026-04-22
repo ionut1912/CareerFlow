@@ -17,10 +17,7 @@ public class FinishChapterCommandHandlerTests
     }
 
     [Fact]
-    public void Constructor_NullCourseService_ThrowsArgumentNullException()
-    {
-        Should.Throw<ArgumentNullException>(() => new FinishChapterCommandHandler(null!));
-    }
+    public void Constructor_NullCourseService_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => new FinishChapterCommandHandler(null!));
 
     [Fact]
     public async Task Handle_ValidCommand_CallsFinishChapterAsyncOnce()

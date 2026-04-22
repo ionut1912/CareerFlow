@@ -5,6 +5,9 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
+using Microsoft.Extensions.Logging;
+
 using Moq;
 using Shouldly;
 
@@ -36,7 +39,7 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
             .ReturnsAsync((Account?)null);
 
         // Act
-        var result = await _handler.Handle(command, Ct);
+        Guid result = await _handler.Handle(command, Ct);
 
         // Assert
         result.ShouldNotBe(Guid.Empty);
@@ -50,13 +53,13 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     {
         // Arrange
         var command = new CreateAccountCommand("exist@email.com", "pass", "pass", "user", "name");
-        var existingAccount = TestDataFactory.CreateAccount();
+        Account existingAccount = TestDataFactory.CreateAccount();
 
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
             .ReturnsAsync(existingAccount);
 
         // Act
-        var exception = await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
+        UserAlreadyExistsException exception = await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldContain(command.Email);
@@ -73,7 +76,7 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
             .ReturnsAsync((Account?)null);
 
         // Act
-        var exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
+        PasswordNotMatchException exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldBe("Parolele nu corespund");
@@ -93,10 +96,10 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
         // Arrange
         var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
 
-        var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
-        var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
-        var uow = isUowNull ? null! : UnitOfWorkMock.Object;
-        var logger = isLoggerNull ? null! : LoggerMock.Object;
+        IAccountRepository repo = isRepoNull ? null! : _accountRepositoryMock.Object;
+        IPasswordService passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
+        IUnitOfWork uow = isUowNull ? null! : UnitOfWorkMock.Object;
+        ILogger<CreateAccountCommandHandler> logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

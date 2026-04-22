@@ -32,7 +32,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task AddRangeAsync_SingleJob_PersistsToDatabase()
     {
         // Arrange
-        var uploadId = await SeedUploadAsync();
+        Guid uploadId = await SeedUploadAsync();
         var jobs = new List<CourseJob> { CourseJob.Create(uploadId, "Pending") };
 
         // Act
@@ -41,7 +41,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.CourseJobs.ToListAsync();
+        List<CourseJob> saved = await Context.CourseJobs.ToListAsync();
         saved.Count.ShouldBe(1);
         saved[0].UploadId.ShouldBe(uploadId);
         saved[0].Status.ShouldBe(JobStatus.Pending);
@@ -51,8 +51,8 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task AddRangeAsync_MultipleJobs_PersistsAllToDatabase()
     {
         // Arrange
-        var uploadId1 = await SeedUploadAsync();
-        var uploadId2 = await SeedUploadAsync();
+        Guid uploadId1 = await SeedUploadAsync();
+        Guid uploadId2 = await SeedUploadAsync();
         var jobs = new List<CourseJob>
         {
             CourseJob.Create(uploadId1, "Pending"),
@@ -65,7 +65,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.CourseJobs.ToListAsync();
+        List<CourseJob> saved = await Context.CourseJobs.ToListAsync();
         saved.Count.ShouldBe(2);
         saved.ShouldContain(j => j.UploadId == uploadId1);
         saved.ShouldContain(j => j.UploadId == uploadId2);
@@ -83,7 +83,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.CourseJobs.ToListAsync();
+        List<CourseJob> saved = await Context.CourseJobs.ToListAsync();
         saved.ShouldBeEmpty();
     }
 
@@ -91,7 +91,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task AddRangeAsync_NewJob_HasPendingStatusByDefault()
     {
         // Arrange
-        var uploadId = await SeedUploadAsync();
+        Guid uploadId = await SeedUploadAsync();
         var jobs = new List<CourseJob> { CourseJob.Create(uploadId, "Pending") };
 
         // Act
@@ -100,7 +100,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.CourseJobs.FirstAsync();
+        CourseJob saved = await Context.CourseJobs.FirstAsync();
         saved.Status.ShouldBe(JobStatus.Pending);
         saved.StartedAt.ShouldBeNull();
         saved.CompletedAt.ShouldBeNull();
@@ -112,7 +112,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task AddAsync_Job_PersistsToDatabase()
     {
         // Arrange
-        var uploadId = await SeedUploadAsync();
+        Guid uploadId = await SeedUploadAsync();
         var job = CourseJob.Create(uploadId, "Pending");
 
         // Act
@@ -121,30 +121,30 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob? saved = await Context.CourseJobs.FindAsync(job.Id);
         saved.ShouldNotBeNull();
-        saved!.UploadId.ShouldBe(uploadId);
+        saved.UploadId.ShouldBe(uploadId);
     }
 
     [Fact]
     public async Task GetByIdAsync_ExistingId_ReturnsJob()
     {
         // Arrange
-        var job = await SeedJobAsync();
+        CourseJob job = await SeedJobAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(job.Id);
+        CourseJob? result = await _sut.GetByIdAsync(job.Id);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.Id.ShouldBe(job.Id);
+        result.Id.ShouldBe(job.Id);
     }
 
     [Fact]
     public async Task GetByIdAsync_NonExistentId_ReturnsNull()
     {
         // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+        CourseJob? result = await _sut.GetByIdAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeNull();
@@ -154,27 +154,26 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_WithUploadInclude_ReturnsJobWithUpload()
     {
         // Arrange
-        var job = await SeedJobAsync();
+        CourseJob job = await SeedJobAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(job.Id, CancellationToken.None, j => j.Upload!);
+        CourseJob? result = await _sut.GetByIdAsync(job.Id, CancellationToken.None, j => j.Upload!);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.Upload.ShouldNotBeNull();
+        result.Upload.ShouldNotBeNull();
     }
 
     [Fact]
     public async Task GetAllAsync_MultipleJobs_ReturnsAll()
     {
         // Arrange
-        var uploadId1 = await SeedUploadAsync();
-        var uploadId2 = await SeedUploadAsync();
-        await _sut.AddRangeAsync(new List<CourseJob>
-        {
+        Guid uploadId1 = await SeedUploadAsync();
+        Guid uploadId2 = await SeedUploadAsync();
+        await _sut.AddRangeAsync([
             CourseJob.Create(uploadId1, "Pending"),
             CourseJob.Create(uploadId2, "Pending")
-        }, CancellationToken.None);
+        ], CancellationToken.None);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
@@ -202,7 +201,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetAllAsync_EmptyTable_ReturnsEmptyCollection()
     {
         // Act
-        var result = await _sut.GetAllAsync();
+        IEnumerable<CourseJob> result = await _sut.GetAllAsync();
 
         // Assert
         result.ShouldBeEmpty();
@@ -212,8 +211,8 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Delete_ExistingJob_RemovesFromDatabase()
     {
         // Arrange
-        var job = await SeedJobAsync();
-        var tracked = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob job = await SeedJobAsync();
+        CourseJob? tracked = await Context.CourseJobs.FindAsync(job.Id);
 
         // Act
         _sut.Delete(tracked!);
@@ -221,7 +220,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var deleted = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob? deleted = await Context.CourseJobs.FindAsync(job.Id);
         deleted.ShouldBeNull();
     }
 
@@ -229,8 +228,8 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Update_StatusChange_IsPersisted()
     {
         // Arrange
-        var job = await SeedJobAsync();
-        var tracked = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob job = await SeedJobAsync();
+        CourseJob? tracked = await Context.CourseJobs.FindAsync(job.Id);
         tracked!.Update(JobStatus.Processing);
 
         // Act
@@ -239,7 +238,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var refreshed = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob? refreshed = await Context.CourseJobs.FindAsync(job.Id);
         refreshed!.Status.ShouldBe(JobStatus.Processing);
         refreshed.StartedAt.ShouldNotBeNull();
     }
@@ -248,8 +247,8 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Update_DoneStatus_SetsCompletedAt()
     {
         // Arrange
-        var job = await SeedJobAsync();
-        var tracked = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob job = await SeedJobAsync();
+        CourseJob? tracked = await Context.CourseJobs.FindAsync(job.Id);
         tracked!.Update(JobStatus.Done);
 
         // Act
@@ -258,7 +257,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var refreshed = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob? refreshed = await Context.CourseJobs.FindAsync(job.Id);
         refreshed!.Status.ShouldBe(JobStatus.Done);
         refreshed.CompletedAt.ShouldNotBeNull();
     }
@@ -267,8 +266,8 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Update_FailedStatus_SetsCompletedAt()
     {
         // Arrange
-        var job = await SeedJobAsync();
-        var tracked = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob job = await SeedJobAsync();
+        CourseJob? tracked = await Context.CourseJobs.FindAsync(job.Id);
         tracked!.Update(JobStatus.Failed);
 
         // Act
@@ -277,14 +276,14 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var refreshed = await Context.CourseJobs.FindAsync(job.Id);
+        CourseJob? refreshed = await Context.CourseJobs.FindAsync(job.Id);
         refreshed!.Status.ShouldBe(JobStatus.Failed);
         refreshed.CompletedAt.ShouldNotBeNull();
     }
 
     private async Task<CourseJob> SeedJobAsync()
     {
-        var uploadId = await SeedUploadAsync();
+        Guid uploadId = await SeedUploadAsync();
         var job = CourseJob.Create(uploadId, "Pending");
         Context.CourseJobs.Add(job);
         await Context.SaveChangesAsync();

@@ -360,14 +360,10 @@ public class DocsAnalyzerServiceTests : IDisposable
                     MultipartParts.Add(new CapturedPart(
                         part.Headers.ContentDisposition?.Name?.Trim('"'),
                         part.Headers.ContentDisposition?.FileName?.Trim('"'),
-                        part.Headers.ContentType?.MediaType,
-                        await part.ReadAsByteArrayAsync(cancellationToken)));
+                        part.Headers.ContentType?.MediaType));
                 }
             }
-            else if (request.Content is not null)
-            {
-                LastRequestBody = await request.Content.ReadAsStringAsync(cancellationToken);
-            }
+            else if (request.Content is not null) LastRequestBody = await request.Content.ReadAsStringAsync(cancellationToken);
 
             return new HttpResponseMessage(_statusCode) { Content = _responseContent };
         }
@@ -376,6 +372,5 @@ public class DocsAnalyzerServiceTests : IDisposable
     private sealed record CapturedPart(
         string? Name,
         string? FileName,
-        string? ContentType,
-        byte[] Data);
+        string? ContentType);
 }

@@ -2,6 +2,8 @@ using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Domain.Exceptions;
 using FluentValidation;
 using FluentValidation.Results;
+
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Shared.Domain.Common;
@@ -22,16 +24,10 @@ public class ExceptionMapperTests
     }
 
     [Fact]
-    public void Constructor_NullLogger_ThrowsArgumentNullException()
-    {
-        Should.Throw<ArgumentNullException>(() => new ExceptionMapper(null!));
-    }
+    public void Constructor_NullLogger_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => new ExceptionMapper(null!));
 
     [Fact]
-    public void TryMap_NullException_ThrowsArgumentNullException()
-    {
-        Should.Throw<ArgumentNullException>(() => _sut.TryMap(null!, out _));
-    }
+    public void TryMap_NullException_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => _sut.TryMap(null!, out _));
 
     [Fact]
     public void TryMap_ValidationException_Returns400()
@@ -43,7 +39,7 @@ public class ExceptionMapperTests
         };
         var ex = new ValidationException(failures);
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -62,7 +58,7 @@ public class ExceptionMapperTests
         };
         var ex = new ValidationException(failures);
 
-        _sut.TryMap(ex, out var pd);
+        _sut.TryMap(ex, out ProblemDetails pd);
 
         var errors = (Dictionary<string, string[]>)pd.Extensions["errors"]!;
         errors["Email"].Length.ShouldBe(2);
@@ -75,7 +71,7 @@ public class ExceptionMapperTests
         var failures = new List<ValidationFailure> { new("", "Some general error") };
         var ex = new ValidationException(failures);
 
-        _sut.TryMap(ex, out var pd);
+        _sut.TryMap(ex, out ProblemDetails pd);
 
         var errors = (Dictionary<string, string[]>)pd.Extensions["errors"]!;
         errors.ContainsKey("_general").ShouldBeTrue();
@@ -92,7 +88,7 @@ public class ExceptionMapperTests
         };
         var ex = new CustomValidationException(validationErrors);
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -109,7 +105,7 @@ public class ExceptionMapperTests
     {
         var ex = new CustomValidationException(null!);
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -120,7 +116,7 @@ public class ExceptionMapperTests
     {
         var ex = new InvalidLearningTypeException("bad type");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -133,7 +129,7 @@ public class ExceptionMapperTests
     {
         var ex = new InvalidJobStatusException("bad status");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -146,7 +142,7 @@ public class ExceptionMapperTests
     {
         var ex = new DomainAlreadyExistsException("exists");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -158,7 +154,7 @@ public class ExceptionMapperTests
     {
         var ex = new UserProfileNotFoundException("not found");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(404);
@@ -170,7 +166,7 @@ public class ExceptionMapperTests
     {
         var ex = new InvalidUserTypeException("invalid");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -182,7 +178,7 @@ public class ExceptionMapperTests
     {
         var ex = new LearningTypeAlreadyExistsException("exists");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -194,7 +190,7 @@ public class ExceptionMapperTests
     {
         var ex = new DocumentEtagExistsException("etag exists");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -206,7 +202,7 @@ public class ExceptionMapperTests
     {
         var ex = new AccountNotFoundException("not found");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(404);
@@ -218,7 +214,7 @@ public class ExceptionMapperTests
     {
         var ex = new InvalidFieldException("invalid field");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -231,7 +227,7 @@ public class ExceptionMapperTests
     {
         var ex = new PasswordNotMatchException("no match");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -243,7 +239,7 @@ public class ExceptionMapperTests
     {
         var ex = new UserAlreadyExistsException("exists");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -255,7 +251,7 @@ public class ExceptionMapperTests
     {
         var ex = new InvalidRefreshTokenException("invalid");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(401);
@@ -267,7 +263,7 @@ public class ExceptionMapperTests
     {
         var ex = new TokenAlreadyUsedException("used");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -279,7 +275,7 @@ public class ExceptionMapperTests
     {
         var ex = new TokenRevokedException("revoked");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -291,7 +287,7 @@ public class ExceptionMapperTests
     {
         var ex = new LegalDocInvalidTypeException("invalid");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(400);
@@ -303,7 +299,7 @@ public class ExceptionMapperTests
     {
         var ex = new LegalDocNotFoundException("not found");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(404);
@@ -313,9 +309,9 @@ public class ExceptionMapperTests
     [Fact]
     public void TryMap_UnknownException_Returns500()
     {
-        var ex = new Exception("unexpected");
+        var ex = new InvalidOperationException("unexpected");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.Status.ShouldBe(500);
@@ -326,7 +322,7 @@ public class ExceptionMapperTests
     [Fact]
     public void TryMap_AnyException_LogsError()
     {
-        var ex = new Exception("test");
+        var ex = new InvalidOperationException("test");
 
         _sut.TryMap(ex, out _);
 
@@ -345,7 +341,7 @@ public class ExceptionMapperTests
     {
         var ex = new InvalidOperationException("op error");
 
-        var result = _sut.TryMap(ex, out var pd);
+        bool result = _sut.TryMap(ex, out ProblemDetails pd);
 
         result.ShouldBeTrue();
         pd.ShouldNotBeNull();
@@ -363,7 +359,7 @@ public class ExceptionMapperTests
     {
         var ex = (Exception)Activator.CreateInstance(exType, "msg")!;
 
-        _sut.TryMap(ex, out var pd);
+        _sut.TryMap(ex, out ProblemDetails pd);
 
         pd.Status.ShouldBe(expectedStatus);
     }

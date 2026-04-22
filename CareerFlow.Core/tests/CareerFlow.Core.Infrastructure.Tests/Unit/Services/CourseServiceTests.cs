@@ -10,6 +10,7 @@ using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Assembly;
 using CareerFlow.Core.Domain.Models.Course.Dto;
+using CareerFlow.Core.Domain.Models.Course.Response;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Services;
 using Hangfire;
@@ -60,18 +61,11 @@ public class CourseServiceTests
     // Helpers
     // -------------------------------------------------------------------------
 
-    private static UploadFileDto CreateFile(
-        string fileName = "test.pdf",
-        string contentType = "application/pdf",
-        byte[]? content = null)
-    {
-        return new UploadFileDto(fileName, contentType, new MemoryStream(content ?? [1, 2, 3]));
-    }
+    private static UploadFileDto CreateFile(string fileName = "test.pdf", string contentType = "application/pdf",
+        byte[]? content = null) =>
+        new(fileName, contentType, new MemoryStream(content ?? [1, 2, 3]));
 
-    private static UploadFileDto EmptyFile(string fileName = "empty.pdf")
-    {
-        return new UploadFileDto(fileName, "application/pdf", new MemoryStream([]));
-    }
+    private static UploadFileDto EmptyFile(string fileName = "empty.pdf") => new(fileName, "application/pdf", new MemoryStream([]));
 
     private static UploadFileDto OversizedFile(string fileName = "big.pdf")
     {
@@ -79,19 +73,13 @@ public class CourseServiceTests
             new MemoryStream(new byte[CourseConstants.MaxFileSizeBytes + 1]));
     }
 
-    private static UploadFileDto DisallowedFile(string fileName = "virus.exe")
-    {
-        return new UploadFileDto(fileName, "application/octet-stream", new MemoryStream([1, 2, 3]));
-    }
+    private static UploadFileDto DisallowedFile(string fileName = "virus.exe") => new(fileName, "application/octet-stream", new MemoryStream([1, 2, 3]));
 
-    private static UserProfile CreateProfile(Guid userId)
-    {
-        return UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
-    }
+    private static UserProfile CreateProfile(Guid userId) => UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
 
     private static UserProfile CreateProfileEnrolledIn(Guid userId, Course course)
     {
-        var profile = CreateProfile(userId);
+        UserProfile profile = CreateProfile(userId);
         profile.EnrollInCourse(course);
         return profile;
     }
@@ -130,15 +118,9 @@ public class CourseServiceTests
         );
     }
 
-    private static CourseSkeletonResponse EmptySkeleton()
-    {
-        return new CourseSkeletonResponse(new SkeletonDto("topic", []), 1);
-    }
+    private static CourseSkeletonResponse EmptySkeleton() => new(new SkeletonDto("topic", []), 1);
 
-    private static CourseSkeletonResponse SkeletonWithChapters(params ChapterDto[] chapters)
-    {
-        return new CourseSkeletonResponse(new SkeletonDto("Python", [.. chapters]), chapters.Length);
-    }
+    private static CourseSkeletonResponse SkeletonWithChapters(params ChapterDto[] chapters) => new(new SkeletonDto("Python", [.. chapters]), chapters.Length);
 
     /// <summary>
     ///     Sets the Id on an Entity base class via reflection since entity IDs
@@ -146,14 +128,14 @@ public class CourseServiceTests
     /// </summary>
     private static void SetEntityId(Entity entity, Guid id)
     {
-        var prop = typeof(Entity).GetProperty("Id")
-                   ?? throw new InvalidOperationException("Entity does not expose an Id property.");
+        PropertyInfo prop = typeof(Entity).GetProperty("Id")
+                            ?? throw new InvalidOperationException("Entity does not expose an Id property.");
         prop.SetValue(entity, id);
     }
 
     private static void SetPrivateField(object target, string fieldName, object value)
     {
-        var field = target.GetType()
+        FieldInfo? field = target.GetType()
             .GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
         field?.SetValue(target, value);
     }
@@ -170,7 +152,7 @@ public class CourseServiceTests
                 It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("storage-key");
 
-        var result = await _sut.UploadManyAsync(userId, [CreateFile()], "My Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(userId, [CreateFile()], "My Course");
 
         result.TotalFiles.ShouldBe(1);
         result.Accepted.ShouldBe(1);
@@ -194,7 +176,7 @@ public class CourseServiceTests
                 It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("key");
 
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
 
         result.Accepted.ShouldBe(3);
         _jobClient.Verify(j =>
@@ -205,7 +187,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_AllFilesInvalid_ReturnsEarlyWithoutPersisting()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [EmptyFile()], "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), [EmptyFile()], "Course");
 
         result.Accepted.ShouldBe(0);
         result.Rejected.ShouldBe(1);
@@ -226,7 +208,7 @@ public class CourseServiceTests
                 It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("key");
 
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
 
         result.TotalFiles.ShouldBe(2);
         result.Accepted.ShouldBe(1);
@@ -238,7 +220,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_EmptyFileContent_AddsError()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [EmptyFile()], "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), [EmptyFile()], "Course");
 
         result.Errors.ShouldContain(e => e.Contains("empty.pdf") && e.Contains("empty"));
     }
@@ -246,7 +228,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_OversizedFile_AddsError()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [OversizedFile()], "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), [OversizedFile()], "Course");
 
         result.Errors.ShouldContain(e => e.Contains("big.pdf") && e.Contains("20MB"));
     }
@@ -254,7 +236,7 @@ public class CourseServiceTests
     [Fact]
     public async Task UploadManyAsync_DisallowedExtension_AddsError()
     {
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [DisallowedFile()], "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), [DisallowedFile()], "Course");
 
         result.Errors.ShouldContain(e => e.Contains("virus.exe"));
     }
@@ -269,7 +251,7 @@ public class CourseServiceTests
                 It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("key");
 
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
 
         result.Accepted.ShouldBe(CourseConstants.MaxFiles);
         result.Rejected.ShouldBe(2);
@@ -286,7 +268,7 @@ public class CourseServiceTests
                 It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("key");
 
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), files, "Course");
 
         result.Accepted.ShouldBe(CourseConstants.MaxFiles);
         result.Errors.ShouldBeEmpty();
@@ -302,7 +284,7 @@ public class CourseServiceTests
                 It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync("key");
 
-        var result = await _sut.UploadManyAsync(Guid.NewGuid(), [CreateFile(fileName)], "Course");
+        UploadCoursesResponse result = await _sut.UploadManyAsync(Guid.NewGuid(), [CreateFile(fileName)], "Course");
 
         result.Accepted.ShouldBe(1);
         result.Errors.ShouldBeEmpty();
@@ -318,8 +300,8 @@ public class CourseServiceTests
         var userId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
         var chapterId = Guid.NewGuid();
-        var course = CreateCourseWithId(courseId);
-        var profile = CreateProfileEnrolledIn(userId, course);
+        Course course = CreateCourseWithId(courseId);
+        UserProfile profile = CreateProfileEnrolledIn(userId, course);
 
         _userProfileRepository.Setup(r => r.GetCurrentUserProfile(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
@@ -349,8 +331,8 @@ public class CourseServiceTests
     {
         var userId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var course = CreateCourseWithId(courseId);
-        var profile = CreateProfileEnrolledIn(userId, course);
+        Course course = CreateCourseWithId(courseId);
+        UserProfile profile = CreateProfileEnrolledIn(userId, course);
 
         _userProfileRepository.Setup(r => r.GetCurrentUserProfile(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
@@ -369,7 +351,7 @@ public class CourseServiceTests
     {
         var userId = Guid.NewGuid();
         var courseId = Guid.NewGuid();
-        var profile = CreateProfile(userId); // enrolled in nothing
+        UserProfile profile = CreateProfile(userId); // enrolled in nothing
 
         _userProfileRepository.Setup(r => r.GetCurrentUserProfile(userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
@@ -390,12 +372,12 @@ public class CourseServiceTests
     public async Task GetCourseSkeletonAsync_CacheHit_ReturnsCachedValueWithoutCallingAnalyzer()
     {
         var request = new CourseSkeletonRequest("Python");
-        var cached = EmptySkeleton();
+        CourseSkeletonResponse cached = EmptySkeleton();
         _cacheService.Setup(c => c.GetAsync<CourseSkeletonResponse>(
                 It.IsAny<string>()))
             .ReturnsAsync(cached);
 
-        var result = await _sut.GetCourseSkeletonAsync(request);
+        CourseSkeletonResponse result = await _sut.GetCourseSkeletonAsync(request);
 
         result.ShouldBe(cached);
         _analyzer.Verify(a => a.GetCourseSkeletonAsync(
@@ -409,14 +391,14 @@ public class CourseServiceTests
     public async Task GetCourseSkeletonAsync_CacheMiss_CallsAnalyzerAndCachesResult()
     {
         var request = new CourseSkeletonRequest("Python");
-        var skeleton = EmptySkeleton();
+        CourseSkeletonResponse skeleton = EmptySkeleton();
         _cacheService.Setup(c => c.GetAsync<CourseSkeletonResponse>(
                 It.IsAny<string>()))
             .ReturnsAsync((CourseSkeletonResponse?)null);
         _analyzer.Setup(a => a.GetCourseSkeletonAsync(request, It.IsAny<CancellationToken>()))
             .ReturnsAsync(skeleton);
 
-        var result = await _sut.GetCourseSkeletonAsync(request);
+        CourseSkeletonResponse result = await _sut.GetCourseSkeletonAsync(request);
 
         result.ShouldBe(skeleton);
         _analyzer.Verify(a => a.GetCourseSkeletonAsync(request, It.IsAny<CancellationToken>()), Times.Once);
@@ -442,7 +424,7 @@ public class CourseServiceTests
                 userId, "Python", It.IsAny<List<ChapterAssemblyModel>>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedId);
 
-        var result = await _sut.SaveCourseContentAsync(userId, "Python", EmptySkeleton());
+        Guid result = await _sut.SaveCourseContentAsync(userId, "Python", EmptySkeleton());
 
         result.ShouldBe(expectedId);
         _analyzer.Verify(a => a.GetExpandedChapterAsync(
@@ -455,7 +437,7 @@ public class CourseServiceTests
     public async Task SaveCourseContentAsync_CacheMiss_ExpandsChaptersAndCachesResult()
     {
         var userId = Guid.NewGuid();
-        var response = SkeletonWithChapters(new ChapterDto("Day 1", "Intro", 1));
+        CourseSkeletonResponse response = SkeletonWithChapters(new ChapterDto("Day 1", "Intro", 1));
 
         _cacheService.Setup(c => c.GetAsync<List<ChapterExpandResponse>>(
                 It.IsAny<string>()))

@@ -1,6 +1,8 @@
+using System.Globalization;
 using System.Net.Http.Headers;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.Models.Authentication;
 using CareerFlow.Core.Infrastructure.Persistence;
 using DotNet.Testcontainers.Builders;
 using JetBrains.Annotations;
@@ -47,7 +49,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         // RabbitMQ
         Environment.SetEnvironmentVariable("RabbitMQ__Host", _rabbitContainer.Hostname);
-        Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString());
+        Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString(CultureInfo.InvariantCulture));
         Environment.SetEnvironmentVariable("RabbitMQ__Username", "rabbitmq");
         Environment.SetEnvironmentVariable("RabbitMQ__Password", "rabbitmq");
 
@@ -101,18 +103,15 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     public HttpClient CreateAuthenticatedClient(Account account)
     {
-        var client = CreateClient();
-        using var scope = Services.CreateScope();
-        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
-        var token = tokenService.GenerateToken(account);
+        HttpClient client = CreateClient();
+        using IServiceScope scope = Services.CreateScope();
+        ITokenService tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        AuthResult token = tokenService.GenerateToken(account);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         return client;
     }
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseEnvironment("Testing");
-    }
+    protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseEnvironment("Testing");
 
     public async Task ResetDatabaseAsync()
     {
@@ -121,7 +120,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         try
         {
-            var respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
+            Respawner respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
             {
                 DbAdapter = DbAdapter.Postgres,
                 SchemasToInclude = ["public"]

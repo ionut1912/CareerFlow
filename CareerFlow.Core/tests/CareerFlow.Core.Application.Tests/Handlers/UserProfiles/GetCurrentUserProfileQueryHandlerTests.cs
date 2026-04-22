@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.UserProfiles.Handlers;
 using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
+using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
@@ -35,7 +36,7 @@ public class GetCurrentUserProfileQueryHandlerTests : BaseHandlerTest<GetCurrent
             .ReturnsAsync(userProfileToReturn);
 
         //Act
-        var result = await _handler.Handle(query, Ct);
+        UserProfileDto result = await _handler.Handle(query, Ct);
         result.ShouldNotBeNull();
         result.AccountId.ShouldBe(query.AccountId);
         result.LearningType.ShouldBe(userProfileToReturn.LearningType.Value);
@@ -52,7 +53,7 @@ public class GetCurrentUserProfileQueryHandlerTests : BaseHandlerTest<GetCurrent
             .ReturnsAsync((UserProfile?)null);
 
         //Act
-        var exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(query, Ct));
+        UserProfileNotFoundException exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(query, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {query.AccountId} nu a fost gasit");

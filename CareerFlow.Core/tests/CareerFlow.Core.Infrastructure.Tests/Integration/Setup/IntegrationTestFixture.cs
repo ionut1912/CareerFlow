@@ -16,18 +16,10 @@ public class IntegrationTestFixture : IAsyncLifetime
 
     public string ConnectionString => _postgres.GetConnectionString();
 
-    public async Task InitializeAsync()
-    {
-        await _postgres.StartAsync();
-    }
+    public async Task InitializeAsync() => await _postgres.StartAsync();
 
-    public async Task DisposeAsync()
-    {
-        await _postgres.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _postgres.DisposeAsync();
 }
 
 [CollectionDefinition("RepositoryCollection")]
-public class RepositoryCollection : ICollectionFixture<IntegrationTestFixture>
-{
-}
+public class RepositoryTests : ICollectionFixture<IntegrationTestFixture>;

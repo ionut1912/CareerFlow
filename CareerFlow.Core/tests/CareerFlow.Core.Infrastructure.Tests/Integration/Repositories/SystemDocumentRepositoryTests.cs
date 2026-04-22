@@ -42,9 +42,9 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.SystemDocuments.FindAsync(document.Id);
+        SystemDocument? saved = await Context.SystemDocuments.FindAsync(document.Id);
         saved.ShouldNotBeNull();
-        saved!.DocumentType.ShouldBe("Terms");
+        saved.DocumentType.ShouldBe("Terms");
         saved.CurrentETag.ShouldBe("\"etag123\"");
     }
 
@@ -59,11 +59,11 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         SystemDocument document = await SeedDocumentAsync("Terms", "\"etag1\"");
 
         // Act
-        var result = await _sut.GetByIdAsync(document.Id);
+        SystemDocument? result = await _sut.GetByIdAsync(document.Id);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.Id.ShouldBe(document.Id);
+        result.Id.ShouldBe(document.Id);
         result.DocumentType.ShouldBe("Terms");
     }
 
@@ -71,7 +71,7 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_NonExistentId_ReturnsNull()
     {
         // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+        SystemDocument? result = await _sut.GetByIdAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeNull();
@@ -101,7 +101,7 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetAllAsync_EmptyTable_ReturnsEmptyCollection()
     {
         // Act
-        var result = await _sut.GetAllAsync();
+        IEnumerable<SystemDocument> result = await _sut.GetAllAsync();
 
         // Assert
         result.ShouldBeEmpty();
@@ -115,8 +115,8 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Delete_ExistingDocument_RemovesFromDatabase()
     {
         // Arrange
-        var document = await SeedDocumentAsync("Terms", "\"etag1\"");
-        var tracked = await Context.SystemDocuments.FindAsync(document.Id);
+        SystemDocument document = await SeedDocumentAsync("Terms", "\"etag1\"");
+        SystemDocument? tracked = await Context.SystemDocuments.FindAsync(document.Id);
 
         // Act
         _sut.Delete(tracked!);
@@ -124,7 +124,7 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var deleted = await Context.SystemDocuments.FindAsync(document.Id);
+        SystemDocument? deleted = await Context.SystemDocuments.FindAsync(document.Id);
         deleted.ShouldBeNull();
     }
 
@@ -136,8 +136,8 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Update_ChangeETag_IsPersisted()
     {
         // Arrange
-        var document = await SeedDocumentAsync("Terms", "\"old\"");
-        var tracked = await Context.SystemDocuments.FindAsync(document.Id);
+        SystemDocument document = await SeedDocumentAsync("Terms", "\"old\"");
+        SystemDocument? tracked = await Context.SystemDocuments.FindAsync(document.Id);
         tracked!.Update("\"new\"");
 
         // Act
@@ -146,7 +146,7 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var refreshed = await Context.SystemDocuments.FindAsync(document.Id);
+        SystemDocument? refreshed = await Context.SystemDocuments.FindAsync(document.Id);
         refreshed!.CurrentETag.ShouldBe("\"new\"");
     }
 
@@ -161,11 +161,11 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         await SeedDocumentAsync("Terms", "\"etag1\"");
 
         // Act
-        var result = await _sut.FindByTypeAsync("Terms", CancellationToken.None);
+        SystemDocument? result = await _sut.FindByTypeAsync("Terms", CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.DocumentType.ShouldBe("Terms");
+        result.DocumentType.ShouldBe("Terms");
         result.CurrentETag.ShouldBe("\"etag1\"");
     }
 
@@ -173,7 +173,7 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task FindByTypeAsync_NonExistentType_ReturnsNull()
     {
         // Act
-        var result = await _sut.FindByTypeAsync("NonExistent", CancellationToken.None);
+        SystemDocument? result = await _sut.FindByTypeAsync("NonExistent", CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();
@@ -187,11 +187,11 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         await SeedDocumentAsync("Privacy", "\"etag2\"");
 
         // Act
-        var result = await _sut.FindByTypeAsync("Privacy", CancellationToken.None);
+        SystemDocument? result = await _sut.FindByTypeAsync("Privacy", CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.DocumentType.ShouldBe("Privacy");
+        result.DocumentType.ShouldBe("Privacy");
         result.CurrentETag.ShouldBe("\"etag2\"");
     }
 
@@ -202,7 +202,7 @@ public class SystemDocumentRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         await SeedDocumentAsync("Terms", "\"etag1\"");
 
         // Act
-        var result = await _sut.FindByTypeAsync("TERMS", CancellationToken.None);
+        SystemDocument? result = await _sut.FindByTypeAsync("TERMS", CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();

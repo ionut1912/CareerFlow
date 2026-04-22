@@ -109,7 +109,7 @@ public class UserProfileEntityTests
     [InlineData(null)]
     public void Update_InvalidDomain_ThrowsInvalidFieldException(string? domain)
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
 
         Should.Throw<InvalidFieldException>(() =>
             profile.Update(ValidLearning, ValidTypes, domain!));

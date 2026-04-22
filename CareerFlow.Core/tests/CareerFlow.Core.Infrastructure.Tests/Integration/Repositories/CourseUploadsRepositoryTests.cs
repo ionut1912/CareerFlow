@@ -34,7 +34,7 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task AddAsync_Upload_PersistsToDatabase()
     {
         // Arrange
-        var upload = CreateUpload();
+        CourseUpload upload = CreateUpload();
 
         // Act
         await _sut.AddAsync(upload, CancellationToken.None);
@@ -42,9 +42,9 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var saved = await Context.CourseUploads.FindAsync(upload.Id);
+        CourseUpload? saved = await Context.CourseUploads.FindAsync(upload.Id);
         saved.ShouldNotBeNull();
-        saved!.Title.ShouldBe("Test Title");
+        saved.Title.ShouldBe("Test Title");
         saved.FileName.ShouldBe("file.pdf");
         saved.FileKey.ShouldBe("file-key");
         saved.FileType.ShouldBe("application/pdf");
@@ -117,14 +117,14 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_ExistingId_ReturnsUpload()
     {
         // Arrange
-        var upload = await SeedUploadAsync();
+        CourseUpload upload = await SeedUploadAsync();
 
         // Act
-        var result = await _sut.GetByIdAsync(upload.Id);
+        CourseUpload? result = await _sut.GetByIdAsync(upload.Id);
 
         // Assert
         result.ShouldNotBeNull();
-        result!.Id.ShouldBe(upload.Id);
+        result.Id.ShouldBe(upload.Id);
         result.Title.ShouldBe(upload.Title);
     }
 
@@ -132,7 +132,7 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_NonExistentId_ReturnsNull()
     {
         // Act
-        var result = await _sut.GetByIdAsync(Guid.NewGuid());
+        CourseUpload? result = await _sut.GetByIdAsync(Guid.NewGuid());
 
         // Assert
         result.ShouldBeNull();
@@ -142,18 +142,18 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetByIdAsync_WithJobInclude_ReturnsUploadWithJobId()
     {
         // Arrange
-        var upload = await SeedUploadAsync();
+        CourseUpload upload = await SeedUploadAsync();
         var job = CourseJob.Create(upload.Id, "Pending");
         Context.CourseJobs.Add(job);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
 
         // Act
-        var result = await _sut.GetByIdAsync(upload.Id, CancellationToken.None, u => u.Job!);
+        CourseUpload? result = await _sut.GetByIdAsync(upload.Id, CancellationToken.None, u => u.Job!);
 
         // Assert
         result.ShouldNotBeNull();
-        var linkedJob = Context.CourseJobs.FirstOrDefault(j => j.UploadId == upload.Id);
+        CourseJob? linkedJob = Context.CourseJobs.FirstOrDefault(j => j.UploadId == upload.Id);
         linkedJob.ShouldNotBeNull();
     }
 
@@ -181,7 +181,7 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task GetAllAsync_EmptyTable_ReturnsEmptyCollection()
     {
         // Act
-        var result = await _sut.GetAllAsync();
+        IEnumerable<CourseUpload> result = await _sut.GetAllAsync();
 
         // Assert
         result.ShouldBeEmpty();
@@ -195,8 +195,8 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Delete_ExistingUpload_RemovesFromDatabase()
     {
         // Arrange
-        var upload = await SeedUploadAsync();
-        var tracked = await Context.CourseUploads.FindAsync(upload.Id);
+        CourseUpload upload = await SeedUploadAsync();
+        CourseUpload? tracked = await Context.CourseUploads.FindAsync(upload.Id);
 
         // Act
         _sut.Delete(tracked!);
@@ -204,7 +204,7 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var deleted = await Context.CourseUploads.FindAsync(upload.Id);
+        CourseUpload? deleted = await Context.CourseUploads.FindAsync(upload.Id);
         deleted.ShouldBeNull();
     }
 
@@ -216,8 +216,8 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
     public async Task Update_ExistingUpload_EntityRemainsIntact()
     {
         // Arrange
-        var upload = await SeedUploadAsync();
-        var tracked = await Context.CourseUploads.FindAsync(upload.Id);
+        CourseUpload upload = await SeedUploadAsync();
+        CourseUpload? tracked = await Context.CourseUploads.FindAsync(upload.Id);
 
         // Act
         _sut.Update(tracked!);
@@ -225,9 +225,9 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Context.ChangeTracker.Clear();
 
         // Assert
-        var refreshed = await Context.CourseUploads.FindAsync(upload.Id);
+        CourseUpload? refreshed = await Context.CourseUploads.FindAsync(upload.Id);
         refreshed.ShouldNotBeNull();
-        refreshed!.Title.ShouldBe(upload.Title);
+        refreshed.Title.ShouldBe(upload.Title);
         refreshed.FileKey.ShouldBe(upload.FileKey);
         refreshed.UserId.ShouldBe(upload.UserId);
     }
@@ -238,15 +238,12 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
 
     private async Task<CourseUpload> SeedUploadAsync(string title = "Test Title")
     {
-        var upload = CreateUpload(title);
+        CourseUpload upload = CreateUpload(title);
         Context.CourseUploads.Add(upload);
         await Context.SaveChangesAsync();
         Context.ChangeTracker.Clear();
         return upload;
     }
 
-    private static CourseUpload CreateUpload(string title = "Test Title")
-    {
-        return CourseUpload.Create(Guid.NewGuid(), title, "file.pdf", "file-key", "application/pdf");
-    }
+    private static CourseUpload CreateUpload(string title = "Test Title") => CourseUpload.Create(Guid.NewGuid(), title, "file.pdf", "file-key", "application/pdf");
 }

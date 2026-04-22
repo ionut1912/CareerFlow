@@ -86,7 +86,7 @@ public class DeleteUserProfileCommandHandlerTests : BaseHandlerTest<DeleteUserPr
             .ReturnsAsync((UserProfile?)null);
 
         // Act
-        var exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
+        UserProfileNotFoundException exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
 
         // Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {request.Id} nu a fost gasit");

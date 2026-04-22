@@ -5,20 +5,20 @@ using Xunit;
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 
 [Collection("RepositoryCollection")]
-public abstract class BaseRepositoryTest : IAsyncLifetime
+public abstract class BaseRepositoryTest : IAsyncLifetime, IDisposable
 {
-    private readonly Func<Task> _resetDatabase;
-    protected readonly TestAppDbContext Context;
+    private Func<Task> ResetDatabase { get; }
+    protected TestAppDbContext Context { get; }
 
     protected BaseRepositoryTest(IntegrationTestFixture fixture)
     {
-        var options = new DbContextOptionsBuilder<TestAppDbContext>()
+        DbContextOptions<TestAppDbContext> options = new DbContextOptionsBuilder<TestAppDbContext>()
             .UseNpgsql(fixture.ConnectionString)
             .Options;
 
         Context = new TestAppDbContext(options);
 
-        _resetDatabase = async () =>
+        ResetDatabase = async () =>
         {
             // Delete in FK-safe order: children before parents
             Context.UserProfiles.RemoveRange(Context.UserProfiles);
@@ -32,16 +32,17 @@ public abstract class BaseRepositoryTest : IAsyncLifetime
     public async Task InitializeAsync()
     {
         await Context.Database.EnsureCreatedAsync();
-        await _resetDatabase();
+        await ResetDatabase();
     }
 
-    public async Task DisposeAsync()
-    {
-        await Context.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await Context.DisposeAsync();
 
-    protected static Account CreateAccount(string email)
+    protected static Account CreateAccount(string email) =>
+        Account.Create(email, "Password1!", Guid.NewGuid().ToString("N")[..20], "Full Name");
+
+    public void Dispose()
     {
-        return Account.Create(email, "Password1!", Guid.NewGuid().ToString("N")[..20], "Full Name");
+        Context.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

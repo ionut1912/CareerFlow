@@ -14,9 +14,9 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
     [Fact]
     public async Task UploadCourse_UnauthenticatedUser_Returns401()
     {
-        using var content = CreateMultipartWithPdf("My Course");
+        using MultipartFormDataContent content = CreateMultipartWithPdf("My Course");
 
-        var response = await AnonymousClient.PostAsync("/course/upload", content);
+        HttpResponseMessage response = await AnonymousClient.PostAsync("/course/upload", content);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -31,7 +31,7 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
         content.Add(fileContent, "files", "course.pdf");
 
-        var response = await authClient.PostAsync("/course/upload", content);
+        HttpResponseMessage response = await authClient.PostAsync("/course/upload", content);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -39,11 +39,11 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
     [Fact]
     public async Task UploadCourse_AuthenticatedUserNoFiles_Returns400BadRequest()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent("My Course"), "Title");
 
-        var response = await authClient.PostAsync("/course/upload", content);
+        HttpResponseMessage response = await authClient.PostAsync("/course/upload", content);
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }
@@ -51,41 +51,41 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
     [Fact]
     public async Task UploadCourse_AuthenticatedUserInvalidExtension_Returns202WithErrors()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent("My Course"), "Title");
-        var fileContent = new ByteArrayContent(new byte[] { 1, 2, 3 });
+        var fileContent = new ByteArrayContent([1, 2, 3]);
         fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
         content.Add(fileContent, "files", "malware.exe");
 
-        var response = await authClient.PostAsync("/course/upload", content);
+        HttpResponseMessage response = await authClient.PostAsync("/course/upload", content);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
-        var body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync();
         body.ShouldContain("malware.exe");
     }
 
     [Fact]
     public async Task UploadCourse_AuthenticatedUserOversizedFile_Returns202WithErrors()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         using var content = new MultipartFormDataContent();
         content.Add(new StringContent("My Course"), "Title");
         var oversized = new ByteArrayContent(new byte[21 * 1024 * 1024]);
         oversized.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
         content.Add(oversized, "files", "huge.pdf");
 
-        var response = await authClient.PostAsync("/course/upload", content);
+        HttpResponseMessage response = await authClient.PostAsync("/course/upload", content);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Accepted);
-        var body = await response.Content.ReadAsStringAsync();
+        string body = await response.Content.ReadAsStringAsync();
         body.ShouldContain("huge.pdf");
     }
 
     [Fact]
     public async Task FinishChapter_UnauthenticatedUser_Returns401()
     {
-        var response = await AnonymousClient.PostAsync(
+        HttpResponseMessage response = await AnonymousClient.PostAsync(
             $"/course/{Guid.NewGuid()}/chapters/{Guid.NewGuid()}/finish", null);
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -94,9 +94,9 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
     [Fact]
     public async Task FinishChapter_AuthenticatedUserChapterNotFound_ReturnsErrorStatus()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
-        var response = await authClient.PostAsync(
+        HttpResponseMessage response = await authClient.PostAsync(
             $"/course/{Guid.NewGuid()}/chapters/{Guid.NewGuid()}/finish", null);
 
         ((int)response.StatusCode).ShouldBeGreaterThanOrEqualTo(400);
@@ -105,7 +105,7 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
     [Fact]
     public async Task GenerateCourse_UnauthenticatedUser_Returns401()
     {
-        var response = await AnonymousClient.PostAsJsonAsync("/course/generate", new { Topic = "C#" });
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/course/generate", new { Topic = "C#" });
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
     }
@@ -113,9 +113,9 @@ public class CourseEndpointsIntegrationTests(TestWebApplicationFactory factory) 
     [Fact]
     public async Task GenerateCourse_AuthenticatedUserEmptyTopic_Returns400()
     {
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
-        var response = await authClient.PostAsJsonAsync("/course/generate", new { Topic = "" });
+        HttpResponseMessage response = await authClient.PostAsJsonAsync("/course/generate", new { Topic = "" });
 
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
     }

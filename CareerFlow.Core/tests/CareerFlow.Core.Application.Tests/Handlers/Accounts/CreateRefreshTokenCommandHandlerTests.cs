@@ -1,11 +1,15 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.Authentication;
+
+using Microsoft.Extensions.Logging;
+
 using Moq;
 using Shouldly;
 
@@ -37,10 +41,10 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     {
         //Arrange
         var command = new CreateRefreshTokenCommand("validToken", "validRefresh");
-        var user = TestDataFactory.CreateAccount();
-        var storedToken = TestDataFactory.CreateRefreshToken(user.Id);
+        Account user = TestDataFactory.CreateAccount();
+        RefreshToken storedToken = TestDataFactory.CreateRefreshToken(user.Id);
         var newAuthResult = new AuthResult("newJwt", "expiry");
-        var newRefreshToken = TestDataFactory.CreateRefreshToken(user.Id);
+        RefreshToken newRefreshToken = TestDataFactory.CreateRefreshToken(user.Id);
 
         _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
             .ReturnsAsync(storedToken);
@@ -49,7 +53,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         _tokenServiceMock.Setup(x => x.GenerateRefreshToken(user.Id, newAuthResult.Token)).Returns(newRefreshToken);
 
         //Act
-        var result = await _handler.Handle(command, Ct);
+        RefreshTokenDto result = await _handler.Handle(command, Ct);
 
         //Assert
         result.Token.ShouldBe(newAuthResult.Token);
@@ -79,7 +83,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     {
         //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
-        var storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
+        RefreshToken storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
         storedToken.MarkAsUsed();
 
         _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
@@ -97,7 +101,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     {
         //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
-        var storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
+        RefreshToken storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
         storedToken.MarkAsRevoked();
 
         _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
@@ -115,7 +119,7 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
     {
         //Arrange
         var command = new CreateRefreshTokenCommand("token", "refresh");
-        var storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
+        RefreshToken storedToken = TestDataFactory.CreateRefreshToken(Guid.NewGuid());
 
         _refreshTokenRepositoryMock.Setup(x => x.GetExistingTokenAsync(command.RefreshToken, Ct))
             .ReturnsAsync(storedToken);
@@ -142,11 +146,11 @@ public class CreateRefreshTokenCommandHandlerTests : BaseHandlerTest<CreateRefre
         var command = new CreateRefreshTokenCommand("token", "refresh");
 
         // Map the boolean flags to either the mock object or a null-forgiven null
-        var logger = isLoggerNull ? null! : LoggerMock.Object;
-        var accountRepo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
-        var tokenService = isTokenServiceNull ? null! : _tokenServiceMock.Object;
-        var refreshRepo = isRefreshRepoNull ? null! : _refreshTokenRepositoryMock.Object;
-        var uow = isUowNull ? null! : UnitOfWorkMock.Object;
+        ILogger<CreateRefreshTokenCommandHandler> logger = isLoggerNull ? null! : LoggerMock.Object;
+        IAccountRepository accountRepo = isAccountRepoNull ? null! : _accountRepositoryMock.Object;
+        ITokenService tokenService = isTokenServiceNull ? null! : _tokenServiceMock.Object;
+        IRefreshTokenRepository refreshRepo = isRefreshRepoNull ? null! : _refreshTokenRepositoryMock.Object;
+        IUnitOfWork uow = isUowNull ? null! : UnitOfWorkMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

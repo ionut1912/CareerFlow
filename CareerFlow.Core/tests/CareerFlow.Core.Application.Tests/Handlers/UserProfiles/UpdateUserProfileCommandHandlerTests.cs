@@ -54,7 +54,7 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
             .ReturnsAsync((UserProfile?)null);
 
         //Act
-        var exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
+        UserProfileNotFoundException exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {request.Id} nu a fost gasit");
@@ -76,7 +76,7 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
             .ReturnsAsync(existingUserProfile);
 
         //Act
-        var exception = await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
+        InvalidLearningTypeException exception = await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul de invatare {request.LearningType} e invalid");
@@ -97,7 +97,7 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
             .ReturnsAsync(existingUserProfile);
 
         //Act
-        var exception = await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
+        InvalidUserTypeException exception = await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul {request.UserTypes[0]} este invalid");

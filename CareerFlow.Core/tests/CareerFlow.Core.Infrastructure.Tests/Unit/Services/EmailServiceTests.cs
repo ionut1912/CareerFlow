@@ -46,7 +46,7 @@ public class EmailServiceTests
         var model = new Dictionary<string, string>();
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync(to!, 1, model);
+        bool result = await _sut.SendEmailWithTemplateAsync(to!, 1, model);
 
         // Assert
         result.ShouldBeFalse();
@@ -69,7 +69,7 @@ public class EmailServiceTests
             .ReturnsAsync(true);
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 42, model);
+        bool result = await _sut.SendEmailWithTemplateAsync("to@example.com", 42, model);
 
         // Assert
         result.ShouldBeTrue();
@@ -90,7 +90,7 @@ public class EmailServiceTests
             .ReturnsAsync(false);
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model);
+        bool result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model);
 
         // Assert
         result.ShouldBeFalse();
@@ -110,7 +110,7 @@ public class EmailServiceTests
             .ThrowsAsync(new HttpRequestException("Provider down"));
 
         // Act
-        var result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model);
+        bool result = await _sut.SendEmailWithTemplateAsync("to@example.com", 1, model);
 
         // Assert
         result.ShouldBeFalse();

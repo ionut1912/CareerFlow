@@ -5,14 +5,8 @@ namespace CareerFlow.Core.Application.Tests.Common;
 
 public abstract class BaseHandlerTest<THandler>
 {
-    protected readonly Mock<ILogger<THandler>> LoggerMock;
-    protected readonly Mock<IUnitOfWork> UnitOfWorkMock;
-
-    protected BaseHandlerTest()
-    {
-        UnitOfWorkMock = new Mock<IUnitOfWork>();
-        LoggerMock = new Mock<ILogger<THandler>>();
-    }
+    protected Mock<ILogger<THandler>> LoggerMock { get; } = new();
+    protected Mock<IUnitOfWork> UnitOfWorkMock { get; } = new();
 
     protected CancellationToken Ct => CancellationToken.None;
 }
