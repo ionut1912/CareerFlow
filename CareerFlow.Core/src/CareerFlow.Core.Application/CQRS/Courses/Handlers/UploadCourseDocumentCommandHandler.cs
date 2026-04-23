@@ -15,8 +15,6 @@ public class UploadCourseDocumentCommandHandler
     }
 
     public async Task<UploadCoursesResponse> Handle(UploadCourseDocumentCommand request,
-        CancellationToken cancellationToken)
-    {
-        return await _courseService.UploadManyAsync(request.UserId, request.Files, request.Title, cancellationToken);
-    }
+        CancellationToken cancellationToken) =>
+        await _courseService.UploadManyAsync(request.UserId, request.Files, request.Title, cancellationToken);
 }

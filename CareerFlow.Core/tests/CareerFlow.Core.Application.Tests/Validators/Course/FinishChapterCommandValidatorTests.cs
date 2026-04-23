@@ -1,6 +1,8 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.Validators.Course;
+
 using FluentValidation.TestHelper;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Course;
@@ -14,7 +16,7 @@ public class FinishChapterCommandValidatorTests
     {
         var command = new FinishChapterCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.NewGuid());
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<FinishChapterCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -24,7 +26,7 @@ public class FinishChapterCommandValidatorTests
     {
         var command = new FinishChapterCommand(Guid.NewGuid(), Guid.Empty, Guid.NewGuid());
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<FinishChapterCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.CourseId)
             .WithErrorMessage("CourseId este necesar");
@@ -35,7 +37,7 @@ public class FinishChapterCommandValidatorTests
     {
         var command = new FinishChapterCommand(Guid.NewGuid(), Guid.NewGuid(), Guid.Empty);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<FinishChapterCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.ChapterId)
             .WithErrorMessage("ChapterId este necesar");
@@ -46,7 +48,7 @@ public class FinishChapterCommandValidatorTests
     {
         var command = new FinishChapterCommand(Guid.NewGuid(), Guid.Empty, Guid.Empty);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<FinishChapterCommand>? result = _sut.TestValidate(command);
 
         result.Errors.Count.ShouldBe(2);
         result.ShouldHaveValidationErrorFor(x => x.CourseId);
@@ -58,7 +60,7 @@ public class FinishChapterCommandValidatorTests
     {
         var command = new FinishChapterCommand(Guid.Empty, Guid.NewGuid(), Guid.NewGuid());
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<FinishChapterCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveValidationErrorFor(x => x.UserId);
     }

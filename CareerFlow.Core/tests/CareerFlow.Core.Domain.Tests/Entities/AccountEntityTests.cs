@@ -1,8 +1,11 @@
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Domain.Tests.Entities;
@@ -13,15 +16,13 @@ public class AccountEntityTests
         string email = "test@test.com",
         string password = "Password1!",
         string username = "username",
-        string name = "Full Name")
-    {
-        return Account.Create(email, password, username, name);
-    }
+        string name = "Full Name") =>
+        Account.Create(email, password, username, name);
 
     [Fact]
     public void Create_ValidParameters_ReturnsAccount()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.ShouldNotBeNull();
         account.Email.ShouldBe("test@test.com");
@@ -33,7 +34,7 @@ public class AccountEntityTests
     [Fact]
     public void Create_ValidParameters_SetsDefaultFlagsToFalse()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.IsFounder.ShouldBeFalse();
         account.TermsAccepted.ShouldBeFalse();
@@ -43,9 +44,9 @@ public class AccountEntityTests
     [Fact]
     public void Create_ValidParameters_SetsCreatedAtToNow()
     {
-        var before = DateTime.UtcNow.AddSeconds(-1);
+        DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.CreatedAt.ShouldBeInRange(before, DateTime.UtcNow.AddSeconds(1));
     }
@@ -93,7 +94,7 @@ public class AccountEntityTests
     [Fact]
     public void HashPassword_ValidService_UpdatesPasswordToHash()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword("Password1!")).Returns("hashed_password");
 
@@ -105,7 +106,7 @@ public class AccountEntityTests
     [Fact]
     public void ResetPassword_ValidService_UpdatesPassword()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword("NewPassword!")).Returns("new_hashed");
 
@@ -117,10 +118,10 @@ public class AccountEntityTests
     [Fact]
     public void ResetPassword_SetsUpdatedAtToNow()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword(It.IsAny<string>())).Returns("h");
-        var before = DateTime.UtcNow.AddSeconds(-1);
+        DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
         account.ResetPassword("NewPassword!", passwordService.Object);
 
@@ -130,7 +131,7 @@ public class AccountEntityTests
     [Fact]
     public void MarkAsFounder_SetsIsFounderTrue()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.MarkAsFounder();
 
@@ -140,8 +141,8 @@ public class AccountEntityTests
     [Fact]
     public void MarkAsFounder_SetsUpdatedAtToNow()
     {
-        var account = CreateValidAccount();
-        var before = DateTime.UtcNow.AddSeconds(-1);
+        Account account = CreateValidAccount();
+        DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
         account.MarkAsFounder();
 
@@ -151,7 +152,7 @@ public class AccountEntityTests
     [Fact]
     public void AcceptTerms_SetsTermsAcceptedTrue()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.AcceptTerms();
 
@@ -161,8 +162,8 @@ public class AccountEntityTests
     [Fact]
     public void AcceptTerms_SetsUpdatedAtToNow()
     {
-        var account = CreateValidAccount();
-        var before = DateTime.UtcNow.AddSeconds(-1);
+        Account account = CreateValidAccount();
+        DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
         account.AcceptTerms();
 
@@ -172,7 +173,7 @@ public class AccountEntityTests
     [Fact]
     public void AcceptPrivacyPolicy_SetsPrivacyPolicyAcceptedTrue()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
 
         account.AcceptPrivacyPolicy();
 
@@ -182,8 +183,8 @@ public class AccountEntityTests
     [Fact]
     public void AcceptPrivacyPolicy_SetsUpdatedAtToNow()
     {
-        var account = CreateValidAccount();
-        var before = DateTime.UtcNow.AddSeconds(-1);
+        Account account = CreateValidAccount();
+        DateTime before = DateTime.UtcNow.AddSeconds(-1);
 
         account.AcceptPrivacyPolicy();
 
@@ -193,7 +194,7 @@ public class AccountEntityTests
     [Fact]
     public void GenerateResetPasswordToken_ValidToken_StoresHashedToken()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword("raw-token")).Returns("hashed-token");
 
@@ -205,14 +206,14 @@ public class AccountEntityTests
     [Fact]
     public void GenerateResetPasswordToken_SetsExpiryOneHourFromNow()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword(It.IsAny<string>())).Returns("h");
-        var expectedExpiry = DateTime.UtcNow.AddMinutes(59);
+        DateTime expectedExpiry = DateTime.UtcNow.AddMinutes(59);
 
         account.GenerateResetPasswordToken("raw-token", passwordService.Object);
 
-        account.ResetPasswordTokenExpiresAt!.ShouldBeGreaterThan(expectedExpiry);
+        account.ResetPasswordTokenExpiresAt.ShouldBeGreaterThan(expectedExpiry);
     }
 
     [Theory]
@@ -221,7 +222,7 @@ public class AccountEntityTests
     [InlineData(null)]
     public void GenerateResetPasswordToken_InvalidToken_ThrowsInvalidFieldException(string? token)
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
 
         Should.Throw<InvalidFieldException>(() =>
@@ -231,7 +232,7 @@ public class AccountEntityTests
     [Fact]
     public void ResetPasswordTokenAndExpiry_ClearsTokenToEmptyString()
     {
-        var account = CreateValidAccount();
+        Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword(It.IsAny<string>())).Returns("h");
         account.GenerateResetPasswordToken("raw-token", passwordService.Object);
@@ -244,10 +245,10 @@ public class AccountEntityTests
     [Fact]
     public void SetResetPasswordExpiresAt_SetsExpiry()
     {
-        var account = CreateValidAccount();
-        var expiry = DateTime.UtcNow.AddHours(2);
+        Account account = CreateValidAccount();
+        DateTime expiry = DateTime.UtcNow.AddHours(2);
 
-        account.SetResetPasswordExipiresAt(expiry);
+        account.SetResetPasswordExpiresAt(expiry);
 
         account.ResetPasswordTokenExpiresAt.ShouldBe(expiry);
     }
@@ -255,8 +256,8 @@ public class AccountEntityTests
     [Fact]
     public void Create_ReturnsUniqueIds_ForMultipleAccounts()
     {
-        var a1 = CreateValidAccount("a@a.com");
-        var a2 = CreateValidAccount("b@b.com");
+        Account a1 = CreateValidAccount("a@a.com");
+        Account a2 = CreateValidAccount("b@b.com");
 
         a1.Id.ShouldNotBe(a2.Id);
     }

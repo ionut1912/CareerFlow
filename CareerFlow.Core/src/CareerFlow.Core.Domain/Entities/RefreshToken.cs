@@ -1,13 +1,18 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+
 using CareerFlow.Core.Domain.Exceptions;
+
+using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
 
 public class RefreshToken : Entity
 {
-    private RefreshToken()
+    [UsedImplicitly]
+    private RefreshToken() // For EfCore
     {
     }
 
@@ -41,15 +46,10 @@ public class RefreshToken : Entity
     public bool IsRevoked { get; private set; }
     public DateTime ExpiryDate { get; private set; }
 
-    public static RefreshToken Create(Guid userId, string rawToken, string jwtId, DateTime expiryDate)
-    {
-        return new RefreshToken(userId, rawToken, jwtId, expiryDate);
-    }
+    public static RefreshToken Create(Guid userId, string rawToken, string jwtId, DateTime expiryDate) =>
+        new(userId, rawToken, jwtId, expiryDate);
 
-    public bool VerifyToken(string rawToken)
-    {
-        return TokenHash == HashToken(rawToken);
-    }
+    public bool VerifyToken(string rawToken) => TokenHash == HashToken(rawToken);
 
     public void MarkAsUsed()
     {
@@ -65,7 +65,7 @@ public class RefreshToken : Entity
 
     private static string HashToken(string rawToken)
     {
-        var bytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
+        byte[] bytes = SHA256.HashData(Encoding.UTF8.GetBytes(rawToken));
         return Convert.ToHexString(bytes);
     }
 }

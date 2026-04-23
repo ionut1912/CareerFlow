@@ -1,7 +1,9 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Domain.Tests.Entities;
@@ -11,10 +13,8 @@ public class UserProfileEntityTests
     private static readonly LearningType ValidLearning = LearningType.Visual;
     private static readonly List<UserType> ValidTypes = [UserType.Student];
 
-    private static UserProfile Profile(Guid? id = null)
-    {
-        return UserProfile.Create(id ?? Guid.NewGuid(), ValidLearning, ValidTypes);
-    }
+    private static UserProfile Profile(Guid? id = null) =>
+        UserProfile.Create(id ?? Guid.NewGuid(), ValidLearning, ValidTypes);
 
 
     [Fact]
@@ -71,7 +71,7 @@ public class UserProfileEntityTests
     [Fact]
     public void Update_ValidParameters_UpdatesProfile()
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
 
         profile.Update(LearningType.Auditory, [UserType.JobSearcher], "Medicine");
 
@@ -82,7 +82,7 @@ public class UserProfileEntityTests
     [Fact]
     public void Update_NullLearningType_ThrowsInvalidFieldException()
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
 
         Should.Throw<InvalidFieldException>(() =>
             profile.Update(null!, ValidTypes, "Student"));
@@ -91,7 +91,7 @@ public class UserProfileEntityTests
     [Fact]
     public void Update_NullUserTypes_ThrowsInvalidFieldException()
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
 
         Should.Throw<InvalidFieldException>(() =>
             profile.Update(ValidLearning, null!, "Student"));
@@ -100,7 +100,7 @@ public class UserProfileEntityTests
     [Fact]
     public void Update_EmptyUserTypes_ThrowsInvalidFieldException()
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
 
         Should.Throw<InvalidFieldException>(() =>
             profile.Update(ValidLearning, [], "Student"));
@@ -112,7 +112,7 @@ public class UserProfileEntityTests
     [InlineData(null)]
     public void Update_InvalidDomain_ThrowsInvalidFieldException(string? domain)
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
 
         Should.Throw<InvalidFieldException>(() =>
             profile.Update(ValidLearning, ValidTypes, domain!));
@@ -121,7 +121,7 @@ public class UserProfileEntityTests
     [Fact]
     public void Update_ReplacesUserTypes()
     {
-        var profile = Profile();
+        UserProfile profile = Profile();
         var newTypes = new List<UserType> { UserType.JobSearcher, UserType.HobbyLearner };
 
         profile.Update(ValidLearning, newTypes, "Student");

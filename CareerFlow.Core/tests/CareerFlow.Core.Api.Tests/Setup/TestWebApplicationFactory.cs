@@ -1,21 +1,33 @@
+using System.Globalization;
 using System.Net.Http.Headers;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Infrastructure.Persistance;
+using CareerFlow.Core.Domain.Models.Authentication;
+using CareerFlow.Core.Infrastructure.Persistence;
+
 using DotNet.Testcontainers.Builders;
+
+using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
 using Npgsql;
+
 using Respawn;
+
 using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
 using Testcontainers.Redis;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Setup;
 
+[UsedImplicitly]
 public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
     private readonly PostgreSqlContainer _dbContainer = new PostgreSqlBuilder("postgres:15-alpine").Build();
@@ -27,7 +39,7 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     private readonly RedisContainer _redisContainer = new RedisBuilder("redis:alpine").Build();
 
-    public string DbConnectionString => _dbContainer.GetConnectionString();
+    private string DbConnectionString => _dbContainer.GetConnectionString();
 
     public async Task InitializeAsync()
     {
@@ -37,35 +49,32 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
             _rabbitContainer.StartAsync()
         );
 
-        // Core Connections
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", DbConnectionString);
-
-        // Fix for Redis error: Mapping Redis container connection string to Redis:ConnectionString
         Environment.SetEnvironmentVariable("Redis__ConnectionString", _redisContainer.GetConnectionString());
-
-        // RabbitMQ
         Environment.SetEnvironmentVariable("RabbitMQ__Host", _rabbitContainer.Hostname);
-        Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString());
+        Environment.SetEnvironmentVariable("RabbitMQ__Port",
+            _rabbitContainer.GetMappedPublicPort(5672).ToString(CultureInfo.InvariantCulture));
         Environment.SetEnvironmentVariable("RabbitMQ__Username", "rabbitmq");
         Environment.SetEnvironmentVariable("RabbitMQ__Password", "rabbitmq");
-
-        // JWT & OpenAI
         Environment.SetEnvironmentVariable("JwtSettings__Key", "testjwtsuperlongkeyforauthentication");
         Environment.SetEnvironmentVariable("JwtSettings__Issuer", "testjwtissuer");
         Environment.SetEnvironmentVariable("JwtSettings__Audience", "testaudience");
         Environment.SetEnvironmentVariable("OpenAI__ApiKey", "testkey");
-
-        // Fix for R2 error: Providing a non-empty AccountId so the Endpoint URL is valid
         Environment.SetEnvironmentVariable("R2__AccountId", "test-account-id");
         Environment.SetEnvironmentVariable("R2__AccessKey", "test-access-key");
         Environment.SetEnvironmentVariable("R2__SecretKey", "test-secret-key");
         Environment.SetEnvironmentVariable("R2__BucketName", "careerflow-courses-test");
-
-        // Analyzer Settings
         Environment.SetEnvironmentVariable("Analyzer__BaseUrl", "http://localhost:8080/ai");
+        Environment.SetEnvironmentVariable("Authentication__BaseUrl", "https://localhost");
+        Environment.SetEnvironmentVariable("Authentication__Google__ClientId", "test-google-client-id");
+        Environment.SetEnvironmentVariable("Authentication__Google__ClientSecret", "test-google-client-secret");
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__ClientId", "test-linkedin-client-id");
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__ClientSecret", "test-linkedin-client-secret");
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__RedirectUri",
+            "https://localhost/social/auth/linkedin/mobile/callback");
 
-        using var scope = Services.CreateScope();
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        using IServiceScope scope = Services.CreateScope();
+        ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
         await dbContext.Database.MigrateAsync();
     }
 
@@ -73,7 +82,6 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
     {
         await base.DisposeAsync();
 
-        // Clean up environment variables
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", null);
         Environment.SetEnvironmentVariable("Redis__ConnectionString", null);
         Environment.SetEnvironmentVariable("RabbitMQ__Host", null);
@@ -89,6 +97,12 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         Environment.SetEnvironmentVariable("R2__SecretKey", null);
         Environment.SetEnvironmentVariable("R2__BucketName", null);
         Environment.SetEnvironmentVariable("Analyzer__BaseUrl", null);
+        Environment.SetEnvironmentVariable("Authentication__BaseUrl", null);
+        Environment.SetEnvironmentVariable("Authentication__Google__ClientId", null);
+        Environment.SetEnvironmentVariable("Authentication__Google__ClientSecret", null);
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__ClientId", null);
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__ClientSecret", null);
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__RedirectUri", null);
 
         await Task.WhenAll(
             _dbContainer.StopAsync(),
@@ -99,18 +113,15 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
     public HttpClient CreateAuthenticatedClient(Account account)
     {
-        var client = CreateClient();
-        using var scope = Services.CreateScope();
-        var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
-        var token = tokenService.GenerateToken(account);
+        HttpClient client = CreateClient();
+        using IServiceScope scope = Services.CreateScope();
+        ITokenService tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
+        AuthResult token = tokenService.GenerateToken(account);
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         return client;
     }
 
-    protected override void ConfigureWebHost(IWebHostBuilder builder)
-    {
-        builder.UseEnvironment("Testing");
-    }
+    protected override void ConfigureWebHost(IWebHostBuilder builder) => builder.UseEnvironment("Testing");
 
     public async Task ResetDatabaseAsync()
     {
@@ -119,11 +130,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         try
         {
-            var respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
-            {
-                DbAdapter = DbAdapter.Postgres,
-                SchemasToInclude = ["public"]
-            });
+            Respawner respawner = await Respawner.CreateAsync(conn,
+                new RespawnerOptions { DbAdapter = DbAdapter.Postgres, SchemasToInclude = ["public"] });
 
             await respawner.ResetAsync(conn);
         }

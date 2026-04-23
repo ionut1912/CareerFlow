@@ -1,5 +1,6 @@
 using Amazon.Runtime;
 using Amazon.S3;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
@@ -7,16 +8,21 @@ using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Gateways;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
-using CareerFlow.Core.Infrastructure.Persistance;
-using CareerFlow.Core.Infrastructure.Persistance.Repositories;
+using CareerFlow.Core.Infrastructure.Persistence;
+using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Hangfire;
 using Hangfire.PostgreSql;
+
 using InfisicalConfiguration;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Shared.Infra.Extensions;
+
 using StackExchange.Redis;
 
 namespace CareerFlow.Core.Infrastructure.Extensions;
@@ -32,11 +38,13 @@ public static class DependencyInjection
 
             services.AddSingleton<IConnectionMultiplexer>(sp =>
             {
-                var options = sp.GetRequiredService<IOptions<CacheSettings>>().Value;
+                CacheSettings options = sp.GetRequiredService<IOptions<CacheSettings>>().Value;
 
                 if (string.IsNullOrWhiteSpace(options.ConnectionString))
+                {
                     throw new InvalidOperationException(
                         $"Redis ConnectionString is missing. Section: {CacheSettings.SectionName}");
+                }
 
                 return ConnectionMultiplexer.Connect(new ConfigurationOptions
                 {
@@ -69,6 +77,8 @@ public static class DependencyInjection
                 .AddRepository<Chapter, ChapterRepository, IChapterRepository, ApplicationDbContext>()
                 .AddRepository<Course, CourseRepository, ICourseRepository, ApplicationDbContext>()
                 .AddRepository<QuizQuestion, QuizRepository, IQuizRepository, ApplicationDbContext>()
+                .AddRepository<SystemDocument, SystemDocumentRepository, ISystemDocumentRepository,
+                    ApplicationDbContext>()
                 .AddRepos<ITokenService, TokenService>()
                 .AddRepos<IPasswordService, PasswordService>()
                 .AddRepos<IAuthService, AuthService>()
@@ -86,15 +96,16 @@ public static class DependencyInjection
 
         private IServiceCollection AddInfisical(IConfiguration configuration, string environment)
         {
-            var infisicalClientId = configuration["Infisical:ClientId"];
-            var infisicalClientSecret = configuration["Infisical:ClientSecret"];
-            var infisicalProjectId = configuration["Infisical:ProjectId"];
+            string? infisicalClientId = configuration["Infisical:ClientId"];
+            string? infisicalClientSecret = configuration["Infisical:ClientSecret"];
+            string? infisicalProjectId = configuration["Infisical:ProjectId"];
 
             if (string.IsNullOrWhiteSpace(infisicalClientId) ||
                 string.IsNullOrWhiteSpace(infisicalProjectId) ||
                 string.IsNullOrWhiteSpace(infisicalClientSecret)) return services;
 
             if (configuration is IConfigurationManager configManager)
+            {
                 configManager.AddInfisical(new InfisicalConfigBuilder()
                     .SetProjectId(infisicalProjectId)
                     .SetEnvironment(environment)
@@ -102,6 +113,7 @@ public static class DependencyInjection
                         .SetUniversalAuth(infisicalClientId, infisicalClientSecret)
                         .Build())
                     .Build());
+            }
 
             return services;
         }
@@ -115,8 +127,6 @@ public static class DependencyInjection
                 .AddHttpClient<IAuthService, AuthService>();
 
             services.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSender>();
-            services.AddHttpClient<IDocumentAnalyzerService, DocsAnalyzerService>();
-            services.AddHttpClient<IAnalyzerService, CourseGenerationService>();
 
             return services;
         }
@@ -127,13 +137,9 @@ public static class DependencyInjection
 
             services.AddSingleton<IAmazonS3>(sp =>
             {
-                var settings = sp.GetRequiredService<IOptions<R2Settings>>().Value;
+                R2Settings settings = sp.GetRequiredService<IOptions<R2Settings>>().Value;
 
-                var config = new AmazonS3Config
-                {
-                    ServiceURL = settings.Endpoint,
-                    ForcePathStyle = true
-                };
+                var config = new AmazonS3Config { ServiceURL = settings.Endpoint, ForcePathStyle = true };
 
                 var credentials = new BasicAWSCredentials(settings.AccessKey, settings.SecretKey);
                 return new AmazonS3Client(credentials, config);
@@ -151,7 +157,14 @@ public static class DependencyInjection
 
             services.AddHttpClient<IDocumentAnalyzerService, DocsAnalyzerService>((sp, client) =>
             {
-                var settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
+                AnalyzerSettings settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
+                client.BaseAddress = new Uri(settings.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSec);
+            });
+
+            services.AddHttpClient<IAnalyzerService, CourseGenerationService>((sp, client) =>
+            {
+                AnalyzerSettings settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
                 client.BaseAddress = new Uri(settings.BaseUrl);
                 client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSec);
             });
@@ -183,7 +196,7 @@ public static class DependencyInjection
 
         public IServiceCollection AddInfrastructure(IConfiguration configuration, string environment)
         {
-            services
+            return services
                 .AddHangfireConfiguration(configuration)
                 .AddInfisical(configuration, environment)
                 .AddSettings(configuration)
@@ -192,8 +205,6 @@ public static class DependencyInjection
                 .AddRedisCache(configuration)
                 .AddStorageConfiguration(configuration)
                 .AddAnalyzerService(configuration);
-
-            return services;
         }
     }
 }

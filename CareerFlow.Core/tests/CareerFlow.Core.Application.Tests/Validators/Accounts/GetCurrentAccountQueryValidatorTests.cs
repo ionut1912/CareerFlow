@@ -1,17 +1,13 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Validators.Account;
+
 using FluentValidation.TestHelper;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Accounts;
 
 public class GetCurrentAccountQueryValidatorTests
 {
-    private readonly GetCurrentAccountQueryValidator _validator;
-
-    public GetCurrentAccountQueryValidatorTests()
-    {
-        _validator = new GetCurrentAccountQueryValidator();
-    }
+    private readonly GetCurrentAccountQueryValidator _validator = new();
 
     [Fact]
     public void Validate_WhenQueryIsValid_ShouldNotHaveErrors()
@@ -20,7 +16,7 @@ public class GetCurrentAccountQueryValidatorTests
         var query = new GetCurrentAccountQuery(Guid.NewGuid());
 
         //Act
-        var result = _validator.TestValidate(query);
+        TestValidationResult<GetCurrentAccountQuery>? result = _validator.TestValidate(query);
 
         //Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -29,13 +25,13 @@ public class GetCurrentAccountQueryValidatorTests
 
     [Theory]
     [MemberData(nameof(GetInvalidGuids))]
-    public void Validate_WhenAccountIdIsEmpty_ShouldHaveErrors(Guid accountId)
+    public void Validate_WhenAccountIdIsEmpty_ShouldHaveErrors(string accountId)
     {
         //Arrange
-        var query = new GetCurrentAccountQuery(accountId);
+        var query = new GetCurrentAccountQuery(Guid.Parse(accountId));
 
         //Act
-        var result = _validator.TestValidate(query);
+        TestValidationResult<GetCurrentAccountQuery>? result = _validator.TestValidate(query);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.AccountId)
@@ -43,8 +39,5 @@ public class GetCurrentAccountQueryValidatorTests
     }
 
 
-    public static IEnumerable<object[]> GetInvalidGuids()
-    {
-        yield return new object[] { Guid.Empty };
-    }
+    public static TheoryData<string> GetInvalidGuids() => [Guid.Empty.ToString()];
 }

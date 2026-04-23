@@ -3,19 +3,25 @@ using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests.UserProfile;
+
+using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.UserProfiles;
 
+[UsedImplicitly]
 public class UserProfileEndpointGroup : EndpointGroup
 {
     public override void Map(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup(this)
+        RouteGroupBuilder group = app.MapGroup(this)
             .RequireAuthorization();
 
         group.MapPost(CreateUserProfile);
@@ -33,10 +39,10 @@ public class UserProfileEndpointGroup : EndpointGroup
         CreateUserProfileRequest request,
         CancellationToken cancellationToken)
     {
-        var accountId = httpContext.GetAccountId();
+        Guid accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return TypedResults.Unauthorized();
         var createUserProfileCommand = request.ToCreateUserProfileCommand(accountId);
-        var userProfileId = await messageBus.InvokeAsync<Guid>(createUserProfileCommand, cancellationToken);
+        Guid userProfileId = await messageBus.InvokeAsync<Guid>(createUserProfileCommand, cancellationToken);
         return TypedResults.Ok(userProfileId);
     }
 
@@ -45,7 +51,7 @@ public class UserProfileEndpointGroup : EndpointGroup
         CancellationToken cancellationToken)
     {
         var query = new GetUserProfilesQuery();
-        var result = await messageBus.InvokeAsync<List<UserProfileDto>>(query, cancellationToken);
+        List<UserProfileDto> result = await messageBus.InvokeAsync<List<UserProfileDto>>(query, cancellationToken);
         return TypedResults.Ok(result);
     }
 
@@ -55,7 +61,7 @@ public class UserProfileEndpointGroup : EndpointGroup
         CancellationToken cancellationToken)
     {
         var query = new GetUserProfileByIdQuery(id);
-        var result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
+        UserProfileDto result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
         return TypedResults.Ok(result);
     }
 
@@ -64,10 +70,10 @@ public class UserProfileEndpointGroup : EndpointGroup
         HttpContext httpContext,
         CancellationToken cancellationToken)
     {
-        var accountId = httpContext.GetAccountId();
+        Guid accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return TypedResults.Unauthorized();
         var query = new GetCurrentUserProfileQuery(accountId);
-        var result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
+        UserProfileDto result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
         return TypedResults.Ok(result);
     }
 
@@ -95,10 +101,10 @@ public class UserProfileEndpointGroup : EndpointGroup
     private static async Task<Results<Ok<UserProfileDto>, UnauthorizedHttpResult>> GetCurrentUserProfileWithCourses(
         IMessageBus messageBus, HttpContext httpContext, CancellationToken cancellationToken)
     {
-        var accountId = httpContext.GetAccountId();
+        Guid accountId = httpContext.GetAccountId();
         if (accountId == Guid.Empty) return TypedResults.Unauthorized();
         var query = new GetCurrentUserCoursesQuery(accountId);
-        var result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
+        UserProfileDto result = await messageBus.InvokeAsync<UserProfileDto>(query, cancellationToken);
         return TypedResults.Ok(result);
     }
 }

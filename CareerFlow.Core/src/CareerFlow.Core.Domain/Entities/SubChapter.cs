@@ -1,11 +1,15 @@
 using CareerFlow.Core.Domain.Exceptions;
+
+using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
 
 public class SubChapter : Entity
 {
-    private SubChapter()
+    [UsedImplicitly]
+    private SubChapter() //For EfCore
     {
     }
 
@@ -28,11 +32,10 @@ public class SubChapter : Entity
     public string Title { get; private set; } = string.Empty;
     public string Summary { get; private set; } = string.Empty;
     public string TheoryHtml { get; private set; } = string.Empty;
-    public Guid ChapterId { get; private set; }
-    public Chapter? Chapter { get; private set; }
 
-    public static SubChapter Create(string title, string summary, string theoryHtml)
-    {
-        return new SubChapter(title, summary, theoryHtml);
-    }
+    [UsedImplicitly] public Guid ChapterId { get; private set; }
+
+    [UsedImplicitly] public Chapter? Chapter { get; private set; }
+
+    public static SubChapter Create(string title, string summary, string theoryHtml) => new(title, summary, theoryHtml);
 }

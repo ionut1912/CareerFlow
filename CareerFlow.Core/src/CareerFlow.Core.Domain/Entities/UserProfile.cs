@@ -1,5 +1,8 @@
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
+using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
@@ -10,7 +13,8 @@ public class UserProfile : Entity
     private readonly List<string> _finishedChapters = [];
     private readonly List<UserType> _userTypes = [];
 
-    private UserProfile()
+    [UsedImplicitly]
+    private UserProfile() //For Ef core
     {
     }
 
@@ -37,22 +41,31 @@ public class UserProfile : Entity
     }
 
     public Guid AccountId { get; private set; }
-    public Account? Account { get; private set; }
+
+    public Account? Account
+    {
+        get;
+        init
+        {
+            field = value;
+            if (value is not null)
+                AccountId = value.Id;
+        }
+    }
+
     public string Domain { get; private set; } = string.Empty;
     public int CorrectAnswersForQuiz { get; private set; }
     public int IncorrectAnswersForQuiz { get; private set; }
     public int Experience { get; private set; }
-    public LearningType LearningType { get; private set; } = LearningType.Visual;
+    public LearningType LearningType { get; private set; } = LearningType.ReadWrite;
 
     public IReadOnlyCollection<UserType> UserTypes => _userTypes.AsReadOnly();
     public IReadOnlyCollection<Course> Courses => _courses.AsReadOnly();
     public IReadOnlyCollection<string> FinishedChapters => _finishedChapters.AsReadOnly();
 
-    public static UserProfile Create(Guid accountId, LearningType learningType,
-        List<UserType> userTypes, string? domain = "Student")
-    {
-        return new UserProfile(accountId, learningType, userTypes, domain);
-    }
+    public static UserProfile Create(Guid accountId, LearningType learningType, List<UserType> userTypes,
+        string? domain = "Student") =>
+        new(accountId, learningType, userTypes, domain);
 
     public void Update(LearningType newLearningType, List<UserType> newUserTypes, string newDomain)
     {
@@ -79,15 +92,6 @@ public class UserProfile : Entity
             throw new InvalidFieldException("Deja inscris in acest curs");
 
         _courses.Add(course);
-    }
-
-    public void UnenrollFromCourse(Guid courseId)
-    {
-        var course = _courses.FirstOrDefault(c => c.Id == courseId);
-        if (course is null)
-            throw new InvalidFieldException("Nu esti inscris in acest curs");
-
-        _courses.Remove(course);
     }
 
     public void FinishChapter(string chapterId)

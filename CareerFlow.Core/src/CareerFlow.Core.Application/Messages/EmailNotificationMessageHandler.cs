@@ -1,14 +1,19 @@
-﻿using CareerFlow.Core.Domain.Abstractions.Services;
+﻿using System.Globalization;
+
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Rabbit.Events.Events;
+
+using JetBrains.Annotations;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.Messages;
 
-public class EmailNotificationMessageHandler
+public partial class EmailNotificationMessageHandler
 {
     private readonly IEmailService _emailService;
     private readonly ILogger<EmailNotificationMessageHandler> _logger;
-
 
     public EmailNotificationMessageHandler(IEmailService emailService, ILogger<EmailNotificationMessageHandler> logger)
     {
@@ -18,6 +23,7 @@ public class EmailNotificationMessageHandler
         _logger = logger;
     }
 
+    [UsedImplicitly]
     public async Task Handle(ResetPasswordNotificationMessage message, CancellationToken cancellationToken)
     {
         var placeholders = new Dictionary<string, string>
@@ -25,14 +31,22 @@ public class EmailNotificationMessageHandler
             { "NumeAplicatie", "CareerFlow" },
             { "Nume", message.Name },
             { "LinkResetare", message.ResetLink },
-            { "AnCurent", DateTime.UtcNow.Year.ToString() }
+            { "AnCurent", DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture) }
         };
 
-        var result =
-            await _emailService.SendEmailWithTemplateAsync(message.Email, 43498403, placeholders, cancellationToken);
+        bool result =
+            await _emailService.SendEmailWithTemplateAsync(message.Email, EmailConstants.ResetPasswordTemplateId,
+                placeholders);
+
         if (result)
-            _logger.LogInformation("Reset password email was sent to required email");
+            LogResetPasswordEmailSent();
         else
-            _logger.LogWarning("Reset password email was not sent to required email");
+            LogResetPasswordEmailFailed();
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Reset password email was sent to required email")]
+    private partial void LogResetPasswordEmailSent();
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Reset password email was not sent to required email")]
+    private partial void LogResetPasswordEmailFailed();
 }

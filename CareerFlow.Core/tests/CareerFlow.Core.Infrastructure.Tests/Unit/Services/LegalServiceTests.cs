@@ -1,11 +1,16 @@
 using System.Net;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.Legal;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -33,15 +38,15 @@ public class LegalServiceTests
     public async Task GetDocumentAsync_WhenCacheHit_ShouldReturnCachedDocumentWithoutCallingGithub()
     {
         // Arrange
-        var docType = "terms-of-service";
+        const string docType = "terms-of-service";
         var cachedDocument = new LegalDocumentResponse("Cached Content", "GitHub Pages", DateTime.UtcNow);
 
         _cacheMock
-            .Setup(x => x.GetAsync<LegalDocumentResponse>($"legal:{docType}", It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAsync<LegalDocumentResponse>($"legal:{docType}"))
             .ReturnsAsync(cachedDocument);
 
         // Act
-        var result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
+        LegalDocumentResponse? result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -54,25 +59,22 @@ public class LegalServiceTests
     public async Task GetDocumentAsync_WhenCacheMissAndResponseIsSuccess_ShouldReturnDocumentAndCacheIt()
     {
         // Arrange
-        var docType = "terms-of-service";
-        var content = "Standard Legal Text";
-        var cacheKey = $"legal:{docType}";
+        const string docType = "terms-of-service";
+        const string content = "Standard Legal Text";
+        const string cacheKey = $"legal:{docType}";
 
         _cacheMock
-            .Setup(x => x.GetAsync<LegalDocumentResponse>(cacheKey, It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAsync<LegalDocumentResponse>(cacheKey))
             .ReturnsAsync((LegalDocumentResponse?)null);
 
-        var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(content)
-        };
+        var httpResponse = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(content) };
 
         _requestsSenderMock
             .Setup(x => x.GetContentAsync(docType, It.IsAny<CancellationToken>()))
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
+        LegalDocumentResponse? result = await _sut.GetDocumentAsync(docType, CancellationToken.None);
 
         // Assert
         result.ShouldNotBeNull();
@@ -80,7 +82,7 @@ public class LegalServiceTests
         result.Source.ShouldBe("GitHub Pages");
 
         _cacheMock.Verify(x =>
-                x.SetAsync(cacheKey, result, TimeSpan.FromHours(6), It.IsAny<CancellationToken>()),
+                x.SetAsync(cacheKey, result, TimeSpan.FromHours(6)),
             Times.Once);
     }
 
@@ -89,7 +91,7 @@ public class LegalServiceTests
     {
         // Arrange
         _cacheMock
-            .Setup(x => x.GetAsync<LegalDocumentResponse>(It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(x => x.GetAsync<LegalDocumentResponse>(It.IsAny<string>()))
             .ReturnsAsync((LegalDocumentResponse?)null);
 
         var httpResponse = new HttpResponseMessage(HttpStatusCode.InternalServerError);
@@ -99,13 +101,12 @@ public class LegalServiceTests
             .ReturnsAsync(httpResponse);
 
         // Act
-        var result = await _sut.GetDocumentAsync("any-type", CancellationToken.None);
+        LegalDocumentResponse? result = await _sut.GetDocumentAsync("any-type", CancellationToken.None);
 
         // Assert
         result.ShouldBeNull();
         _cacheMock.Verify(x =>
-                x.SetAsync(It.IsAny<string>(), It.IsAny<LegalDocumentResponse>(), It.IsAny<TimeSpan>(),
-                    It.IsAny<CancellationToken>()),
+                x.SetAsync(It.IsAny<string>(), It.IsAny<LegalDocumentResponse>(), It.IsAny<TimeSpan>()),
             Times.Never);
     }
 

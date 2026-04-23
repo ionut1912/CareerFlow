@@ -1,17 +1,13 @@
 using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Application.Validators.UserProfiles;
+
 using FluentValidation.TestHelper;
 
 namespace CareerFlow.Core.Application.Tests.Validators.UserProfiles;
 
 public class UpdateUserProfileCommandValidatorTests
 {
-    private readonly UpdateUserProfileCommandValidator _validator;
-
-    public UpdateUserProfileCommandValidatorTests()
-    {
-        _validator = new UpdateUserProfileCommandValidator();
-    }
+    private readonly UpdateUserProfileCommandValidator _validator = new();
 
     [Fact]
     public void Validate_ValidCommand_ShouldNotHaveValidationError()
@@ -20,7 +16,7 @@ public class UpdateUserProfileCommandValidatorTests
         var command = new UpdateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<UpdateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldNotHaveAnyValidationErrors();
@@ -34,7 +30,7 @@ public class UpdateUserProfileCommandValidatorTests
         var command = new UpdateUserProfileCommand(Guid.NewGuid(), "invalidType", ["Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<UpdateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.LearningType)
@@ -51,7 +47,7 @@ public class UpdateUserProfileCommandValidatorTests
             ["Student", "JobSearcher", "HobbyLearner", "test"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<UpdateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -65,7 +61,7 @@ public class UpdateUserProfileCommandValidatorTests
         var command = new UpdateUserProfileCommand(Guid.NewGuid(), "Visual", ["test"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<UpdateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -80,7 +76,7 @@ public class UpdateUserProfileCommandValidatorTests
         var command = new UpdateUserProfileCommand(Guid.NewGuid(), "Visual", ["Student", "Student"], "test");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<UpdateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.UserTypes)
@@ -95,7 +91,7 @@ public class UpdateUserProfileCommandValidatorTests
             "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
 
         //Act
-        var result = _validator.TestValidate(command);
+        TestValidationResult<UpdateUserProfileCommand>? result = _validator.TestValidate(command);
 
         //Assert
         result.ShouldHaveValidationErrorFor(x => x.Domain)

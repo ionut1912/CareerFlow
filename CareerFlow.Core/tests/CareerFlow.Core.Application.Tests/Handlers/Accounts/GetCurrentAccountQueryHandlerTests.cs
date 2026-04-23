@@ -1,10 +1,15 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
+using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -17,19 +22,19 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
     public GetCurrentAccountQueryHandlerTests()
     {
         _accountRepositoryMock = new Mock<IAccountRepository>();
-        _handler = new GetCurrentAccountQueryHandler(_accountRepositoryMock.Object, _loggerMock.Object);
+        _handler = new GetCurrentAccountQueryHandler(_accountRepositoryMock.Object, LoggerMock.Object);
     }
 
     [Fact]
     public async Task Handle_WhenUserExists_ReturnsUserDto()
     {
         // Arrange
-        var account = TestDataFactory.CreateAccount();
+        Account account = TestDataFactory.CreateAccount();
         var query = new GetCurrentAccountQuery(account.Id);
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(account.Id, Ct)).ReturnsAsync(account);
 
         // Act
-        var result = await _handler.Handle(query, Ct);
+        AccountDto result = await _handler.Handle(query, Ct);
 
         // Assert
         result.Id.ShouldBe(account.Id);
@@ -44,10 +49,12 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(query.AccountId, Ct)).ReturnsAsync((Account?)null);
 
         // Act
-        var exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
+        AccountNotFoundException exception =
+            await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
 
         // Assert
-        _loggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
+        exception.Message.ShouldContain(query.AccountId.ToString());
+        LoggerMock.VerifyLogError(query.AccountId.ToString(), Times.Once());
     }
 
     [Theory]
@@ -61,8 +68,8 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
         var query = new GetCurrentAccountQuery(Guid.NewGuid());
 
         // Use the null-forgiving operator (!) to suppress CS8604
-        var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        IAccountRepository repo = isRepoNull ? null! : _accountRepositoryMock.Object;
+        ILogger<GetCurrentAccountQueryHandler> logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

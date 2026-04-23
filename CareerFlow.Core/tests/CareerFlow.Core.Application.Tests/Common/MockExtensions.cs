@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
+
 using Moq;
 
 namespace CareerFlow.Core.Application.Tests.Common;
@@ -17,8 +18,6 @@ public static class MockExtensions
             times);
     }
 
-    public static void VerifySaveChanges(this Mock<IUnitOfWork> unitOfWork, Times times)
-    {
+    public static void VerifySaveChanges(this Mock<IUnitOfWork> unitOfWork, Times times) =>
         unitOfWork.Verify(x => x.SaveChangesAsync(It.IsAny<CancellationToken>()), times);
-    }
 }

@@ -1,10 +1,13 @@
+using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
 
 public sealed class QuizQuestion : Entity
 {
-    private QuizQuestion()
+    [UsedImplicitly]
+    private QuizQuestion() //For EfCore
     {
     }
 
@@ -22,13 +25,14 @@ public sealed class QuizQuestion : Entity
     public List<string> Options { get; private set; } = [];
     public string CorrectAnswer { get; private set; } = string.Empty;
     public Guid? ChapterId { get; private set; }
-    public Guid? SubChapterId { get; private set; }
-    public Chapter? Chapter { get; private set; }
-    public SubChapter? SubChapter { get; private set; }
+
+    [UsedImplicitly] public Guid? SubChapterId { get; private set; }
+
+    [UsedImplicitly] public Chapter? Chapter { get; private set; }
+
+    [UsedImplicitly] public SubChapter? SubChapter { get; private set; }
 
     public static QuizQuestion Create(string question, List<string> options, string correctAnswer, Guid? chapterId,
-        Guid? subChapterId)
-    {
-        return new QuizQuestion(question, options, correctAnswer, chapterId, subChapterId);
-    }
+        Guid? subChapterId) =>
+        new(question, options, correctAnswer, chapterId, subChapterId);
 }

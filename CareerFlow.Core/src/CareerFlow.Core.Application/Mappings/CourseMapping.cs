@@ -19,23 +19,13 @@ public static class CourseMapping
         return new UploadCourseDocumentCommand(userId, request.Title, files);
     }
 
-    public static FinishChapterCommand ToFinishChapterCommand(this FinishChapterRequest request, Guid userId)
-    {
-        return new FinishChapterCommand(userId, request.CourseId, request.ChapterId);
-    }
+    public static FinishChapterCommand ToFinishChapterCommand(this FinishChapterRequest request, Guid userId) =>
+        new(userId, request.CourseId, request.ChapterId);
 
-    public static GenerateCourseCommand ToGenerateCourseCommand(this CourseRequest request, Guid userId)
-    {
-        return new GenerateCourseCommand(userId, request.Topic);
-    }
+    public static GenerateCourseCommand ToGenerateCourseCommand(this CourseRequest request, Guid userId) =>
+        new(userId, request.Topic);
 
-    private static CourseDto ToDto(this Course course)
-    {
-        return new CourseDto(course.Topic, course.Chapters.ToDto());
-    }
+    private static CourseDto ToDto(this Course course) => new(course.Topic, course.Chapters.ToDto());
 
-    public static List<CourseDto> ToDto(this IEnumerable<Course> courses)
-    {
-        return courses.Select(c => c.ToDto()).ToList();
-    }
+    public static List<CourseDto> ToDto(this IEnumerable<Course> courses) => courses.Select(c => c.ToDto()).ToList();
 }

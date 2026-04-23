@@ -17,9 +17,9 @@ public static class ChapterExpandResponseExtensions
                     sub.Title,
                     sub.ContentSummary,
                     content.TheoryHtml,
-                    content.Quiz?.Select(ToQuizItem).ToList() ?? []))
+                    content.Quiz.Select(ToQuizItem).ToList()))
                 .ToList(),
-            r.FinalQuiz?.Select(ToQuizItem).ToList() ?? []
+            r.FinalQuiz.Select(ToQuizItem).ToList()
         )).ToList();
     }
 

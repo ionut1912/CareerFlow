@@ -4,7 +4,9 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Course;
@@ -20,10 +22,8 @@ public class GenerateCourseCommandHandlerTests
     }
 
     [Fact]
-    public void Constructor_NullCourseService_ThrowsArgumentNullException()
-    {
+    public void Constructor_NullCourseService_ThrowsArgumentNullException() =>
         Should.Throw<ArgumentNullException>(() => new GenerateCourseCommandHandler(null!));
-    }
 
     [Fact]
     public async Task Handle_ValidCommand_ReturnsGeneratedCourseId()
@@ -41,7 +41,7 @@ public class GenerateCourseCommandHandlerTests
                 It.IsAny<CancellationToken>()))
             .ReturnsAsync(expectedCourseId);
 
-        var result = await _sut.Handle(command, CancellationToken.None);
+        Guid result = await _sut.Handle(command, CancellationToken.None);
 
         result.ShouldBe(expectedCourseId);
     }
@@ -138,7 +138,7 @@ public class GenerateCourseCommandHandlerTests
                 It.IsAny<CourseSkeletonResponse>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(Guid.NewGuid());
 
-        var result = await _sut.Handle(command, CancellationToken.None);
+        Guid result = await _sut.Handle(command, CancellationToken.None);
 
         result.ShouldNotBe(Guid.Empty);
     }

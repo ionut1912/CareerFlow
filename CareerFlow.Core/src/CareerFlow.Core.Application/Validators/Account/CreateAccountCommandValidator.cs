@@ -1,4 +1,5 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+
 using FluentValidation;
 
 namespace CareerFlow.Core.Application.Validators.Account;

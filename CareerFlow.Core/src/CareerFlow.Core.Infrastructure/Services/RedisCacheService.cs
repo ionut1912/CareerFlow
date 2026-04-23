@@ -1,88 +1,90 @@
 using System.Text.Json;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Infrastructure.Configurations;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using StackExchange.Redis;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public sealed class RedisCacheService : ICacheService
+public partial class RedisCacheService : ICacheService
 {
-    private readonly IDatabase _db;
-
-    private readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        PropertyNameCaseInsensitive = true
-    };
-
+    private readonly IConnectionMultiplexer _connection;
+    private readonly IDatabase _database;
     private readonly ILogger<RedisCacheService> _logger;
-    private readonly CacheSettings _options;
+    private readonly CacheSettings _settings;
 
     public RedisCacheService(
         IConnectionMultiplexer connection,
         IOptions<CacheSettings> options,
         ILogger<RedisCacheService> logger)
     {
-        _db = connection.GetDatabase();
-        _options = options.Value;
+        _connection = connection;
+        _database = _connection.GetDatabase();
+        _settings = options.Value;
         _logger = logger;
     }
 
-    public async Task<T?> GetAsync<T>(string key, CancellationToken ct = default)
+    public async Task<T?> GetAsync<T>(string key)
     {
         try
         {
-            var value = await _db.StringGetAsync(BuildKey(key));
-            return value.IsNullOrEmpty ? default : JsonSerializer.Deserialize<T>((string)value!, _jsonOptions);
+            RedisValue redisValue = await _database.StringGetAsync(PrefixedKey(key));
+            return !redisValue.HasValue ? default : JsonSerializer.Deserialize<T>(redisValue.ToString());
         }
-        catch (Exception ex)
+        catch (RedisConnectionException ex)
         {
-            _logger.LogError(ex, "Redis GET failed for key {Key}", key);
+            LogGetError(ex, key);
             throw;
         }
     }
 
-    public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null, CancellationToken ct = default)
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiry = null)
     {
         try
         {
-            var serialized = JsonSerializer.Serialize(value, _jsonOptions);
-            var ttl = expiry ?? TimeSpan.FromMinutes(_options.DefaultExpiryMinutes);
-            await _db.StringSetAsync(BuildKey(key), serialized, ttl);
+            string json = JsonSerializer.Serialize(value);
+            TimeSpan timeToLive = expiry ?? TimeSpan.FromMinutes(_settings.DefaultExpiryMinutes);
+            await _database.StringSetAsync(PrefixedKey(key), json, timeToLive);
         }
-        catch (Exception ex)
+        catch (RedisConnectionException ex)
         {
-            _logger.LogError(ex, "Redis SET failed for key {Key}", key);
+            LogSetError(ex, key);
             throw;
         }
     }
 
-    public async Task RemoveAsync(string key, CancellationToken ct = default)
+    public async Task RemoveByPatternAsync(string pattern)
     {
         try
         {
-            await _db.KeyDeleteAsync(BuildKey(key));
+            IServer[] servers = _connection.GetServers();
+            if (servers.Length == 0) throw new InvalidOperationException("No Redis servers available.");
+
+            IServer server = servers[0];
+            string searchPattern = $"{_settings.InstanceName}{pattern}*";
+            IAsyncEnumerable<RedisKey> keys = server.KeysAsync(pattern: searchPattern);
+
+            await foreach (RedisKey key in keys) await _database.KeyDeleteAsync(key);
         }
-        catch (Exception ex)
+        catch (RedisConnectionException ex)
         {
-            _logger.LogError(ex, "Redis DELETE failed for key {Key}", key);
+            LogRemovePatternError(ex, pattern);
             throw;
         }
     }
 
-    public async Task<bool> ExistsAsync(string key, CancellationToken ct = default)
-    {
-        try
-        {
-            return await _db.KeyExistsAsync(BuildKey(key));
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Redis EXISTS failed for key {Key}", key);
-            throw;
-        }
-    }
+    private RedisKey PrefixedKey(string key) => $"{_settings.InstanceName}{key}";
 
-    private string BuildKey(string key) => $"{_options.InstanceName}{key}";
+    [LoggerMessage(Level = LogLevel.Error, Message = "Redis connection error while getting key: {Key}")]
+    private partial void LogGetError(Exception ex, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Redis connection error while setting key: {Key}")]
+    private partial void LogSetError(Exception ex, string key);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Redis connection error while removing pattern: {Pattern}")]
+    private partial void LogRemovePatternError(Exception ex, string pattern);
 }

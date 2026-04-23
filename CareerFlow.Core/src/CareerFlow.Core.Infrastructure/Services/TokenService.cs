@@ -1,31 +1,26 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public class TokenService : ITokenService
+public class TokenService(IConfiguration configuration) : ITokenService
 {
-    private readonly IConfiguration _configuration;
-
-    public TokenService(IConfiguration configuration)
-    {
-        _configuration = configuration;
-    }
-
     public AuthResult GenerateToken(Account account)
     {
-        var jwtSettings = _configuration.GetSection("JwtSettings");
+        IConfigurationSection jwtSettings = configuration.GetSection("JwtSettings");
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings["Key"]!));
         var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
-        var jti = Guid.NewGuid().ToString();
+        string jti = Guid.NewGuid().ToString();
 
 
         var claims = new List<Claim>
@@ -34,11 +29,9 @@ public class TokenService : ITokenService
             new(JwtRegisteredClaimNames.Name, account.Username),
             new(JwtRegisteredClaimNames.Email, account.Email),
             new(JwtRegisteredClaimNames.Jti, jti),
-
-
-            new("is_founder", account.IsFounder.ToString().ToLower()),
-            new("terms_accepted", account.TermsAccepted.ToString().ToLower()),
-            new("policy_accepted", account.PrivacyPolicyAccepted.ToString().ToLower())
+            new("is_founder", account.IsFounder ? "true" : "false"),
+            new("terms_accepted", account.TermsAccepted ? "true" : "false"),
+            new("policy_accepted", account.PrivacyPolicyAccepted ? "true" : "false")
         };
 
 
@@ -53,7 +46,7 @@ public class TokenService : ITokenService
 
 
         var handler = new JsonWebTokenHandler();
-        var tokenString = handler.CreateToken(tokenDescriptor);
+        string? tokenString = handler.CreateToken(tokenDescriptor);
 
         return new AuthResult(tokenString, jti);
     }
@@ -61,15 +54,15 @@ public class TokenService : ITokenService
     public RefreshToken GenerateRefreshToken(Guid userId, string jwtToken)
     {
         var handler = new JsonWebTokenHandler();
-        var jwt = handler.ReadJsonWebToken(jwtToken);
-        var jti = jwt.GetClaim(JwtRegisteredClaimNames.Jti).Value; // extracts the 36-char GUID
+        JsonWebToken? jwt = handler.ReadJsonWebToken(jwtToken);
+        string jti = jwt.GetClaim(JwtRegisteredClaimNames.Jti).Value; // extracts the 36-char GUID
 
         return RefreshToken.Create(userId, GenerateRandomString(35), jti, DateTime.UtcNow.AddMonths(6));
     }
 
     private static string GenerateRandomString(int length)
     {
-        var random = new byte[length];
+        byte[] random = new byte[length];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(random);
         return Convert.ToBase64String(random);

@@ -5,7 +5,11 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
+using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -23,8 +27,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
         _handler = new CreateAccountCommandHandler(
             _accountRepositoryMock.Object,
             _passwordServiceMock.Object,
-            _unitOfWorkMock.Object,
-            _loggerMock.Object);
+            UnitOfWorkMock.Object,
+            LoggerMock.Object);
     }
 
     [Fact]
@@ -36,13 +40,13 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
             .ReturnsAsync((Account?)null);
 
         // Act
-        var result = await _handler.Handle(command, Ct);
+        Guid result = await _handler.Handle(command, Ct);
 
         // Assert
         result.ShouldNotBe(Guid.Empty);
         _passwordServiceMock.Verify(x => x.HashPassword(command.Password), Times.Once);
         _accountRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Account>(), Ct), Times.Once);
-        _unitOfWorkMock.VerifySaveChanges(Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
     }
 
     [Fact]
@@ -50,18 +54,19 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
     {
         // Arrange
         var command = new CreateAccountCommand("exist@email.com", "pass", "pass", "user", "name");
-        var existingAccount = TestDataFactory.CreateAccount();
+        Account existingAccount = TestDataFactory.CreateAccount();
 
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
             .ReturnsAsync(existingAccount);
 
         // Act
-        var exception = await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
+        UserAlreadyExistsException exception =
+            await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldContain(command.Email);
-        _loggerMock.VerifyLogError(command.Email, Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError(command.Email, Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Fact]
@@ -73,12 +78,13 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
             .ReturnsAsync((Account?)null);
 
         // Act
-        var exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
+        PasswordNotMatchException exception =
+            await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldBe("Parolele nu corespund");
-        _loggerMock.VerifyLogError("nu corespund", Times.Once());
-        _unitOfWorkMock.VerifySaveChanges(Times.Never());
+        LoggerMock.VerifyLogError("nu corespund", Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
     }
 
     [Theory]
@@ -93,10 +99,10 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
         // Arrange
         var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
 
-        var repo = isRepoNull ? null! : _accountRepositoryMock.Object;
-        var passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
-        var uow = isUowNull ? null! : _unitOfWorkMock.Object;
-        var logger = isLoggerNull ? null! : _loggerMock.Object;
+        IAccountRepository repo = isRepoNull ? null! : _accountRepositoryMock.Object;
+        IPasswordService passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
+        IUnitOfWork uow = isUowNull ? null! : UnitOfWorkMock.Object;
+        ILogger<CreateAccountCommandHandler> logger = isLoggerNull ? null! : LoggerMock.Object;
 
         // Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(async () =>

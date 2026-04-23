@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Reflection;
+
 using CareerFlow.Core.Api.Tests.Setup;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests.Account;
@@ -7,19 +9,18 @@ using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Integration;
 
 [Trait("Category", "Integration")]
-public class AccountEndpointsTests : IntegrationTestBase
+public class AccountEndpointsTests(TestWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
-    public AccountEndpointsTests(TestWebApplicationFactory factory) : base(factory)
-    {
-    }
-
     [Fact]
     public async Task Register_ShouldReturnSuccess_WhenDataIsValid()
     {
@@ -28,8 +29,8 @@ public class AccountEndpointsTests : IntegrationTestBase
             "testName");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
-        var result = await response.Content.ReadFromJsonAsync<Guid>();
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
+        Guid result = await response.Content.ReadFromJsonAsync<Guid>();
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -45,7 +46,7 @@ public class AccountEndpointsTests : IntegrationTestBase
             "testName");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -58,7 +59,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new CreateAccountRequest("testEmail", "", "", "testUsername", "testName");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -71,7 +72,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new CreateAccountRequest("testEmail", "testPassword", "testPassword", "testUsername", "testName");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/invalid-ur;", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/invalid-ur;", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -86,7 +87,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/register", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -99,7 +100,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new LoginRequest("testEmail", "testPassword");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -109,11 +110,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task Login_Return200_WhenDataIsValid()
     {
         // Arrange
-        var (_, _, credentials) = await CreateAndAuthenticateUserAsync();
+        (_, _, LoginRequest credentials) = await CreateAndAuthenticateUserAsync();
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
-        var result = await response.Content.ReadFromJsonAsync<AccountDto>();
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
+        AccountDto? result = await response.Content.ReadFromJsonAsync<AccountDto>();
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -135,7 +136,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new LoginRequest("testEmail", "testPassword");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/invalid-uri", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/invalid-uri", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -149,7 +150,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new LoginRequest("testEmail@email.com", "testPassword2");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -162,7 +163,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new LoginRequest("testEmail2@email.com", "testPassword2");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/login", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -175,7 +176,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new RefreshTokenRequest("testRefresh", "testRefreshToken");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/refresh-token", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/refresh-token", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -185,12 +186,14 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task RefreshToken_ShouldReturnOk_WhenDataIsValid()
     {
         // Arrange
-        var (authClient, account, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, AccountDto account, _) = await CreateAndAuthenticateUserAsync();
+        account.Token.ShouldNotBeNullOrWhiteSpace();
+        account.RefreshToken.ShouldNotBeNullOrWhiteSpace();
         var refreshTokenRequest = new RefreshTokenRequest(account.Token, account.RefreshToken);
 
         // Act
-        var response = await authClient.PostAsJsonAsync("/account/refresh-token", refreshTokenRequest);
-        var result = await response.Content.ReadFromJsonAsync<RefreshTokenDto>();
+        HttpResponseMessage response = await authClient.PostAsJsonAsync("/account/refresh-token", refreshTokenRequest);
+        RefreshTokenDto? result = await response.Content.ReadFromJsonAsync<RefreshTokenDto>();
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -204,11 +207,13 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task RefreshToken_ShouldReturnNotFound_WhenUrlIsInvalid()
     {
         // Arrange
-        var (authClient, account, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, AccountDto account, _) = await CreateAndAuthenticateUserAsync();
+        account.Token.ShouldNotBeNullOrWhiteSpace();
+        account.RefreshToken.ShouldNotBeNullOrWhiteSpace();
         var refreshTokenRequest = new RefreshTokenRequest(account.Token, account.RefreshToken);
 
         // Act
-        var response = await authClient.PostAsJsonAsync("/invalidurl", refreshTokenRequest);
+        HttpResponseMessage response = await authClient.PostAsJsonAsync("/invalidurl", refreshTokenRequest);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -222,7 +227,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new ForgotPasswordRequest("existing@email.com");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/forgot-password", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/forgot-password", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -235,7 +240,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new ForgotPasswordRequest("nonexistent@email.com");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/forgot-password", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/forgot-password", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -245,17 +250,18 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task ResetPassword_ShouldReturnNoContent_WhenTokenAndDataAreValid()
     {
         // Arrange
-        var email = "reset-success@email.com";
+        const string email = "reset-success@email.com";
         await CreateAndAuthenticateUserAsync(email);
-        var rawToken = "SuperSecretToken123";
+        const string rawToken = "SuperSecretToken123";
 
-        using (var scope = Factory.Services.CreateScope())
+        using (IServiceScope scope = Factory.Services.CreateScope())
         {
-            var repo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
-            var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
-            var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            IAccountRepository repo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
+            IPasswordService passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+            IUnitOfWork uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var account = await repo.GetAccountByEmailAsync(email, default);
+            Account? account = await repo.GetAccountByEmailAsync(email, CancellationToken.None);
+            account.ShouldNotBeNull();
             account.GenerateResetPasswordToken(rawToken, passwordService);
             repo.Update(account);
             await uow.SaveChangesAsync();
@@ -264,9 +270,9 @@ public class AccountEndpointsTests : IntegrationTestBase
         var resetRequest = new ResetPasswordRequest(email, "NewSecurePassword123!", rawToken);
 
         // Act
-        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetRequest);
+        HttpResponseMessage response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetRequest);
         var loginRequest = new LoginRequest(email, "NewSecurePassword123!");
-        var loginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", loginRequest);
+        HttpResponseMessage loginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", loginRequest);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -277,20 +283,21 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task ResetPassword_ShouldReturnBadRequest_WhenTokenIsExpired()
     {
         // Arrange
-        var email = "expired@email.com";
+        const string email = "expired@email.com";
         await CreateAndAuthenticateUserAsync(email);
-        var rawToken = "token123";
+        const string rawToken = "token123";
 
-        using (var scope = Factory.Services.CreateScope())
+        using (IServiceScope scope = Factory.Services.CreateScope())
         {
-            var repo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
-            var passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
-            var uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            IAccountRepository repo = scope.ServiceProvider.GetRequiredService<IAccountRepository>();
+            IPasswordService passwordService = scope.ServiceProvider.GetRequiredService<IPasswordService>();
+            IUnitOfWork uow = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var account = await repo.GetAccountByEmailAsync(email, default);
+            Account? account = await repo.GetAccountByEmailAsync(email, CancellationToken.None);
+            account.ShouldNotBeNull();
             account.GenerateResetPasswordToken(rawToken, passwordService);
 
-            var field = account.GetType().GetProperty("ResetPasswordTokenExpiresAt");
+            PropertyInfo? field = account.GetType().GetProperty("ResetPasswordTokenExpiresAt");
             field?.SetValue(account, DateTime.UtcNow.AddHours(-1));
 
             repo.Update(account);
@@ -300,7 +307,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var resetRequest = new ResetPasswordRequest(email, "NewPassword123!", rawToken);
 
         // Act
-        var response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetRequest);
+        HttpResponseMessage response = await AnonymousClient.PutAsJsonAsync("/account/reset-password", resetRequest);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);
@@ -310,7 +317,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task GetCurrentAccount_ShouldReturnUnauthorized_WhenNotAuthenticated()
     {
         // Arrange & Act
-        var response = await AnonymousClient.GetAsync("/account/current");
+        HttpResponseMessage response = await AnonymousClient.GetAsync("/account/current");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -320,11 +327,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task GetCurrentAccount_ShouldReturnLoggedInUser_WhenAuthenticated()
     {
         // Arrange
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
         // Act
-        var response = await authClient.GetAsync("/account/current");
-        var currentAccount = await response.Content.ReadFromJsonAsync<AccountDto>();
+        HttpResponseMessage response = await authClient.GetAsync("/account/current");
+        AccountDto? currentAccount = await response.Content.ReadFromJsonAsync<AccountDto>();
 
         // Assert
         response.EnsureSuccessStatusCode();
@@ -338,7 +345,7 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task DeleteAccount_ShouldReturnUnauthorized_WhenNotAuthenticated()
     {
         // Arrange & Act
-        var response = await AnonymousClient.DeleteAsync("/account");
+        HttpResponseMessage response = await AnonymousClient.DeleteAsync("/account");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -348,10 +355,10 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task DeleteAccount_ShouldReturnNoContent_WhenAuthenticated()
     {
         // Arrange
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
 
         // Act
-        var response = await authClient.DeleteAsync("/account");
+        HttpResponseMessage response = await authClient.DeleteAsync("/account");
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -361,11 +368,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task DeleteAccount_ShouldReturnNotFound_WhenRelogin()
     {
         // Arrange
-        var (authClient, _, credentials) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, LoginRequest credentials) = await CreateAndAuthenticateUserAsync();
 
         // Act
-        var response = await authClient.DeleteAsync("/account");
-        var reloginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
+        HttpResponseMessage response = await authClient.DeleteAsync("/account");
+        HttpResponseMessage reloginResponse = await AnonymousClient.PostAsJsonAsync("/account/login", credentials);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -378,11 +385,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task AcceptLegal_ShouldReturnNoContent_WhenTermsAreAccepted()
     {
         // Arrange
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         var request = new AcceptLegalDocRequest("Terms");
 
         // Act
-        var response = await authClient.PostAsJsonAsync("/account/accept-legaldoc", request);
+        HttpResponseMessage response = await authClient.PostAsJsonAsync("/account/accept-legaldoc", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -392,11 +399,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task AcceptLegal_ShouldReturnNoContent_WhenPrivacyIsAccepted()
     {
         // Arrange
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         var request = new AcceptLegalDocRequest("Privacy");
 
         // Act
-        var response = await authClient.PostAsJsonAsync("/account/accept-legaldoc", request);
+        HttpResponseMessage response = await authClient.PostAsJsonAsync("/account/accept-legaldoc", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NoContent);
@@ -409,7 +416,7 @@ public class AccountEndpointsTests : IntegrationTestBase
         var request = new AcceptLegalDocRequest("Terms");
 
         // Act
-        var response = await AnonymousClient.PostAsJsonAsync("/account/accept-legaldoc", request);
+        HttpResponseMessage response = await AnonymousClient.PostAsJsonAsync("/account/accept-legaldoc", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
@@ -420,11 +427,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     {
         // Arrange
         var account = Account.Create("testEmail@email.com", "testPassword", "testUsername", "testName");
-        var orphanedClient = CreateClientForNonExistentUser(account);
+        HttpClient orphanedClient = CreateClientForNonExistentUser(account);
         var request = new AcceptLegalDocRequest("Terms");
 
         // Act
-        var response = await orphanedClient.PostAsJsonAsync("/account/accept-legaldoc", request);
+        HttpResponseMessage response = await orphanedClient.PostAsJsonAsync("/account/accept-legaldoc", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.NotFound);
@@ -434,11 +441,11 @@ public class AccountEndpointsTests : IntegrationTestBase
     public async Task AcceptLegal_ShouldReturnBadRequest_WhenTypeIsInvalid()
     {
         // Arrange
-        var (authClient, _, _) = await CreateAndAuthenticateUserAsync();
+        (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         var request = new AcceptLegalDocRequest("InvalidType");
 
         // Act
-        var response = await authClient.PostAsJsonAsync("/account/accept-legaldoc", request);
+        HttpResponseMessage response = await authClient.PostAsJsonAsync("/account/accept-legaldoc", request);
 
         // Assert
         response.StatusCode.ShouldBe(HttpStatusCode.BadRequest);

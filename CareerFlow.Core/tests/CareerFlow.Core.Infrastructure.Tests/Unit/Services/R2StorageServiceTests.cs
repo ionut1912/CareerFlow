@@ -1,10 +1,15 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -12,13 +17,19 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 public class R2StorageServiceTests
 {
     private const string BucketName = "test-bucket";
+    private const string AccountId = "test-account-id";
+    private const string AccessKey = "test-access-key";
+    private const string SecretKey = "test-secret-key";
 
     private readonly Mock<IAmazonS3> _s3 = new();
     private readonly R2StorageService _sut;
 
     public R2StorageServiceTests()
     {
-        var options = Options.Create(new R2Settings { BucketName = BucketName });
+        IOptions<R2Settings> options = Options.Create(new R2Settings
+        {
+            AccountId = AccountId, AccessKey = AccessKey, SecretKey = SecretKey, BucketName = BucketName
+        });
         _sut = new R2StorageService(_s3.Object, options);
     }
 
@@ -50,7 +61,7 @@ public class R2StorageServiceTests
         _s3.Setup(s => s.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutObjectResponse());
 
-        var key = await _sut.UploadAsync(new MemoryStream([1, 2, 3]), "doc.pdf", "application/pdf");
+        string key = await _sut.UploadAsync(new MemoryStream([1, 2, 3]), "doc.pdf", "application/pdf");
 
         key.ShouldStartWith("courses/");
         key.ShouldEndWith("/doc.pdf");
@@ -62,8 +73,8 @@ public class R2StorageServiceTests
         _s3.Setup(s => s.PutObjectAsync(It.IsAny<PutObjectRequest>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new PutObjectResponse());
 
-        var key1 = await _sut.UploadAsync(new MemoryStream([1]), "doc.pdf", "application/pdf");
-        var key2 = await _sut.UploadAsync(new MemoryStream([1]), "doc.pdf", "application/pdf");
+        string key1 = await _sut.UploadAsync(new MemoryStream([1]), "doc.pdf", "application/pdf");
+        string key2 = await _sut.UploadAsync(new MemoryStream([1]), "doc.pdf", "application/pdf");
 
         key1.ShouldNotBe(key2);
     }
@@ -116,7 +127,7 @@ public class R2StorageServiceTests
         _s3.Setup(s => s.GetObjectAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(new GetObjectResponse { ResponseStream = responseStream });
 
-        var result = await _sut.DownloadAsync("courses/abc/doc.pdf");
+        Stream result = await _sut.DownloadAsync("courses/abc/doc.pdf");
 
         result.ShouldBeSameAs(responseStream);
     }

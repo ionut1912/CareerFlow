@@ -3,7 +3,9 @@ using CareerFlow.Core.Application.CQRS.Courses.Handlers;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.Models.Course.Response;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Course;
@@ -26,16 +28,14 @@ public class UploadCourseDocumentCommandHandlerTests
     }
 
     [Fact]
-    public void Constructor_NullCourseService_ThrowsArgumentNullException()
-    {
+    public void Constructor_NullCourseService_ThrowsArgumentNullException() =>
         Should.Throw<ArgumentNullException>(() => new UploadCourseDocumentCommandHandler(null!));
-    }
 
     [Fact]
     public async Task Handle_ValidCommand_ReturnsUploadCoursesResponse()
     {
         var userId = Guid.NewGuid();
-        var files = CreateFiles();
+        List<UploadFileDto> files = CreateFiles();
         var command = new UploadCourseDocumentCommand(userId, "My Course", files);
         var expected = new UploadCoursesResponse([], 0, 0, 0, []);
 
@@ -43,7 +43,7 @@ public class UploadCourseDocumentCommandHandlerTests
             .Setup(s => s.UploadManyAsync(userId, files, "My Course", It.IsAny<CancellationToken>()))
             .ReturnsAsync(expected);
 
-        var result = await _sut.Handle(command, CancellationToken.None);
+        UploadCoursesResponse result = await _sut.Handle(command, CancellationToken.None);
 
         result.ShouldBe(expected);
     }
@@ -52,7 +52,7 @@ public class UploadCourseDocumentCommandHandlerTests
     public async Task Handle_ValidCommand_CallsUploadManyOnce()
     {
         var userId = Guid.NewGuid();
-        var files = CreateFiles();
+        List<UploadFileDto> files = CreateFiles();
         var command = new UploadCourseDocumentCommand(userId, "Title", files);
 
         _courseServiceMock

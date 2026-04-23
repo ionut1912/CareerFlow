@@ -1,10 +1,11 @@
 ﻿using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public class EmailService : IEmailService
+public partial class EmailService : IEmailService
 {
     private readonly ILogger<EmailService> _logger;
     private readonly IMailClient _mailClient;
@@ -17,38 +18,45 @@ public class EmailService : IEmailService
         _logger = logger;
     }
 
-    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId,
-        Dictionary<string, string> templateModel, CancellationToken cancellationToken)
+    public async Task<bool> SendEmailWithTemplateAsync(string receiver, int templateId,
+        Dictionary<string, string> placeholders)
     {
-        if (cancellationToken.IsCancellationRequested)
+        if (string.IsNullOrWhiteSpace(receiver))
         {
-            _logger.LogWarning("Email sending cancelled before execution.");
-            return false;
-        }
-
-        if (string.IsNullOrWhiteSpace(to))
-        {
-            _logger.LogError("Receiver email address is empty");
+            LogEmptyReceiver();
             return false;
         }
 
         try
         {
-            var success = await _mailClient.SendTemplatedEmailAsync(to, templateId, templateModel, cancellationToken);
+            bool success = await _mailClient.SendTemplatedEmailAsync(receiver, templateId, placeholders);
 
             if (success)
             {
-                _logger.LogInformation("Email sent successfully using template {TemplateId}", templateId);
+                LogEmailSent(templateId);
                 return true;
             }
 
-            _logger.LogError("Failed to send email via provider.");
+            LogEmailFailed();
             return false;
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Exception occurred while sending email with template {TemplateId}", templateId);
+            LogEmailException(templateId, ex);
             return false;
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Receiver email address is empty")]
+    private partial void LogEmptyReceiver();
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Email sent successfully using template {TemplateId}")]
+    private partial void LogEmailSent(int templateId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to send email via provider.")]
+    private partial void LogEmailFailed();
+
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Exception occurred while sending email with template {TemplateId}")]
+    private partial void LogEmailException(int templateId, Exception ex);
 }

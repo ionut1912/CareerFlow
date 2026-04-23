@@ -9,15 +9,15 @@ public static class UserProfileMapping
 {
     public static UserProfileDto ToDto(this UserProfile profile)
     {
-        var email = profile.Account?.Email ?? string.Empty;
-        var username = profile.Account?.Username ?? string.Empty;
-        var name = profile.Account?.Name ?? string.Empty;
+        string email = profile.Account?.Email ?? string.Empty;
+        string username = profile.Account?.Username ?? string.Empty;
+        string name = profile.Account?.Name ?? string.Empty;
 
-        var courses = profile.Courses?.ToDto() ?? [];
+        List<CourseDto> courses = profile.Courses.ToDto();
 
-        var userTypes = profile.UserTypes?
+        var userTypes = profile.UserTypes
             .Select(ut => ut.Value)
-            .ToList() ?? [];
+            .ToList();
 
         return new UserProfileDto(
             profile.Id,
@@ -34,10 +34,8 @@ public static class UserProfileMapping
             courses);
     }
 
-    public static List<UserProfileDto> ToDtos(this IEnumerable<UserProfile> profiles)
-    {
-        return profiles.Select(ToDto).ToList();
-    }
+    public static List<UserProfileDto> ToDtos(this IEnumerable<UserProfile> profiles) =>
+        profiles.Select(ToDto).ToList();
 
     public static CreateUserProfileCommand ToCreateUserProfileCommand(this CreateUserProfileRequest profileRequest,
         Guid accountId)

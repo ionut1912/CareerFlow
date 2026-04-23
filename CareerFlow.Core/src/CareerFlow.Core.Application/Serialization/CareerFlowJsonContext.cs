@@ -1,9 +1,11 @@
 using System.Text.Json.Serialization;
+
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests.Account;
 using CareerFlow.Core.Application.Requests.Course;
 using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Application.Requests.UserProfile;
+
 using ForgotPasswordRequest = Microsoft.AspNetCore.Identity.Data.ForgotPasswordRequest;
 using LoginRequest = Microsoft.AspNetCore.Identity.Data.LoginRequest;
 using ResetPasswordRequest = Microsoft.AspNetCore.Identity.Data.ResetPasswordRequest;
@@ -36,6 +38,4 @@ namespace CareerFlow.Core.Application.Serialization;
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-public partial class CareerFlowJsonContext : JsonSerializerContext
-{
-}
+public partial class CareerFlowJsonContext : JsonSerializerContext;

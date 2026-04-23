@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
+
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
@@ -8,13 +10,15 @@ using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Mappers;
+
 using Hangfire;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.HangfireJobs;
 
 [AutomaticRetry(Attempts = 3, DelaysInSeconds = [60, 120, 300])]
-public sealed class ProcessCourseJob
+public sealed partial class ProcessCourseJob
 {
     private readonly IDocumentAnalyzerService _analyzer;
     private readonly ICacheService _cache;
@@ -52,11 +56,11 @@ public sealed class ProcessCourseJob
 
     public async Task ExecuteAsync(Guid jobId, Guid userId, CancellationToken ct)
     {
-        var job = await _courseJobRepository.GetByIdAsync(jobId, ct, j => j.Upload!);
+        CourseJob? job = await _courseJobRepository.GetByIdAsync(jobId, ct, j => j.Upload!);
 
         if (job is null)
         {
-            _logger.LogWarning("Job {JobId} not found", jobId);
+            LogJobNotFound(jobId);
             return;
         }
 
@@ -64,20 +68,21 @@ public sealed class ProcessCourseJob
 
         try
         {
-            var documentResponse = await GetOrCacheDocumentAnalysisAsync(job.Upload!, ct);
-            var expandedChapters = await GetOrCacheExpandedChaptersAsync(job.Upload!, documentResponse, ct);
+            DocumentProcessingResponse documentResponse = await GetOrCacheDocumentAnalysisAsync(job.Upload!, ct);
+            List<ExpandedChapterDataDto> expandedChapters =
+                await GetOrCacheExpandedChaptersAsync(job.Upload!, documentResponse, ct);
 
-            var courseId = await _coursePersistenceService.PersistAsync(
+            Guid courseId = await _coursePersistenceService.PersistAsync(
                 userId, job.Upload!.Title, expandedChapters.ToAssemblyModels(), ct);
 
             job.SetCourseId(courseId);
             await UpdateJobStatusAsync(job, JobStatus.Done, ct);
 
-            _logger.LogInformation("Job {JobId} done. Course {CourseId}", jobId, courseId);
+            LogJobDone(jobId, courseId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Job {JobId} failed", jobId);
+            LogJobFailed(ex, jobId);
             job.SetErrorMessage(ex.Message);
             await UpdateJobStatusAsync(job, JobStatus.Failed, ct);
             throw;
@@ -87,31 +92,31 @@ public sealed class ProcessCourseJob
     private async Task<DocumentProcessingResponse> GetOrCacheDocumentAnalysisAsync(
         CourseUpload upload, CancellationToken ct)
     {
-        var cacheKey = $"course:analyze:{upload.FileName}";
-        var cached = await _cache.GetAsync<DocumentProcessingResponse>(cacheKey, ct);
+        string cacheKey = CacheKeyConstants.CacheKeyDocAnalyze(upload.FileName);
+        DocumentProcessingResponse? cached = await _cache.GetAsync<DocumentProcessingResponse>(cacheKey);
 
         if (cached is not null)
         {
-            _logger.LogInformation("Cache hit for analysis of {FileName}", upload.FileName);
+            LogCacheHitAnalysis(upload.FileName);
             return cached;
         }
 
-        var uploadFile = await DownloadAsUploadFileModelAsync(upload, ct);
-        var response = await _analyzer.AnalyzeDocumentAsync(uploadFile, ct);
+        UploadFileDto uploadFile = await DownloadAsUploadFileModelAsync(upload, ct);
+        DocumentProcessingResponse response = await _analyzer.AnalyzeDocumentAsync(uploadFile, ct);
 
-        await _cache.SetAsync(cacheKey, response, TimeSpan.FromHours(2), ct);
+        await _cache.SetAsync(cacheKey, response, TimeSpan.FromHours(2));
         return response;
     }
 
     private async Task<List<ExpandedChapterDataDto>> GetOrCacheExpandedChaptersAsync(
         CourseUpload upload, DocumentProcessingResponse documentResponse, CancellationToken ct)
     {
-        var cacheKey = $"course:chapters:{upload.FileName}";
-        var cached = await _cache.GetAsync<List<ExpandedChapterDataDto>>(cacheKey, ct);
+        string cacheKey = CacheKeyConstants.CacheKeyChapter(upload.FileName);
+        List<ExpandedChapterDataDto>? cached = await _cache.GetAsync<List<ExpandedChapterDataDto>>(cacheKey);
 
         if (cached is not null)
         {
-            _logger.LogInformation("Cache hit for chapters of {FileName}", upload.FileName);
+            LogCacheHitChapters(upload.FileName);
             return cached;
         }
 
@@ -126,7 +131,7 @@ public sealed class ProcessCourseJob
                     chapterSkeleton.CoreConcept,
                     documentResponse.DocumentId);
 
-                var detail = await _analyzer.ExpandAnalyzedDocument(request, token);
+                ChapterDetailResponse detail = await _analyzer.ExpandAnalyzedDocument(request, token);
 
                 concurrentChapters.Add(new ExpandedChapterDataDto(
                     chapterSkeleton.Day,
@@ -136,13 +141,13 @@ public sealed class ProcessCourseJob
             });
 
         var result = concurrentChapters.OrderBy(c => c.Day).ToList();
-        await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(2), ct);
+        await _cache.SetAsync(cacheKey, result, TimeSpan.FromHours(2));
         return result;
     }
 
     private async Task<UploadFileDto> DownloadAsUploadFileModelAsync(CourseUpload upload, CancellationToken ct)
     {
-        var stream = await _storage.DownloadAsync(upload.FileKey, ct);
+        Stream stream = await _storage.DownloadAsync(upload.FileKey, ct);
         var ms = new MemoryStream();
         await stream.CopyToAsync(ms, ct);
         ms.Position = 0;
@@ -154,4 +159,19 @@ public sealed class ProcessCourseJob
         job.Update(status);
         await _uow.SaveChangesAsync(ct);
     }
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "Job {JobId} not found")]
+    private partial void LogJobNotFound(Guid jobId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Job {JobId} done. Course {CourseId}")]
+    private partial void LogJobDone(Guid jobId, Guid courseId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Job {JobId} failed")]
+    private partial void LogJobFailed(Exception ex, Guid jobId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Cache hit for analysis of {FileName}")]
+    private partial void LogCacheHitAnalysis(string fileName);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Cache hit for chapters of {FileName}")]
+    private partial void LogCacheHitChapters(string fileName);
 }

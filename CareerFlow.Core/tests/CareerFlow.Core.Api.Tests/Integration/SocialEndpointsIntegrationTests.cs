@@ -1,46 +1,58 @@
 using System.Net;
+
 using CareerFlow.Core.Api.Tests.Setup;
+
 using Microsoft.AspNetCore.Mvc.Testing;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Integration;
 
 [Trait("Category", "Integration")]
-public class SocialEndpointsIntegrationTests : IntegrationTestBase
+public class SocialEndpointsIntegrationTests(TestWebApplicationFactory factory) : IntegrationTestBase(factory)
 {
-    public SocialEndpointsIntegrationTests(TestWebApplicationFactory factory) : base(factory)
-    {
-    }
-
-    private HttpClient NoRedirectClient()
-    {
-        return Factory.CreateClient(
-            new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
-    }
+    private HttpClient CreateNoRedirectClient() =>
+        Factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
 
     [Fact]
     public async Task GoogleMobileLogin_NoParams_Returns302Redirect()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/google/mobile");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/google/mobile");
+
+        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
     }
 
     [Fact]
     public async Task GoogleMobileLogin_WithReturnUrl_Returns302Redirect()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/google/mobile?returnUrl=myapp://callback");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/google/mobile?returnUrl=myapp://callback");
+
+        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
     }
 
     [Fact]
     public async Task GoogleMobileLogin_LocationHeaderPointsToGoogle()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/google/mobile");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
-        var location = response.Headers.Location?.ToString();
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/google/mobile");
+
+        //Assert
+        string? location = response.Headers.Location?.ToString();
         location.ShouldNotBeNullOrWhiteSpace();
         location.ShouldContain("accounts.google.com");
     }
@@ -48,22 +60,31 @@ public class SocialEndpointsIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task GoogleMobileLogin_ContainsStateInRedirectUrl()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/google/mobile");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
-        var location = response.Headers.Location?.ToString();
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/google/mobile");
+
+        //Assert
+        string? location = response.Headers.Location?.ToString();
+        location.ShouldNotBeNullOrWhiteSpace();
         location.ShouldContain("state=");
     }
 
     [Fact]
     public async Task GoogleMobileLogin_TwoConsecutiveCalls_ProduceDifferentStates()
     {
-        var client = NoRedirectClient();
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
-        var r1 = await client.GetAsync("/social/auth/google/mobile");
-        var r2 = await client.GetAsync("/social/auth/google/mobile");
+        //Act
+        HttpResponseMessage r1 = await client.GetAsync("/social/auth/google/mobile");
+        HttpResponseMessage r2 = await client.GetAsync("/social/auth/google/mobile");
 
-        var loc1 = r1.Headers.Location?.ToString();
-        var loc2 = r2.Headers.Location?.ToString();
+        //Assert
+        string? loc1 = r1.Headers.Location?.ToString();
+        string? loc2 = r2.Headers.Location?.ToString();
 
         loc1.ShouldNotBe(loc2);
     }
@@ -71,17 +92,27 @@ public class SocialEndpointsIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task LinkedInMobileLogin_NoParams_Returns302Redirect()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/linkedin/mobile");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/linkedin/mobile");
+
+        //Assert
         response.StatusCode.ShouldBe(HttpStatusCode.Redirect);
     }
 
     [Fact]
     public async Task LinkedInMobileLogin_LocationHeaderPointsToLinkedIn()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/linkedin/mobile");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
-        var location = response.Headers.Location?.ToString();
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/linkedin/mobile");
+
+        //Assert
+        string? location = response.Headers.Location?.ToString();
         location.ShouldNotBeNullOrWhiteSpace();
         location.ShouldContain("linkedin.com");
     }
@@ -89,19 +120,30 @@ public class SocialEndpointsIntegrationTests : IntegrationTestBase
     [Fact]
     public async Task LinkedInMobileLogin_ContainsStateInRedirectUrl()
     {
-        var response = await NoRedirectClient().GetAsync("/social/auth/linkedin/mobile");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
-        var location = response.Headers.Location?.ToString();
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/linkedin/mobile");
+
+        //Assert
+        string? location = response.Headers.Location?.ToString();
+        location.ShouldNotBeNull();
         location.ShouldContain("state=");
     }
 
     [Fact]
     public async Task LinkedInMobileLogin_WithReturnUrl_HasClientIdInLocation()
     {
-        var response = await NoRedirectClient()
-            .GetAsync("/social/auth/linkedin/mobile?returnUrl=myapp://callback");
+        //Arrange
+        using HttpClient client = CreateNoRedirectClient();
 
-        var location = response.Headers.Location?.ToString();
+        //Act
+        HttpResponseMessage response = await client.GetAsync("/social/auth/linkedin/mobile?returnUrl=myapp://callback");
+
+        //Assert
+        string? location = response.Headers.Location?.ToString();
+        location.ShouldNotBeNull();
         location.ShouldContain("client_id");
     }
 }

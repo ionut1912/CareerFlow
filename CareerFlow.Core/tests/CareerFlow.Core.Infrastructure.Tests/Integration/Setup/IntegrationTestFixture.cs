@@ -1,8 +1,12 @@
-﻿using Testcontainers.PostgreSql;
+﻿using JetBrains.Annotations;
+
+using Testcontainers.PostgreSql;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 
+[UsedImplicitly]
 public class IntegrationTestFixture : IAsyncLifetime
 {
     // FIX: Pass the image directly into the constructor
@@ -14,18 +18,10 @@ public class IntegrationTestFixture : IAsyncLifetime
 
     public string ConnectionString => _postgres.GetConnectionString();
 
-    public async Task InitializeAsync()
-    {
-        await _postgres.StartAsync();
-    }
+    public async Task InitializeAsync() => await _postgres.StartAsync();
 
-    public async Task DisposeAsync()
-    {
-        await _postgres.DisposeAsync();
-    }
+    public async Task DisposeAsync() => await _postgres.DisposeAsync();
 }
 
 [CollectionDefinition("RepositoryCollection")]
-public class RepositoryCollection : ICollectionFixture<IntegrationTestFixture>
-{
-}
+public class RepositoryTests : ICollectionFixture<IntegrationTestFixture>;

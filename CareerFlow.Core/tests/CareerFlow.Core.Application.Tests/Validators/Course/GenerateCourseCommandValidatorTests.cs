@@ -1,6 +1,8 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.Validators.Course;
+
 using FluentValidation.TestHelper;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Course;
@@ -14,7 +16,7 @@ public class GenerateCourseCommandValidatorTests
     {
         var command = new GenerateCourseCommand(Guid.NewGuid(), "C# Advanced");
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<GenerateCourseCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -27,7 +29,7 @@ public class GenerateCourseCommandValidatorTests
     {
         var command = new GenerateCourseCommand(Guid.NewGuid(), topic!);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<GenerateCourseCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Topic)
             .WithErrorMessage("Topic este necesar");
@@ -40,7 +42,7 @@ public class GenerateCourseCommandValidatorTests
     {
         var command = new GenerateCourseCommand(Guid.NewGuid(), topic);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<GenerateCourseCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -50,7 +52,7 @@ public class GenerateCourseCommandValidatorTests
     {
         var command = new GenerateCourseCommand(Guid.NewGuid(), "");
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<GenerateCourseCommand>? result = _sut.TestValidate(command);
 
         result.Errors.Count.ShouldBe(1);
         result.Errors[0].PropertyName.ShouldBe(nameof(command.Topic));

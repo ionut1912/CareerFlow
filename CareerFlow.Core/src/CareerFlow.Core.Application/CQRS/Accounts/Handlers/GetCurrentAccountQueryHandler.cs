@@ -1,15 +1,20 @@
 ﻿using System.Text.Json;
+
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 
-public class GetCurrentAccountQueryHandler
+public partial class GetCurrentAccountQueryHandler
 {
+    private static readonly JsonSerializerOptions _jsonOptions = new() { WriteIndented = true };
+
     private readonly IAccountRepository _accountRepository;
     private readonly ILogger<GetCurrentAccountQueryHandler> _logger;
 
@@ -24,16 +29,24 @@ public class GetCurrentAccountQueryHandler
 
     public async Task<AccountDto> Handle(GetCurrentAccountQuery request, CancellationToken cancellationToken)
     {
-        var account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
+        Account? account = await _accountRepository.GetByIdAsync(request.AccountId, cancellationToken);
         if (account is null)
         {
-            _logger.LogError("Contul cu id-ul {AccountId} nu a fost gasit", request.AccountId);
+            LogAccountNotFound(request.AccountId);
             throw new AccountNotFoundException($"Contul cu id-ul '{request.AccountId}' nu a fost gasit");
         }
 
         var accountDto = account.ToAccountDto();
-        _logger.LogInformation("Contul curent: {AccountDto}",
-            JsonSerializer.Serialize(accountDto, new JsonSerializerOptions { WriteIndented = true }));
+
+        if (_logger.IsEnabled(LogLevel.Information))
+            LogCurrentAccount(JsonSerializer.Serialize(accountDto, _jsonOptions));
+
         return accountDto;
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Contul cu id-ul {AccountId} nu a fost gasit")]
+    private partial void LogAccountNotFound(Guid accountId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Contul curent: {AccountDto}")]
+    private partial void LogCurrentAccount(string accountDto);
 }

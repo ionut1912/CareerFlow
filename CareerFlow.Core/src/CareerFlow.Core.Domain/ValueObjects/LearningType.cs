@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
+
 using CareerFlow.Core.Domain.Exceptions;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.ValueObjects;

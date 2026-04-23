@@ -1,5 +1,7 @@
 ﻿using CareerFlow.Core.Infrastructure.Services;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -15,7 +17,7 @@ public class PasswordServiceTests
         const string password = "SuperSecret123!";
 
         // Act
-        var hash = _sut.HashPassword(password);
+        string hash = _sut.HashPassword(password);
 
         // Assert
         hash.ShouldNotBeNullOrWhiteSpace();
@@ -28,7 +30,7 @@ public class PasswordServiceTests
         const string password = "AnotherPassword";
 
         // Act
-        var hash = _sut.HashPassword(password);
+        string hash = _sut.HashPassword(password);
 
         // Assert
         hash.ShouldStartWith("$2");
@@ -41,8 +43,8 @@ public class PasswordServiceTests
         const string password = "SamePassword";
 
         // Act
-        var hash1 = _sut.HashPassword(password);
-        var hash2 = _sut.HashPassword(password);
+        string hash1 = _sut.HashPassword(password);
+        string hash2 = _sut.HashPassword(password);
 
         // Assert
         hash1.ShouldNotBe(hash2);
@@ -53,10 +55,10 @@ public class PasswordServiceTests
     {
         // Arrange
         const string password = "CorrectHorseBatteryStaple";
-        var hash = _sut.HashPassword(password);
+        string hash = _sut.HashPassword(password);
 
         // Act
-        var result = _sut.VerifyPassword(password, hash);
+        bool result = _sut.VerifyPassword(password, hash);
 
         // Assert
         result.ShouldBeTrue();
@@ -66,10 +68,10 @@ public class PasswordServiceTests
     public void VerifyPassword_WrongPassword_ReturnsFalse()
     {
         // Arrange
-        var hash = _sut.HashPassword("CorrectPassword");
+        string hash = _sut.HashPassword("CorrectPassword");
 
         // Act
-        var result = _sut.VerifyPassword("WrongPassword", hash);
+        bool result = _sut.VerifyPassword("WrongPassword", hash);
 
         // Assert
         result.ShouldBeFalse();
@@ -79,10 +81,10 @@ public class PasswordServiceTests
     public void VerifyPassword_EmptyPassword_ReturnsFalse()
     {
         // Arrange
-        var hash = _sut.HashPassword("realpassword");
+        string hash = _sut.HashPassword("realpassword");
 
         // Act
-        var result = _sut.VerifyPassword(string.Empty, hash);
+        bool result = _sut.VerifyPassword(string.Empty, hash);
 
         // Assert
         result.ShouldBeFalse();
@@ -95,8 +97,8 @@ public class PasswordServiceTests
         const string password = "RoundTripPa$$w0rd";
 
         // Act
-        var hash = _sut.HashPassword(password);
-        var verified = _sut.VerifyPassword(password, hash);
+        string hash = _sut.HashPassword(password);
+        bool verified = _sut.VerifyPassword(password, hash);
 
         // Assert
         verified.ShouldBeTrue();

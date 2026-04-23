@@ -1,9 +1,14 @@
-﻿namespace CareerFlow.Core.Infrastructure.Configurations;
+﻿using JetBrains.Annotations;
+
+namespace CareerFlow.Core.Infrastructure.Configurations;
 
 public class PostmarkSettings
 {
-    public static string SectionName => "PostmarkSettings";
-    public string ServerToken { get; set; } = string.Empty;
-    public string FromAddress { get; set; } = string.Empty;
-    public string FromName { get; set; } = string.Empty;
+    public const string SectionName = "PostmarkSettings";
+
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public required string ServerToken { get; init; }
+
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public required string FromAddress { get; init; }
 }

@@ -1,10 +1,15 @@
 ﻿using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Infrastructure.Configurations;
+
+using JetBrains.Annotations;
+
 using Microsoft.Extensions.Options;
+
 using PostmarkDotNet;
 
 namespace CareerFlow.Core.Infrastructure.Gateways;
 
+[UsedImplicitly]
 public class PostmarkMailClient : IMailClient
 {
     private readonly PostmarkClient _client;
@@ -16,20 +21,18 @@ public class PostmarkMailClient : IMailClient
         _client = new PostmarkClient(_settings.ServerToken);
     }
 
-    public async Task<bool> SendTemplatedEmailAsync(string to, int templateId, Dictionary<string, string> model,
-        CancellationToken cancellationToken)
+    public async Task<bool> SendTemplatedEmailAsync(string receiver, int templateId, Dictionary<string, string> model)
     {
         var message = new TemplatedPostmarkMessage
         {
-            To = to,
+            To = receiver,
             From = _settings.FromAddress,
             TemplateId = templateId,
             TemplateModel = model,
             TrackOpens = true
         };
 
-        var result = await _client.SendMessageAsync(message);
-
+        PostmarkResponse? result = await _client.SendMessageAsync(message);
         return result.Status == PostmarkStatus.Success;
     }
 }

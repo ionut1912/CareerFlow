@@ -1,5 +1,6 @@
 ﻿using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Infrastructure.Persistance.Configurations;
+using CareerFlow.Core.Infrastructure.Persistence.Configurations;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
@@ -15,6 +16,7 @@ public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options)
     public DbSet<CourseJob> CourseJobs => Set<CourseJob>();
     public DbSet<CourseUpload> CourseUploads => Set<CourseUpload>();
     public DbSet<QuizQuestion> QuizQuestions => Set<QuizQuestion>();
+    public DbSet<SystemDocument> SystemDocuments => Set<SystemDocument>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -29,5 +31,6 @@ public sealed class TestAppDbContext(DbContextOptions<TestAppDbContext> options)
         modelBuilder.ApplyConfiguration(new CourseJobConfiguration());
         modelBuilder.ApplyConfiguration(new CourseUploadConfiguration());
         modelBuilder.ApplyConfiguration(new QuizQuestionConfiguration());
+        modelBuilder.ApplyConfiguration(new SystemDocumentsConfiguration());
     }
 }

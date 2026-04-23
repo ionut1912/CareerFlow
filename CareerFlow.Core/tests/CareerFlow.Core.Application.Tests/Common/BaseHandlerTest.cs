@@ -1,18 +1,17 @@
 ﻿using Microsoft.Extensions.Logging;
+
 using Moq;
 
 namespace CareerFlow.Core.Application.Tests.Common;
 
 public abstract class BaseHandlerTest<THandler>
 {
-    protected readonly Mock<ILogger<THandler>> _loggerMock;
-    protected readonly Mock<IUnitOfWork> _unitOfWorkMock;
-
     protected BaseHandlerTest()
     {
-        _unitOfWorkMock = new Mock<IUnitOfWork>();
-        _loggerMock = new Mock<ILogger<THandler>>();
+        LoggerMock.Setup(x => x.IsEnabled(It.IsAny<LogLevel>())).Returns(true);
     }
 
+    protected Mock<ILogger<THandler>> LoggerMock { get; } = new();
+    protected Mock<IUnitOfWork> UnitOfWorkMock { get; } = new();
     protected CancellationToken Ct => CancellationToken.None;
 }

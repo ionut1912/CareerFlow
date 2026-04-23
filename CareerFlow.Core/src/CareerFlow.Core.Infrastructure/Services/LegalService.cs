@@ -1,13 +1,15 @@
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Models.Legal;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public class LegalService : ILegalService
+public partial class LegalService : ILegalService
 {
-    private static readonly TimeSpan CacheDuration = TimeSpan.FromHours(6);
+    private static readonly TimeSpan _cacheDuration = TimeSpan.FromHours(6);
     private readonly ICacheService _cache;
     private readonly ILogger<LegalService> _logger;
     private readonly IGithubPagesRequestsSender _requestsSender;
@@ -27,30 +29,39 @@ public class LegalService : ILegalService
 
     public async Task<LegalDocumentResponse?> GetDocumentAsync(string type, CancellationToken cancellationToken)
     {
-        var cacheKey = $"legal:{type.ToLowerInvariant()}";
+        string cacheKey = CacheKeyConstants.CacheKeyLegal(type);
 
-        var cached = await _cache.GetAsync<LegalDocumentResponse>(cacheKey, cancellationToken);
+        LegalDocumentResponse? cached = await _cache.GetAsync<LegalDocumentResponse>(cacheKey);
         if (cached is not null)
         {
-            _logger.LogDebug("Legal document '{Type}' served from cache", type);
+            LogDocumentServedFromCache(_logger, type);
             return cached;
         }
 
-        var response = await _requestsSender.GetContentAsync(type, cancellationToken);
+        HttpResponseMessage response = await _requestsSender.GetContentAsync(type, cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger.LogWarning("GitHub Pages returned {StatusCode} for document type '{Type}'",
-                (int)response.StatusCode, type);
+            LogGithubPagesError(_logger, (int)response.StatusCode, type);
             return null;
         }
 
-        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        string content = await response.Content.ReadAsStringAsync(cancellationToken);
         var document = new LegalDocumentResponse(content, "GitHub Pages", DateTime.UtcNow);
 
-        await _cache.SetAsync(cacheKey, document, CacheDuration, cancellationToken);
-        _logger.LogInformation("Legal document '{Type}' fetched from GitHub Pages and cached", type);
+        await _cache.SetAsync(cacheKey, document, _cacheDuration);
+        LogDocumentFetchedAndCached(_logger, type);
 
         return document;
     }
+
+    [LoggerMessage(Level = LogLevel.Debug, Message = "Legal document '{Type}' served from cache")]
+    private static partial void LogDocumentServedFromCache(ILogger logger, string type);
+
+    [LoggerMessage(Level = LogLevel.Warning, Message = "GitHub Pages returned {StatusCode} for document type '{Type}'")]
+    private static partial void LogGithubPagesError(ILogger logger, int statusCode, string type);
+
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Legal document '{Type}' fetched from GitHub Pages and cached")]
+    private static partial void LogDocumentFetchedAndCached(ILogger logger, string type);
 }

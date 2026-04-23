@@ -2,7 +2,9 @@ using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.Validators.Course;
 using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Models.Course.Dto;
+
 using FluentValidation.TestHelper;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Course;
@@ -39,7 +41,7 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "My Course", CreateMockFiles());
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -49,7 +51,7 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", CreateMockFiles(3));
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -60,7 +62,7 @@ public class UploadCourseDocumentCommandValidatorTests
         var command =
             new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", CreateMockFiles(CourseConstants.MaxFiles));
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -69,11 +71,11 @@ public class UploadCourseDocumentCommandValidatorTests
     public void Validate_OversizedFile_PassesValidation()
     {
         // Size is a service-layer concern — validator does not reject oversized files
-        var oversized = new byte[CourseConstants.MaxFileSizeBytes + 1];
+        byte[] oversized = new byte[CourseConstants.MaxFileSizeBytes + 1];
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title",
             [CreateMockFile(content: oversized)]);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -87,7 +89,7 @@ public class UploadCourseDocumentCommandValidatorTests
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title",
             [CreateMockFile(contentType: contentType)]);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldNotHaveAnyValidationErrors();
     }
@@ -104,7 +106,7 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), title!, CreateMockFiles());
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Title)
             .WithErrorMessage("Titlul este necesar");
@@ -119,7 +121,7 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", null!);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Files)
             .WithErrorMessage("Files sunt necesare");
@@ -130,7 +132,7 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title", []);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Files)
             .WithErrorMessage("Files sunt necesare");
@@ -142,7 +144,7 @@ public class UploadCourseDocumentCommandValidatorTests
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title",
             CreateMockFiles(CourseConstants.MaxFiles + 1));
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.ShouldHaveValidationErrorFor(x => x.Files)
             .WithErrorMessage($"Numărul maxim de fișiere este {CourseConstants.MaxFiles}");
@@ -158,7 +160,7 @@ public class UploadCourseDocumentCommandValidatorTests
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "Title",
             [CreateMockFile(content: [])]);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.IsValid.ShouldBeFalse();
         result.Errors.ShouldContain(e => e.ErrorMessage == "Fișierul nu poate fi gol");
@@ -173,7 +175,7 @@ public class UploadCourseDocumentCommandValidatorTests
     {
         var command = new UploadCourseDocumentCommand(Guid.NewGuid(), "", null!);
 
-        var result = _sut.TestValidate(command);
+        TestValidationResult<UploadCourseDocumentCommand>? result = _sut.TestValidate(command);
 
         result.Errors.Count.ShouldBe(2);
         result.ShouldHaveValidationErrorFor(x => x.Title);

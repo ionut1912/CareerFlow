@@ -1,31 +1,35 @@
 using CareerFlow.Core.Application.CQRS.UserProfiles.Handlers;
 using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
+using CareerFlow.Core.Application.Dtos;
+using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
 
-public class GetCurrentUserCoursesQueryHandlerTests
+public class GetCurrentUserCoursesQueryHandlerTests : BaseHandlerTest<GetCurrentUserCoursesQueryHandler>
 {
-    private readonly Mock<ILogger<GetCurrentUserCoursesQueryHandler>> _loggerMock = new();
     private readonly Mock<IUserProfileRepository> _repoMock = new();
     private readonly GetCurrentUserCoursesQueryHandler _sut;
 
     public GetCurrentUserCoursesQueryHandlerTests()
     {
-        _sut = new GetCurrentUserCoursesQueryHandler(_repoMock.Object, _loggerMock.Object);
+        _sut = new GetCurrentUserCoursesQueryHandler(_repoMock.Object, LoggerMock.Object);
     }
 
     [Fact]
     public void Constructor_NullRepository_ThrowsArgumentNullException()
     {
         Should.Throw<ArgumentNullException>(() =>
-            new GetCurrentUserCoursesQueryHandler(null!, _loggerMock.Object));
+            new GetCurrentUserCoursesQueryHandler(null!, LoggerMock.Object));
     }
 
     [Fact]
@@ -45,7 +49,7 @@ public class GetCurrentUserCoursesQueryHandlerTests
         _repoMock.Setup(r => r.GetUserCourses(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
-        var result = await _sut.Handle(query, CancellationToken.None);
+        UserProfileDto result = await _sut.Handle(query, Ct);
 
         result.ShouldNotBeNull();
         result.AccountId.ShouldBe(accountId);
@@ -61,7 +65,7 @@ public class GetCurrentUserCoursesQueryHandlerTests
             .ReturnsAsync((UserProfile?)null);
 
         await Should.ThrowAsync<AccountNotFoundException>(() =>
-            _sut.Handle(query, CancellationToken.None));
+            _sut.Handle(query, Ct));
     }
 
     [Fact]
@@ -74,9 +78,9 @@ public class GetCurrentUserCoursesQueryHandlerTests
             .ReturnsAsync((UserProfile?)null);
 
         await Should.ThrowAsync<AccountNotFoundException>(() =>
-            _sut.Handle(query, CancellationToken.None));
+            _sut.Handle(query, Ct));
 
-        _loggerMock.Verify(
+        LoggerMock.Verify(
             x => x.Log(
                 LogLevel.Error,
                 It.IsAny<EventId>(),
@@ -96,7 +100,7 @@ public class GetCurrentUserCoursesQueryHandlerTests
         _repoMock.Setup(r => r.GetUserCourses(accountId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(profile);
 
-        await _sut.Handle(query, CancellationToken.None);
+        await _sut.Handle(query, Ct);
 
         _repoMock.Verify(r => r.GetUserCourses(accountId, It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -107,12 +111,12 @@ public class GetCurrentUserCoursesQueryHandlerTests
         var accountId = Guid.NewGuid();
         var profile = UserProfile.Create(accountId, LearningType.Visual, [UserType.Student]);
         var query = new GetCurrentUserCoursesQuery(accountId);
-        using var cts = new CancellationTokenSource();
 
-        _repoMock.Setup(r => r.GetUserCourses(accountId, cts.Token)).ReturnsAsync(profile);
 
-        await _sut.Handle(query, cts.Token);
+        _repoMock.Setup(r => r.GetUserCourses(accountId, Ct)).ReturnsAsync(profile);
 
-        _repoMock.Verify(r => r.GetUserCourses(accountId, cts.Token), Times.Once);
+        await _sut.Handle(query, Ct);
+
+        _repoMock.Verify(r => r.GetUserCourses(accountId, Ct), Times.Once);
     }
 }

@@ -1,8 +1,12 @@
 ﻿using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.Models.Authentication;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -21,7 +25,7 @@ public class TokenServiceTests
             { "JwtSettings:Audience", "TestAudience" }
         };
 
-        var configuration = new ConfigurationBuilder()
+        IConfigurationRoot configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(inMemory)
             .Build();
 
@@ -42,8 +46,8 @@ public class TokenServiceTests
     [Fact]
     public void GenerateToken_ValidAccount_ReturnsNonNullAuthResult()
     {
-        var account = BuildTestAccount();
-        var result = _sut.GenerateToken(account);
+        Account account = BuildTestAccount();
+        AuthResult result = _sut.GenerateToken(account);
         result.ShouldNotBeNull();
         result.Token.ShouldNotBeNullOrWhiteSpace();
     }
@@ -51,19 +55,19 @@ public class TokenServiceTests
     [Fact]
     public void GenerateToken_CalledTwice_ProducesDistinctJti()
     {
-        var account = BuildTestAccount();
-        var result1 = _sut.GenerateToken(account);
-        var result2 = _sut.GenerateToken(account);
+        Account account = BuildTestAccount();
+        AuthResult result1 = _sut.GenerateToken(account);
+        AuthResult result2 = _sut.GenerateToken(account);
         result1.Jti.ShouldNotBe(result2.Jti);
     }
 
     [Fact]
     public void GenerateToken_ValidAccount_TokenContainsSubjectAndEmailClaims()
     {
-        var account = BuildTestAccount();
-        var result = _sut.GenerateToken(account);
+        Account account = BuildTestAccount();
+        AuthResult result = _sut.GenerateToken(account);
         var handler = new JsonWebTokenHandler();
-        var jwt = handler.ReadJsonWebToken(result.Token);
+        JsonWebToken? jwt = handler.ReadJsonWebToken(result.Token);
         jwt.Subject.ShouldBe(account.Id.ToString());
         jwt.GetClaim("email").Value.ShouldBe(account.Email);
     }
@@ -71,10 +75,10 @@ public class TokenServiceTests
     [Fact]
     public void GenerateToken_AccountWithAcceptedTerms_TermsAndPolicyClaimsAreTrue()
     {
-        var account = BuildTestAccount();
-        var result = _sut.GenerateToken(account);
+        Account account = BuildTestAccount();
+        AuthResult result = _sut.GenerateToken(account);
         var handler = new JsonWebTokenHandler();
-        var jwt = handler.ReadJsonWebToken(result.Token);
+        JsonWebToken? jwt = handler.ReadJsonWebToken(result.Token);
         jwt.GetClaim("terms_accepted").Value.ShouldBe("true");
         jwt.GetClaim("policy_accepted").Value.ShouldBe("true");
     }
@@ -82,20 +86,20 @@ public class TokenServiceTests
     [Fact]
     public void GenerateToken_NonFounderAccount_IsFounderClaimIsFalse()
     {
-        var account = BuildTestAccount();
-        var result = _sut.GenerateToken(account);
+        Account account = BuildTestAccount();
+        AuthResult result = _sut.GenerateToken(account);
         var handler = new JsonWebTokenHandler();
-        var jwt = handler.ReadJsonWebToken(result.Token);
+        JsonWebToken? jwt = handler.ReadJsonWebToken(result.Token);
         jwt.GetClaim("is_founder").Value.ShouldBe("false");
     }
 
     [Fact]
     public void GenerateToken_ValidAccount_JtiInTokenMatchesAuthResultJti()
     {
-        var account = BuildTestAccount();
-        var result = _sut.GenerateToken(account);
+        Account account = BuildTestAccount();
+        AuthResult result = _sut.GenerateToken(account);
         var handler = new JsonWebTokenHandler();
-        var jwt = handler.ReadJsonWebToken(result.Token);
+        JsonWebToken? jwt = handler.ReadJsonWebToken(result.Token);
         jwt.GetClaim(JwtRegisteredClaimNames.Jti).Value.ShouldBe(result.Jti);
     }
 
@@ -103,7 +107,7 @@ public class TokenServiceTests
     public void GenerateRefreshToken_ValidInputs_ReturnsRefreshTokenBoundToUser()
     {
         var userId = Guid.NewGuid();
-        var refreshToken = _sut.GenerateRefreshToken(userId, _validJwtToken);
+        RefreshToken refreshToken = _sut.GenerateRefreshToken(userId, _validJwtToken);
         refreshToken.ShouldNotBeNull();
         refreshToken.UserId.ShouldBe(userId);
     }
@@ -112,7 +116,7 @@ public class TokenServiceTests
     public void GenerateRefreshToken_ValidInputs_TokenStringIsNonEmpty()
     {
         var userId = Guid.NewGuid();
-        var refreshToken = _sut.GenerateRefreshToken(userId, _validJwtToken);
+        RefreshToken refreshToken = _sut.GenerateRefreshToken(userId, _validJwtToken);
         refreshToken.TokenHash.ShouldNotBeNullOrWhiteSpace();
     }
 
@@ -121,8 +125,8 @@ public class TokenServiceTests
     {
         var userId = Guid.NewGuid();
         // Each call generates a new random token internally, so hashes will differ
-        var rt1 = _sut.GenerateRefreshToken(userId, _validJwtToken);
-        var rt2 = _sut.GenerateRefreshToken(userId, _validJwtToken);
+        RefreshToken rt1 = _sut.GenerateRefreshToken(userId, _validJwtToken);
+        RefreshToken rt2 = _sut.GenerateRefreshToken(userId, _validJwtToken);
         rt1.TokenHash.ShouldNotBe(rt2.TokenHash);
     }
 
@@ -130,18 +134,18 @@ public class TokenServiceTests
     public void GenerateRefreshToken_ValidInputs_ExpiresApproximatelySixMonthsFromNow()
     {
         var userId = Guid.NewGuid();
-        var before = DateTime.UtcNow.AddMonths(6).AddSeconds(-5);
-        var after = DateTime.UtcNow.AddMonths(6).AddSeconds(5);
-        var refreshToken = _sut.GenerateRefreshToken(userId, _validJwtToken);
+        DateTime before = DateTime.UtcNow.AddMonths(6).AddSeconds(-5);
+        DateTime after = DateTime.UtcNow.AddMonths(6).AddSeconds(5);
+        RefreshToken refreshToken = _sut.GenerateRefreshToken(userId, _validJwtToken);
         refreshToken.ExpiryDate.ShouldBeInRange(before, after);
     }
 
     [Fact]
     public void GenerateRefreshToken_JwtId_MatchesJtiFromToken()
     {
-        var account = BuildTestAccount();
-        var authResult = _sut.GenerateToken(account);
-        var refreshToken = _sut.GenerateRefreshToken(account.Id, authResult.Token);
+        Account account = BuildTestAccount();
+        AuthResult authResult = _sut.GenerateToken(account);
+        RefreshToken refreshToken = _sut.GenerateRefreshToken(account.Id, authResult.Token);
 
         // JwtId stored on the refresh token must match the JTI embedded in the JWT
         refreshToken.JwtId.ShouldBe(authResult.Jti);

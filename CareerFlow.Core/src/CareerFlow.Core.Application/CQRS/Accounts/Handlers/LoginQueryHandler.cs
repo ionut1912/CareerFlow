@@ -3,12 +3,15 @@ using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Domain.Models.Authentication;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
 
-public class LoginQueryHandler
+public partial class LoginQueryHandler
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ITokenService _jwtTokenService;
@@ -40,30 +43,40 @@ public class LoginQueryHandler
 
     public async Task<AccountDto> Handle(LoginQuery request, CancellationToken cancellationToken)
     {
-        var account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
+        Account? account = await _accountRepository.GetAccountByEmailAsync(request.Email, cancellationToken);
 
         if (account is null)
         {
-            _logger.LogError("Procesul de logare a esuat,deoarece contul cu Email :{Email} nu a fost gasit",
-                request.Email);
+            LogAccountNotFound(request.Email);
             throw new AccountNotFoundException($"Contul cu email {request.Email} nu a fost gasit");
         }
 
-        var isPasswordValid = _passwordService.VerifyPassword(request.Password, account.Password);
+        bool isPasswordValid = _passwordService.VerifyPassword(request.Password, account.Password);
 
         if (!isPasswordValid)
         {
-            _logger.LogError("Nu ne putem loga,deoarece parola introdusa si cea existenta nu corespund");
+            LogPasswordNotMatch();
             throw new PasswordNotMatchException("Parola existenta si cea introdusa nu corespund");
         }
 
-        var jwtToken = _jwtTokenService.GenerateToken(account);
-        var refreshToken = _jwtTokenService.GenerateRefreshToken(account.Id, jwtToken.Token);
+        AuthResult jwtToken = _jwtTokenService.GenerateToken(account);
+        RefreshToken refreshToken = _jwtTokenService.GenerateRefreshToken(account.Id, jwtToken.Token);
         await _refreshTokenRepository.AddAsync(refreshToken, cancellationToken);
         await _unitOfWork.SaveChangesAsync(cancellationToken);
         var accountDto = account.ToAccountDto(jwtToken.Token, refreshToken.TokenHash);
 
-        _logger.LogInformation("Procesul de logare realizat cu succes");
+        LogLoginSuccess();
         return accountDto;
     }
+
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Procesul de logare a esuat,deoarece contul cu Email :{Email} nu a fost gasit")]
+    private partial void LogAccountNotFound(string email);
+
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Nu ne putem loga,deoarece parola introdusa si cea existenta nu corespund")]
+    private partial void LogPasswordNotMatch();
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Procesul de logare realizat cu succes")]
+    private partial void LogLoginSuccess();
 }

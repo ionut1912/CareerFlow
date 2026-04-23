@@ -1,23 +1,29 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net10.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-    <ItemGroup>
-        <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1"/>
-        <PackageReference Include="Shared.Application" Version="1.0.7"/>
-        <PackageReference Include="WolverineFx" Version="5.30.0"/>
-    </ItemGroup>
-    <ItemGroup>
-        <ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj"/>
-        <ProjectReference Include="..\CareerFlow.Core.Rabbit.Events\CareerFlow.Core.Rabbit.Events.csproj"/>
-    </ItemGroup>
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1"/>
+    <PackageReference Include="Shared.Application" Version="1.0.7"/>
+    <PackageReference Include="WolverineFx" Version="5.30.0"/>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CareerFlow.Core.Domain\CareerFlow.Core.Domain.csproj"/>
+    <ProjectReference Include="..\CareerFlow.Core.Rabbit.Events\CareerFlow.Core.Rabbit.Events.csproj"/>
+  </ItemGroup>
 
-    <ItemGroup>
-        <FrameworkReference Include="Microsoft.AspNetCore.App"/>
-    </ItemGroup>
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="JetBrains.Annotations">
+      <HintPath>..\..\..\..\..\..\.nuget\packages\jetbrains.annotations\2025.2.4\lib\netstandard2.0\JetBrains.Annotations.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>
 

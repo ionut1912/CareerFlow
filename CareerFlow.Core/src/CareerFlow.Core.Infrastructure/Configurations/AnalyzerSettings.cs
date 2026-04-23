@@ -1,8 +1,13 @@
+using JetBrains.Annotations;
+
 namespace CareerFlow.Core.Infrastructure.Configurations;
 
 public sealed class AnalyzerSettings
 {
     public const string SectionName = "Analyzer";
-    public string BaseUrl { get; init; } = string.Empty;
-    public int TimeoutSec { get; init; } = 120;
+
+    [UsedImplicitly(ImplicitUseKindFlags.Assign)]
+    public required string BaseUrl { get; init; }
+
+    public required int TimeoutSec { get; init; } = 60;
 }
