@@ -30,10 +30,12 @@ public class DocsAnalyzerService : IDocumentAnalyzerService
         return await PostAsync<DocumentProcessingResponse>("/document-courses/upload-and-analyze", content, ct);
     }
 
-    public async Task<ChapterDetailResponse> ExpandAnalyzedDocument(DocumentChapterRequest documentChapterRequest,
+    public async Task<ChapterDetailResponse> ExpandAnalyzedDocument(
+        DocumentChapterRequest documentChapterRequest,
         CancellationToken ct)
     {
-        HttpResponseMessage response = await _http.PostAsJsonAsync("/document-courses/chapters/expand", documentChapterRequest, ct);
+        HttpResponseMessage response = await _http.PostAsJsonAsync(
+            "/document-courses/chapters/expand", documentChapterRequest, _snakeCaseOptions, ct);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<ChapterDetailResponse>(_snakeCaseOptions, ct)
                ?? throw new InvalidOperationException("Null response from endpoint");
@@ -43,7 +45,12 @@ public class DocsAnalyzerService : IDocumentAnalyzerService
     {
         var content = new MultipartFormDataContent();
         var streamContent = new StreamContent(file.Content);
-        streamContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType);
+
+        string mediaType = string.IsNullOrWhiteSpace(file.ContentType)
+            ? "application/octet-stream"
+            : file.ContentType;
+
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue(mediaType);
         content.Add(streamContent, "file", file.FileName);
         return content;
     }

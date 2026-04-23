@@ -1,6 +1,8 @@
 using System.Text.Json;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
+using CareerFlow.Core.Infrastructure.Tests.Unit.Setup;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -17,7 +19,7 @@ public class RedisCacheServiceTests
 
     private readonly Mock<IConnectionMultiplexer> _connectionMock = new();
     private readonly Mock<IDatabase> _dbMock = new();
-    private readonly Mock<ILogger<RedisCacheService>> _loggerMock = new();
+    private readonly FakeLogger<RedisCacheService> _fakeLogger = new();
     private readonly Mock<IServer> _serverMock = new();
 
     private readonly CacheSettings _settings = new()
@@ -47,14 +49,50 @@ public class RedisCacheServiceTests
         _sut = new RedisCacheService(
             _connectionMock.Object,
             Options.Create(_settings),
-            _loggerMock.Object);
+            _fakeLogger);
     }
 
     private static RedisKey PrefixedKey(string raw) => $"{InstanceName}{raw}";
 
-    // ---------------------------------------------------------------------------
-    // GetAsync
-    // ---------------------------------------------------------------------------
+    /// <summary>
+    /// Sets up StringSetAsync with the StackExchange.Redis 2.12.x signature
+    /// (Expiration instead of TimeSpan?, ValueCondition instead of When) to return true.
+    /// </summary>
+    private void SetupStringSetAsyncReturnsTrue()
+    {
+        _dbMock
+            .Setup(x => x.StringSetAsync(
+                It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<Expiration>(),
+                It.IsAny<ValueCondition>(), It.IsAny<CommandFlags>()))
+            .ReturnsAsync(true);
+    }
+
+    /// <summary>
+    /// Sets up StringSetAsync with the StackExchange.Redis 2.12.x signature to throw.
+    /// </summary>
+    private void SetupStringSetAsyncThrows(Exception ex)
+    {
+        _dbMock
+            .Setup(x => x.StringSetAsync(
+                It.IsAny<RedisKey>(), It.IsAny<RedisValue>(), It.IsAny<Expiration>(),
+                It.IsAny<ValueCondition>(), It.IsAny<CommandFlags>()))
+            .ThrowsAsync(ex);
+    }
+
+    /// <summary>
+    /// Returns the single StringSetAsync invocation from the mock's log.
+    /// </summary>
+    private IInvocation GetSingleStringSetAsyncInvocation()
+    {
+        var calls = _dbMock.Invocations
+            .Where(i => i.Method.Name == nameof(IDatabase.StringSetAsync))
+            .ToList();
+
+        calls.Count.ShouldBe(1, "Expected exactly one StringSetAsync call");
+        return calls[0];
+    }
+
+    // ── GetAsync ─────────────────────────────────────────────────────────────
 
     [Fact]
     public async Task GetAsync_WhenKeyExists_ShouldReturnDeserializedValue()
@@ -127,29 +165,158 @@ public class RedisCacheServiceTests
     public async Task GetAsync_WhenRedisThrows_ShouldLogError()
     {
         // Arrange
-        var exception = new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down");
+        const string key = "error-key";
 
         _dbMock
             .Setup(x => x.StringGetAsync(It.IsAny<RedisKey>(), It.IsAny<CommandFlags>()))
-            .ThrowsAsync(exception);
+            .ThrowsAsync(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
 
         // Act
-        await Should.ThrowAsync<RedisConnectionException>(() => _sut.GetAsync<SamplePayload>("any-key"));
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.GetAsync<SamplePayload>(key));
 
         // Assert
-        _loggerMock.Verify(
-            x => x.Log(
-                LogLevel.Error,
-                It.IsAny<EventId>(),
-                It.Is<It.IsAnyType>((v, _) => v.ToString()!.Contains("Redis GET failed")),
-                exception,
-                It.IsAny<Func<It.IsAnyType, Exception?, string>>()),
-            Times.Once);
+        FakeLogRecord record = _fakeLogger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Error);
+        record.Message.ShouldContain(key);
     }
 
-    // ---------------------------------------------------------------------------
-    // RemoveByPatternAsync
-    // ---------------------------------------------------------------------------
+    // ── SetAsync ─────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task SetAsync_ShouldStoreSerializedValueInRedis()
+    {
+        // Arrange
+        const string key = "user:1";
+        var payload = new SamplePayload("Bob", 25);
+
+        SetupStringSetAsyncReturnsTrue();
+
+        // Act
+        await _sut.SetAsync(key, payload);
+
+        // Assert
+        IInvocation call = GetSingleStringSetAsyncInvocation();
+
+        call.Arguments[0].ToString().ShouldBe(PrefixedKey(key).ToString());
+
+        string actualJson = call.Arguments[1].ToString()!;
+        SamplePayload? deserialized = JsonSerializer.Deserialize<SamplePayload>(actualJson);
+        deserialized.ShouldNotBeNull();
+        deserialized.Name.ShouldBe("Bob");
+        deserialized.Age.ShouldBe(25);
+    }
+
+    [Fact]
+    public async Task SetAsync_ShouldUseKeyWithInstanceNamePrefix()
+    {
+        // Arrange
+        const string rawKey = "token:abc";
+
+        SetupStringSetAsyncReturnsTrue();
+
+        // Act
+        await _sut.SetAsync(rawKey, "value");
+
+        // Assert
+        IInvocation call = GetSingleStringSetAsyncInvocation();
+        call.Arguments[0].ToString().ShouldBe(PrefixedKey(rawKey).ToString());
+    }
+
+    [Fact]
+    public async Task SetAsync_WhenExpiryProvided_ShouldUseProvidedExpiry()
+    {
+        // Arrange
+        var customExpiry = TimeSpan.FromMinutes(5);
+
+        SetupStringSetAsyncReturnsTrue();
+
+        // Act
+        await _sut.SetAsync("key", "value", customExpiry);
+
+        // Assert
+        IInvocation call = GetSingleStringSetAsyncInvocation();
+
+        // StackExchange.Redis 2.12.x uses Expiration (implicit from TimeSpan)
+        var actualExpiration = (Expiration)call.Arguments[2];
+        Expiration expectedExpiration = customExpiry;
+        actualExpiration.ShouldBe(expectedExpiration);
+    }
+
+    [Fact]
+    public async Task SetAsync_WhenExpiryNotProvided_ShouldUseDefaultFromSettings()
+    {
+        // Arrange
+        SetupStringSetAsyncReturnsTrue();
+
+        // Act
+        await _sut.SetAsync("key", "value");
+
+        // Assert
+        IInvocation call = GetSingleStringSetAsyncInvocation();
+
+        // StackExchange.Redis 2.12.x uses Expiration (implicit from TimeSpan)
+        var actualExpiration = (Expiration)call.Arguments[2];
+        Expiration expectedExpiration = TimeSpan.FromMinutes(DefaultExpiryMinutes);
+        actualExpiration.ShouldBe(expectedExpiration);
+    }
+
+    [Fact]
+    public async Task SetAsync_WhenRedisThrows_ShouldRethrow()
+    {
+        // Arrange
+        SetupStringSetAsyncThrows(
+            new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
+
+        // Act & Assert
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.SetAsync("key", "value"));
+    }
+
+    [Fact]
+    public async Task SetAsync_WhenRedisThrows_ShouldLogError()
+    {
+        // Arrange
+        const string key = "my-key";
+
+        SetupStringSetAsyncThrows(
+            new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
+
+        // Act
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.SetAsync(key, "value"));
+
+        // Assert
+        FakeLogRecord record = _fakeLogger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Error);
+        record.Message.ShouldContain(key);
+    }
+
+    // ── RemoveByPatternAsync ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task RemoveByPatternAsync_ShouldPassPrefixedPatternWithWildcardToServer()
+    {
+        // Arrange
+        const string pattern = "course:analyze:";
+        const string expectedFullPattern = $"{InstanceName}{pattern}*";
+
+        _serverMock
+            .Setup(x => x.KeysAsync(
+                It.IsAny<int>(), It.IsAny<RedisValue>(),
+                It.IsAny<int>(), It.IsAny<long>(),
+                It.IsAny<int>(), It.IsAny<CommandFlags>()))
+            .Returns(AsyncEnumerable.Empty<RedisKey>());
+
+        // Act
+        await _sut.RemoveByPatternAsync(pattern);
+
+        // Assert
+        _serverMock.Verify(
+            x => x.KeysAsync(
+                It.IsAny<int>(),
+                It.Is<RedisValue>(v => v.ToString() == expectedFullPattern),
+                It.IsAny<int>(), It.IsAny<long>(),
+                It.IsAny<int>(), It.IsAny<CommandFlags>()),
+            Times.Once);
+    }
 
     [Fact]
     public async Task RemoveByPatternAsync_ShouldDeleteAllMatchingKeys()
@@ -162,10 +329,8 @@ public class RedisCacheServiceTests
             .Setup(x => x.KeysAsync(
                 It.IsAny<int>(),
                 It.Is<RedisValue>(v => v.ToString().Contains(pattern)),
-                It.IsAny<int>(),
-                It.IsAny<long>(),
-                It.IsAny<int>(),
-                It.IsAny<CommandFlags>()))
+                It.IsAny<int>(), It.IsAny<long>(),
+                It.IsAny<int>(), It.IsAny<CommandFlags>()))
             .Returns(matchingKeys.ToAsyncEnumerable());
 
         _dbMock
@@ -187,12 +352,9 @@ public class RedisCacheServiceTests
         // Arrange
         _serverMock
             .Setup(x => x.KeysAsync(
-                It.IsAny<int>(),
-                It.IsAny<RedisValue>(),
-                It.IsAny<int>(),
-                It.IsAny<long>(),
-                It.IsAny<int>(),
-                It.IsAny<CommandFlags>()))
+                It.IsAny<int>(), It.IsAny<RedisValue>(),
+                It.IsAny<int>(), It.IsAny<long>(),
+                It.IsAny<int>(), It.IsAny<CommandFlags>()))
             .Returns(AsyncEnumerable.Empty<RedisKey>());
 
         // Act
@@ -216,9 +378,44 @@ public class RedisCacheServiceTests
         await Should.ThrowAsync<InvalidOperationException>(() => _sut.RemoveByPatternAsync("course:"));
     }
 
-    // ---------------------------------------------------------------------------
-    // Helper
-    // ---------------------------------------------------------------------------
+    [Fact]
+    public async Task RemoveByPatternAsync_WhenRedisThrows_ShouldRethrow()
+    {
+        // Arrange
+        _serverMock
+            .Setup(x => x.KeysAsync(
+                It.IsAny<int>(), It.IsAny<RedisValue>(),
+                It.IsAny<int>(), It.IsAny<long>(),
+                It.IsAny<int>(), It.IsAny<CommandFlags>()))
+            .Throws(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
+
+        // Act & Assert
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.RemoveByPatternAsync("any:"));
+    }
+
+    [Fact]
+    public async Task RemoveByPatternAsync_WhenRedisThrows_ShouldLogError()
+    {
+        // Arrange
+        const string pattern = "fail:";
+
+        _serverMock
+            .Setup(x => x.KeysAsync(
+                It.IsAny<int>(), It.IsAny<RedisValue>(),
+                It.IsAny<int>(), It.IsAny<long>(),
+                It.IsAny<int>(), It.IsAny<CommandFlags>()))
+            .Throws(new RedisConnectionException(ConnectionFailureType.UnableToConnect, "down"));
+
+        // Act
+        await Should.ThrowAsync<RedisConnectionException>(() => _sut.RemoveByPatternAsync(pattern));
+
+        // Assert
+        FakeLogRecord record = _fakeLogger.Records.ShouldHaveSingleItem();
+        record.Level.ShouldBe(LogLevel.Error);
+        record.Message.ShouldContain(pattern);
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────────
 
     private sealed record SamplePayload(string Name, int Age);
 }

@@ -8,6 +8,9 @@ public class Course : Entity
     private readonly List<Chapter> _chapters = [];
 
     [UsedImplicitly]
+    private readonly List<UserProfile> _userProfiles = [];
+
+    [UsedImplicitly]
     private Course()
     {
     }
@@ -25,7 +28,7 @@ public class Course : Entity
 
     public string Topic { get; private set; } = string.Empty;
     public IReadOnlyCollection<Chapter> Chapters => _chapters.AsReadOnly();
-    public IReadOnlyCollection<UserProfile> UserProfiles { get; } = [];
+    public IReadOnlyCollection<UserProfile> UserProfiles => _userProfiles.AsReadOnly();
 
     public static Course Create(string topic, List<Chapter> chapters) => new(topic, chapters);
 }

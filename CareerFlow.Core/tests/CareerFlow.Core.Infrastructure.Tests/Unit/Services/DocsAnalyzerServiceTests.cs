@@ -34,80 +34,33 @@ public class DocsAnalyzerServiceTests : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private static StringContent JsonContent<T>(T value)
-    {
-        return new StringContent(JsonSerializer.Serialize(value, SnakeCaseOptions),
-            Encoding.UTF8,
-            "application/json");
-    }
-
-    private static UploadFileDto BuildUploadFileDto()
-    {
-        return new UploadFileDto(
-            "test.pdf",
-            "application/pdf",
-            new MemoryStream("file content"u8.ToArray()));
-    }
-
-    private static DocumentProcessingResponse BuildDocumentProcessingResponse()
-    {
-        return new DocumentProcessingResponse(
-            "doc-123",
-            new DocumentAnalysisDto(
-                "C# Guide",
-                "A comprehensive guide",
-                ["OOP", "Async", "LINQ"]),
-            new SkeletonDto(
-                "C# Programming",
-                [
-                    new ChapterDto("Intro", "Overview", 1),
-                    new ChapterDto("OOP", "Classes", 2)
-                ]),
-            5);
-    }
-
-    private static ChapterDetailResponse BuildChapterDetailResponse()
-    {
-        return new ChapterDetailResponse(
-            [
-                new DetailedSubchapterDto(
-                    "Classes",
-                    "How to define classes",
-                    "<p>A class is a blueprint</p>",
-                    [
-                        new QuestionDto(
-                            "What is a class?",
-                            [
-                                new QuestionOptionDto("A blueprint", true),
-                                new QuestionOptionDto("A variable", false)
-                            ])
-                    ])
-            ],
-            [
-                new QuestionDto(
-                    "What is OOP?",
-                    [
-                        new QuestionOptionDto("A paradigm", true),
-                        new QuestionOptionDto("A language", false)
-                    ])
-            ]);
-    }
+    // ── Constructor ──────────────────────────────────────────────────────────
 
     [Fact]
     public void Constructor_ShouldSetTimeoutToTenMinutes()
     {
+        // Arrange
         var client = new HttpClient(_handler) { BaseAddress = new Uri("https://api.test.com") };
+
+        // Act
         _ = new DocsAnalyzerService(client);
+
+        // Assert
         client.Timeout.ShouldBe(TimeSpan.FromMinutes(10));
     }
+
+    // ── AnalyzeDocumentAsync — request shape ─────────────────────────────────
 
     [Fact]
     public async Task AnalyzeDocumentAsync_ShouldPostToCorrectEndpoint()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
+        // Act
         await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         _handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
         _handler.LastRequest.RequestUri!.PathAndQuery.ShouldBe("/document-courses/upload-and-analyze");
     }
@@ -115,32 +68,41 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task AnalyzeDocumentAsync_ShouldSendMultipartFormDataContent()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
+        // Act
         await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         _handler.MultipartParts.ShouldNotBeEmpty();
     }
 
     [Fact]
     public async Task AnalyzeDocumentAsync_ShouldIncludeFileInMultipartWithCorrectName()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
+        // Act
         await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         CapturedPart? filePart = _handler.MultipartParts.FirstOrDefault(p => p.Name == "file");
-        filePart?.Name.ShouldNotBeNull();
-        filePart?.FileName.ShouldBe("test.pdf");
+        filePart.ShouldNotBeNull();
+        filePart.FileName.ShouldBe("test.pdf");
     }
 
     [Fact]
     public async Task AnalyzeDocumentAsync_ShouldSetCorrectContentTypeOnFilePart()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
+        // Act
         await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         CapturedPart filePart = _handler.MultipartParts.First(p => p.Name == "file");
         filePart.ContentType.ShouldBe("application/pdf");
     }
@@ -148,36 +110,60 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task AnalyzeDocumentAsync_WhenContentTypeIsNull_ShouldFallBackToOctetStream()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
+        var dto = new UploadFileDto("test.bin", null!, new MemoryStream("data"u8.ToArray()));
 
-        var dto = new UploadFileDto(
-            "test.bin",
-            null!,
-            new MemoryStream("data"u8.ToArray()));
-
+        // Act
         await _sut.AnalyzeDocumentAsync(dto, CancellationToken.None);
 
+        // Assert
         CapturedPart filePart = _handler.MultipartParts.First(p => p.Name == "file");
         filePart.ContentType.ShouldBe("application/octet-stream");
     }
 
     [Fact]
+    public async Task AnalyzeDocumentAsync_WhenContentTypeIsWhiteSpace_ShouldFallBackToOctetStream()
+    {
+        // Arrange
+        _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
+        var dto = new UploadFileDto("test.bin", "   ", new MemoryStream("data"u8.ToArray()));
+
+        // Act
+        await _sut.AnalyzeDocumentAsync(dto, CancellationToken.None);
+
+        // Assert
+        CapturedPart filePart = _handler.MultipartParts.First(p => p.Name == "file");
+        filePart.ContentType.ShouldBe("application/octet-stream");
+    }
+
+    // ── AnalyzeDocumentAsync — response deserialization ──────────────────────
+
+    [Fact]
     public async Task AnalyzeDocumentAsync_WhenSuccessResponse_ShouldReturnDeserializedDocumentId()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
-        DocumentProcessingResponse result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
+        // Act
+        DocumentProcessingResponse result =
+            await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         result.DocumentId.ShouldBe("doc-123");
     }
 
     [Fact]
     public async Task AnalyzeDocumentAsync_WhenSuccessResponse_ShouldReturnDeserializedAnalysis()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
-        DocumentProcessingResponse result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
+        // Act
+        DocumentProcessingResponse result =
+            await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         result.Analysis.Title.ShouldBe("C# Guide");
         result.Analysis.Summary.ShouldBe("A comprehensive guide");
         result.Analysis.KeyTopics.ShouldBe(["OOP", "Async", "LINQ"]);
@@ -186,10 +172,14 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task AnalyzeDocumentAsync_WhenSuccessResponse_ShouldReturnDeserializedSkeleton()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildDocumentProcessingResponse()));
 
-        DocumentProcessingResponse result = await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
+        // Act
+        DocumentProcessingResponse result =
+            await _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None);
 
+        // Assert
         result.Skeleton.Topic.ShouldBe("C# Programming");
         result.Skeleton.Chapters.Count.ShouldBe(2);
         result.Skeleton.Chapters[0].Title.ShouldBe("Intro");
@@ -197,11 +187,26 @@ public class DocsAnalyzerServiceTests : IDisposable
         result.EstimatedDays.ShouldBe(5);
     }
 
+    // ── AnalyzeDocumentAsync — error handling ────────────────────────────────
+
     [Fact]
     public async Task AnalyzeDocumentAsync_WhenNonSuccessResponse_ShouldThrowHttpRequestException()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.InternalServerError);
 
+        // Act & Assert
+        await Should.ThrowAsync<HttpRequestException>(() =>
+            _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task AnalyzeDocumentAsync_WhenBadRequest_ShouldThrowHttpRequestException()
+    {
+        // Arrange
+        _handler.RespondWith(HttpStatusCode.BadRequest);
+
+        // Act & Assert
         await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None));
     }
@@ -209,8 +214,10 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task AnalyzeDocumentAsync_WhenUnauthorized_ShouldThrowHttpRequestException()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.Unauthorized);
 
+        // Act & Assert
         await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None));
     }
@@ -218,51 +225,85 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task AnalyzeDocumentAsync_WhenNullJsonResponse_ShouldThrowInvalidOperationException()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent<DocumentProcessingResponse?>(null));
 
+        // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
             _sut.AnalyzeDocumentAsync(BuildUploadFileDto(), CancellationToken.None));
     }
 
+    // ── ExpandAnalyzedDocument — request shape ───────────────────────────────
+
     [Fact]
     public async Task ExpandAnalyzedDocument_ShouldPostToCorrectEndpoint()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
+        // Act
         await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
+        // Assert
         _handler.LastRequest!.Method.ShouldBe(HttpMethod.Post);
         _handler.LastRequest.RequestUri!.PathAndQuery.ShouldBe("/document-courses/chapters/expand");
     }
 
     [Fact]
-    public async Task ExpandAnalyzedDocument_ShouldSerializeRequestWithSnakeCase()
+    public async Task ExpandAnalyzedDocument_ShouldSerializeRequestBodyWithSnakeCaseKeys()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
+        // Act
         await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
-        _handler.LastRequestBody?.ShouldContain("\"chapter_title\"");
-        _handler.LastRequestBody?.ShouldContain("\"core_concept\"");
-        _handler.LastRequestBody?.ShouldContain("\"document_id\"");
-        _handler.LastRequestBody?.ShouldNotContain("ChapterTitle");
-        _handler.LastRequestBody?.ShouldNotContain("CoreConcept");
-        _handler.LastRequestBody?.ShouldNotContain("DocumentId");
+        // Assert — keys must be snake_case; PascalCase property names must not appear
+        _handler.LastRequestBody.ShouldNotBeNull();
+        _handler.LastRequestBody.ShouldContain("\"chapter_title\"");
+        _handler.LastRequestBody.ShouldContain("\"core_concept\"");
+        _handler.LastRequestBody.ShouldContain("\"document_id\"");
+        _handler.LastRequestBody.ShouldNotContain("ChapterTitle");
+        _handler.LastRequestBody.ShouldNotContain("CoreConcept");
+        _handler.LastRequestBody.ShouldNotContain("DocumentId");
     }
+
+    [Fact]
+    public async Task ExpandAnalyzedDocument_ShouldSerializeRequestBodyWithCorrectValues()
+    {
+        // Arrange
+        _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
+
+        // Act
+        await _sut.ExpandAnalyzedDocument(
+            new DocumentChapterRequest("OOP", "Classes and Objects", "doc-456"),
+            CancellationToken.None);
+
+        // Assert
+        _handler.LastRequestBody.ShouldNotBeNull();
+        _handler.LastRequestBody.ShouldContain("\"OOP\"");
+        _handler.LastRequestBody.ShouldContain("\"Classes and Objects\"");
+        _handler.LastRequestBody.ShouldContain("\"doc-456\"");
+    }
+
+    // ── ExpandAnalyzedDocument — response deserialization ────────────────────
 
     [Fact]
     public async Task ExpandAnalyzedDocument_WhenSuccessResponse_ShouldReturnDeserializedSubchapters()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
+        // Act
         ChapterDetailResponse result = await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
+        // Assert
         result.Subchapters.Count.ShouldBe(1);
         result.Subchapters[0].Title.ShouldBe("Classes");
         result.Subchapters[0].ContentSummary.ShouldBe("How to define classes");
@@ -272,12 +313,15 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task ExpandAnalyzedDocument_WhenSuccessResponse_ShouldReturnDeserializedSubchapterQuiz()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
+        // Act
         ChapterDetailResponse result = await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
+        // Assert
         List<QuestionDto> quiz = result.Subchapters[0].Quiz;
         quiz.Count.ShouldBe(1);
         quiz[0].Question.ShouldBe("What is a class?");
@@ -287,22 +331,42 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task ExpandAnalyzedDocument_WhenSuccessResponse_ShouldReturnDeserializedRecapQuiz()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(BuildChapterDetailResponse()));
 
+        // Act
         ChapterDetailResponse result = await _sut.ExpandAnalyzedDocument(
             new DocumentChapterRequest("OOP", "Classes", "doc-123"),
             CancellationToken.None);
 
+        // Assert
         result.RecapQuiz.Count.ShouldBe(1);
         result.RecapQuiz[0].Question.ShouldBe("What is OOP?");
         result.RecapQuiz[0].Options.Single(o => o.IsCorrect).Label.ShouldBe("A paradigm");
     }
 
+    // ── ExpandAnalyzedDocument — error handling ──────────────────────────────
+
     [Fact]
     public async Task ExpandAnalyzedDocument_WhenNonSuccessResponse_ShouldThrowHttpRequestException()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.InternalServerError);
 
+        // Act & Assert
+        await Should.ThrowAsync<HttpRequestException>(() =>
+            _sut.ExpandAnalyzedDocument(
+                new DocumentChapterRequest("OOP", "Classes", "doc-123"),
+                CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ExpandAnalyzedDocument_WhenBadRequest_ShouldThrowHttpRequestException()
+    {
+        // Arrange
+        _handler.RespondWith(HttpStatusCode.BadRequest);
+
+        // Act & Assert
         await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.ExpandAnalyzedDocument(
                 new DocumentChapterRequest("OOP", "Classes", "doc-123"),
@@ -312,8 +376,10 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task ExpandAnalyzedDocument_WhenUnauthorized_ShouldThrowHttpRequestException()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.Unauthorized);
 
+        // Act & Assert
         await Should.ThrowAsync<HttpRequestException>(() =>
             _sut.ExpandAnalyzedDocument(
                 new DocumentChapterRequest("OOP", "Classes", "doc-123"),
@@ -323,13 +389,52 @@ public class DocsAnalyzerServiceTests : IDisposable
     [Fact]
     public async Task ExpandAnalyzedDocument_WhenNullJsonResponse_ShouldThrowInvalidOperationException()
     {
+        // Arrange
         _handler.RespondWith(HttpStatusCode.OK, JsonContent<ChapterDetailResponse?>(null));
 
+        // Act & Assert
         await Should.ThrowAsync<InvalidOperationException>(() =>
             _sut.ExpandAnalyzedDocument(
                 new DocumentChapterRequest("OOP", "Classes", "doc-123"),
                 CancellationToken.None));
     }
+
+    // ── Helpers ──────────────────────────────────────────────────────────────
+
+    private static StringContent JsonContent<T>(T value) =>
+        new(JsonSerializer.Serialize(value, SnakeCaseOptions), Encoding.UTF8, "application/json");
+
+    private static UploadFileDto BuildUploadFileDto() =>
+        new("test.pdf", "application/pdf", new MemoryStream("file content"u8.ToArray()));
+
+    private static DocumentProcessingResponse BuildDocumentProcessingResponse() =>
+        new("doc-123",
+            new DocumentAnalysisDto("C# Guide", "A comprehensive guide", ["OOP", "Async", "LINQ"]),
+            new SkeletonDto("C# Programming", [
+                new ChapterDto("Intro", "Overview", 1),
+                new ChapterDto("OOP", "Classes", 2)
+            ]),
+            5);
+
+    private static ChapterDetailResponse BuildChapterDetailResponse() =>
+        new([
+                new DetailedSubchapterDto(
+                    "Classes",
+                    "How to define classes",
+                    "<p>A class is a blueprint</p>",
+                    [
+                        new QuestionDto("What is a class?", [
+                            new QuestionOptionDto("A blueprint", true),
+                            new QuestionOptionDto("A variable", false)
+                        ])
+                    ])
+            ],
+            [
+                new QuestionDto("What is OOP?", [
+                    new QuestionOptionDto("A paradigm", true),
+                    new QuestionOptionDto("A language", false)
+                ])
+            ]);
 
     private sealed class FakeHttpMessageHandler : HttpMessageHandler
     {
@@ -369,8 +474,5 @@ public class DocsAnalyzerServiceTests : IDisposable
         }
     }
 
-    private sealed record CapturedPart(
-        string? Name,
-        string? FileName,
-        string? ContentType);
+    private sealed record CapturedPart(string? Name, string? FileName, string? ContentType);
 }
