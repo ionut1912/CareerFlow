@@ -34,7 +34,8 @@ public static class UserProfileMapping
             courses);
     }
 
-    public static List<UserProfileDto> ToDtos(this IEnumerable<UserProfile> profiles) => profiles.Select(ToDto).ToList();
+    public static List<UserProfileDto> ToDtos(this IEnumerable<UserProfile> profiles) =>
+        profiles.Select(ToDto).ToList();
 
     public static CreateUserProfileCommand ToCreateUserProfileCommand(this CreateUserProfileRequest profileRequest,
         Guid accountId)

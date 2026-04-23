@@ -1,11 +1,15 @@
 using System.Net;
 using System.Net.Http.Headers;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.HangfireJobs;

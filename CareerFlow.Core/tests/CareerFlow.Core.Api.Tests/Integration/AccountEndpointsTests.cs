@@ -9,8 +9,11 @@ using CareerFlow.Core.Application.Requests.LegalDoc;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
+
 using Microsoft.Extensions.DependencyInjection;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Integration;

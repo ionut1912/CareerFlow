@@ -19,9 +19,11 @@ public static class CourseMapping
         return new UploadCourseDocumentCommand(userId, request.Title, files);
     }
 
-    public static FinishChapterCommand ToFinishChapterCommand(this FinishChapterRequest request, Guid userId) => new(userId, request.CourseId, request.ChapterId);
+    public static FinishChapterCommand ToFinishChapterCommand(this FinishChapterRequest request, Guid userId) =>
+        new(userId, request.CourseId, request.ChapterId);
 
-    public static GenerateCourseCommand ToGenerateCourseCommand(this CourseRequest request, Guid userId) => new(userId, request.Topic);
+    public static GenerateCourseCommand ToGenerateCourseCommand(this CourseRequest request, Guid userId) =>
+        new(userId, request.Topic);
 
     private static CourseDto ToDto(this Course course) => new(course.Topic, course.Chapters.ToDto());
 

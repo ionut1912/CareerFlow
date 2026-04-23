@@ -1,5 +1,6 @@
 using Amazon.Runtime;
 using Amazon.S3;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
@@ -10,13 +11,18 @@ using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Persistence;
 using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Hangfire;
 using Hangfire.PostgreSql;
+
 using InfisicalConfiguration;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+
 using Shared.Infra.Extensions;
+
 using StackExchange.Redis;
 
 namespace CareerFlow.Core.Infrastructure.Extensions;
@@ -71,7 +77,8 @@ public static class DependencyInjection
                 .AddRepository<Chapter, ChapterRepository, IChapterRepository, ApplicationDbContext>()
                 .AddRepository<Course, CourseRepository, ICourseRepository, ApplicationDbContext>()
                 .AddRepository<QuizQuestion, QuizRepository, IQuizRepository, ApplicationDbContext>()
-                .AddRepository<SystemDocument, SystemDocumentRepository, ISystemDocumentRepository, ApplicationDbContext>()
+                .AddRepository<SystemDocument, SystemDocumentRepository, ISystemDocumentRepository,
+                    ApplicationDbContext>()
                 .AddRepos<ITokenService, TokenService>()
                 .AddRepos<IPasswordService, PasswordService>()
                 .AddRepos<IAuthService, AuthService>()
@@ -132,11 +139,7 @@ public static class DependencyInjection
             {
                 R2Settings settings = sp.GetRequiredService<IOptions<R2Settings>>().Value;
 
-                var config = new AmazonS3Config
-                {
-                    ServiceURL = settings.Endpoint,
-                    ForcePathStyle = true
-                };
+                var config = new AmazonS3Config { ServiceURL = settings.Endpoint, ForcePathStyle = true };
 
                 var credentials = new BasicAWSCredentials(settings.AccessKey, settings.SecretKey);
                 return new AmazonS3Client(credentials, config);
@@ -202,8 +205,6 @@ public static class DependencyInjection
                 .AddRedisCache(configuration)
                 .AddStorageConfiguration(configuration)
                 .AddAnalyzerService(configuration);
-
-
         }
     }
 }

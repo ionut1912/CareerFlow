@@ -4,11 +4,14 @@ using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests.Account;
 using CareerFlow.Core.Application.Requests.LegalDoc;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Account;

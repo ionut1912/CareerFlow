@@ -1,20 +1,28 @@
 using System.Globalization;
 using System.Net.Http.Headers;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
 using CareerFlow.Core.Infrastructure.Persistence;
+
 using DotNet.Testcontainers.Builders;
+
 using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+
 using Npgsql;
+
 using Respawn;
+
 using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
 using Testcontainers.Redis;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Setup;
@@ -44,7 +52,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         Environment.SetEnvironmentVariable("ConnectionStrings__DefaultConnection", DbConnectionString);
         Environment.SetEnvironmentVariable("Redis__ConnectionString", _redisContainer.GetConnectionString());
         Environment.SetEnvironmentVariable("RabbitMQ__Host", _rabbitContainer.Hostname);
-        Environment.SetEnvironmentVariable("RabbitMQ__Port", _rabbitContainer.GetMappedPublicPort(5672).ToString(CultureInfo.InvariantCulture));
+        Environment.SetEnvironmentVariable("RabbitMQ__Port",
+            _rabbitContainer.GetMappedPublicPort(5672).ToString(CultureInfo.InvariantCulture));
         Environment.SetEnvironmentVariable("RabbitMQ__Username", "rabbitmq");
         Environment.SetEnvironmentVariable("RabbitMQ__Password", "rabbitmq");
         Environment.SetEnvironmentVariable("JwtSettings__Key", "testjwtsuperlongkeyforauthentication");
@@ -61,7 +70,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
         Environment.SetEnvironmentVariable("Authentication__Google__ClientSecret", "test-google-client-secret");
         Environment.SetEnvironmentVariable("Authentication__LinkedIn__ClientId", "test-linkedin-client-id");
         Environment.SetEnvironmentVariable("Authentication__LinkedIn__ClientSecret", "test-linkedin-client-secret");
-        Environment.SetEnvironmentVariable("Authentication__LinkedIn__RedirectUri", "https://localhost/social/auth/linkedin/mobile/callback");
+        Environment.SetEnvironmentVariable("Authentication__LinkedIn__RedirectUri",
+            "https://localhost/social/auth/linkedin/mobile/callback");
 
         using IServiceScope scope = Services.CreateScope();
         ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
@@ -120,11 +130,8 @@ public class TestWebApplicationFactory : WebApplicationFactory<Program>, IAsyncL
 
         try
         {
-            Respawner respawner = await Respawner.CreateAsync(conn, new RespawnerOptions
-            {
-                DbAdapter = DbAdapter.Postgres,
-                SchemasToInclude = ["public"]
-            });
+            Respawner respawner = await Respawner.CreateAsync(conn,
+                new RespawnerOptions { DbAdapter = DbAdapter.Postgres, SchemasToInclude = ["public"] });
 
             await respawner.ResetAsync(conn);
         }

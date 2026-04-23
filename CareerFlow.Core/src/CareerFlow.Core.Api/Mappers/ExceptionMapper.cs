@@ -1,6 +1,9 @@
 ﻿using CareerFlow.Core.Domain.Exceptions;
+
 using FluentValidation;
+
 using Microsoft.AspNetCore.Mvc;
+
 using Shared.Api.Abstractions;
 using Shared.Domain.Exceptions;
 
@@ -43,7 +46,8 @@ public sealed partial class ExceptionMapper(ILogger<ExceptionMapper> logger) : I
         return true;
     }
 
-    private static ProblemDetails Create(int status, string title, string detail) => new() { Status = status, Title = title, Detail = detail };
+    private static ProblemDetails Create(int status, string title, string detail) =>
+        new() { Status = status, Title = title, Detail = detail };
 
     private static ProblemDetails CreateValidation(CustomValidationException ex)
     {

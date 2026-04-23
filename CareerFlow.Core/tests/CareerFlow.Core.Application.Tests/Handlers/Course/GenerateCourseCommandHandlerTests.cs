@@ -4,7 +4,9 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Course;
@@ -20,7 +22,8 @@ public class GenerateCourseCommandHandlerTests
     }
 
     [Fact]
-    public void Constructor_NullCourseService_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => new GenerateCourseCommandHandler(null!));
+    public void Constructor_NullCourseService_ThrowsArgumentNullException() =>
+        Should.Throw<ArgumentNullException>(() => new GenerateCourseCommandHandler(null!));
 
     [Fact]
     public async Task Handle_ValidCommand_ReturnsGeneratedCourseId()

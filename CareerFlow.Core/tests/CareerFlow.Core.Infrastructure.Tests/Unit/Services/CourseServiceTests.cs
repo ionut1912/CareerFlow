@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
+
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
@@ -13,13 +14,19 @@ using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.Models.Course.Response;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Hangfire;
 using Hangfire.Common;
 using Hangfire.States;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shared.Domain.Common;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -65,7 +72,8 @@ public class CourseServiceTests
         byte[]? content = null) =>
         new(fileName, contentType, new MemoryStream(content ?? [1, 2, 3]));
 
-    private static UploadFileDto EmptyFile(string fileName = "empty.pdf") => new(fileName, "application/pdf", new MemoryStream([]));
+    private static UploadFileDto EmptyFile(string fileName = "empty.pdf") =>
+        new(fileName, "application/pdf", new MemoryStream([]));
 
     private static UploadFileDto OversizedFile(string fileName = "big.pdf")
     {
@@ -73,9 +81,11 @@ public class CourseServiceTests
             new MemoryStream(new byte[CourseConstants.MaxFileSizeBytes + 1]));
     }
 
-    private static UploadFileDto DisallowedFile(string fileName = "virus.exe") => new(fileName, "application/octet-stream", new MemoryStream([1, 2, 3]));
+    private static UploadFileDto DisallowedFile(string fileName = "virus.exe") =>
+        new(fileName, "application/octet-stream", new MemoryStream([1, 2, 3]));
 
-    private static UserProfile CreateProfile(Guid userId) => UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
+    private static UserProfile CreateProfile(Guid userId) =>
+        UserProfile.Create(userId, LearningType.Visual, [UserType.Student]);
 
     private static UserProfile CreateProfileEnrolledIn(Guid userId, Course course)
     {
@@ -120,7 +130,8 @@ public class CourseServiceTests
 
     private static CourseSkeletonResponse EmptySkeleton() => new(new SkeletonDto("topic", []), 1);
 
-    private static CourseSkeletonResponse SkeletonWithChapters(params ChapterDto[] chapters) => new(new SkeletonDto("Python", [.. chapters]), chapters.Length);
+    private static CourseSkeletonResponse SkeletonWithChapters(params ChapterDto[] chapters) =>
+        new(new SkeletonDto("Python", [.. chapters]), chapters.Length);
 
     /// <summary>
     ///     Sets the Id on an Entity base class via reflection since entity IDs

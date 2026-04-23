@@ -1,12 +1,16 @@
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests.Course;
 using CareerFlow.Core.Domain.Models.Course.Response;
+
 using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Course;

@@ -6,7 +6,9 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
@@ -86,7 +88,8 @@ public class DeleteUserProfileCommandHandlerTests : BaseHandlerTest<DeleteUserPr
             .ReturnsAsync((UserProfile?)null);
 
         // Act
-        UserProfileNotFoundException exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
+        UserProfileNotFoundException exception =
+            await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
 
         // Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {request.Id} nu a fost gasit");

@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.UserProfiles.Commands;
 using CareerFlow.Core.Application.Validators.UserProfiles;
+
 using FluentValidation.TestHelper;
 
 namespace CareerFlow.Core.Application.Tests.Validators.UserProfiles;

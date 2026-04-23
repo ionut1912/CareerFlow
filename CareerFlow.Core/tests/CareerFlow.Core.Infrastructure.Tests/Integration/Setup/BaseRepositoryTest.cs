@@ -1,5 +1,7 @@
 ﻿using CareerFlow.Core.Domain.Entities;
+
 using Microsoft.EntityFrameworkCore;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
@@ -7,9 +9,6 @@ namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
 [Collection("RepositoryCollection")]
 public abstract class BaseRepositoryTest : IAsyncLifetime, IDisposable
 {
-    private Func<Task> ResetDatabase { get; }
-    protected TestAppDbContext Context { get; }
-
     protected BaseRepositoryTest(IntegrationTestFixture fixture)
     {
         DbContextOptions<TestAppDbContext> options = new DbContextOptionsBuilder<TestAppDbContext>()
@@ -29,6 +28,9 @@ public abstract class BaseRepositoryTest : IAsyncLifetime, IDisposable
         };
     }
 
+    private Func<Task> ResetDatabase { get; }
+    protected TestAppDbContext Context { get; }
+
     public async Task InitializeAsync()
     {
         await Context.Database.EnsureCreatedAsync();
@@ -37,12 +39,12 @@ public abstract class BaseRepositoryTest : IAsyncLifetime, IDisposable
 
     public async Task DisposeAsync() => await Context.DisposeAsync();
 
-    protected static Account CreateAccount(string email) =>
-        Account.Create(email, "Password1!", Guid.NewGuid().ToString("N")[..20], "Full Name");
-
     public void Dispose()
     {
         Context.Dispose();
         GC.SuppressFinalize(this);
     }
+
+    protected static Account CreateAccount(string email) =>
+        Account.Create(email, "Password1!", Guid.NewGuid().ToString("N")[..20], "Full Name");
 }

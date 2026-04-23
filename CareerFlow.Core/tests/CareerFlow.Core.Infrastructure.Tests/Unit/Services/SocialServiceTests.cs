@@ -2,6 +2,7 @@ using System.Collections.Specialized;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web;
+
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
@@ -9,8 +10,11 @@ using CareerFlow.Core.Domain.Models.Authentication;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Core.Infrastructure.Tests.Unit.Setup;
+
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -24,8 +28,13 @@ public class SocialServiceTests
     private readonly SocialAuthSettings _settings = new()
     {
         BaseUrl = "https://api.careerflow.com",
-        Google = new GoogleSettings { ClientId = "google-client-id",ClientSecret = "google-client-secret"},
-        LinkedIn = new LinkedInSettings { ClientId = "linkedin-client-id",ClientSecret ="linkedin-client-secret",RedirectUri = "linkedin-redirect-uri"}
+        Google = new GoogleSettings { ClientId = "google-client-id", ClientSecret = "google-client-secret" },
+        LinkedIn = new LinkedInSettings
+        {
+            ClientId = "linkedin-client-id",
+            ClientSecret = "linkedin-client-secret",
+            RedirectUri = "linkedin-redirect-uri"
+        }
     };
 
     private readonly Mock<ITokenService> _tokenServiceMock = new();

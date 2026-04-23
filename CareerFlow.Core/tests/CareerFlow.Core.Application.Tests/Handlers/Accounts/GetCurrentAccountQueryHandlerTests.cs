@@ -9,6 +9,7 @@ using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -48,7 +49,8 @@ public class GetCurrentAccountQueryHandlerTests : BaseHandlerTest<GetCurrentAcco
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(query.AccountId, Ct)).ReturnsAsync((Account?)null);
 
         // Act
-        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
+        AccountNotFoundException exception =
+            await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
 
         // Assert
         exception.Message.ShouldContain(query.AccountId.ToString());

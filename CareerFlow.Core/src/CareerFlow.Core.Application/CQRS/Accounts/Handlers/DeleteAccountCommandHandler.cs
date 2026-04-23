@@ -2,6 +2,7 @@
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
@@ -37,7 +38,8 @@ public partial class DeleteAccountCommandHandler
         LogAccountDeleted(request.Id);
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "User-ul cu id-ul : {Id} nu poate fi sters,deoarce nu a fost gasit")]
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "User-ul cu id-ul : {Id} nu poate fi sters,deoarce nu a fost gasit")]
     private partial void LogAccountNotFound(Guid id);
 
     [LoggerMessage(Level = LogLevel.Information, Message = "User-ul cu id-ul: {Id} a fost sters cu succes")]

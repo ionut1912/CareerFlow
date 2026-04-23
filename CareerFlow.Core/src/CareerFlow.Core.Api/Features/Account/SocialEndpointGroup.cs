@@ -1,8 +1,12 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+
 using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Account;

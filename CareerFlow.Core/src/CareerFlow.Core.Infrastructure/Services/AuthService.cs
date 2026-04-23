@@ -1,6 +1,7 @@
 ﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Gateways.Dtos;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -8,6 +9,7 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Modles;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -62,14 +64,16 @@ public partial class AuthService : IAuthService
             { "client_secret", _settings.LinkedIn.ClientSecret }
         });
 
-        HttpResponseMessage tokenResponse = await _httpClient.PostAsync("https://www.linkedin.com/oauth/v2/accessToken", tokenReq, cancellationToken);
+        HttpResponseMessage tokenResponse = await _httpClient.PostAsync("https://www.linkedin.com/oauth/v2/accessToken",
+            tokenReq, cancellationToken);
         tokenResponse.EnsureSuccessStatusCode();
 
         LiToken? tokenData = await tokenResponse.Content.ReadFromJsonAsync<LiToken>(cancellationToken);
         _httpClient.DefaultRequestHeaders.Authorization =
             new AuthenticationHeaderValue("Bearer", tokenData!.AccessToken);
 
-        LiUser? userData = await _httpClient.GetFromJsonAsync<LiUser>("https://api.linkedin.com/v2/userinfo", cancellationToken);
+        LiUser? userData =
+            await _httpClient.GetFromJsonAsync<LiUser>("https://api.linkedin.com/v2/userinfo", cancellationToken);
         Account? account = await _accountRepository.GetAccountByEmailAsync(userData!.Email, cancellationToken);
 
         if (account == null) return await SaveUserAsync(userData.Email, userData.Name, cancellationToken);
@@ -88,7 +92,8 @@ public partial class AuthService : IAuthService
             { "grant_type", "authorization_code" }
         });
 
-        HttpResponseMessage response = await _httpClient.PostAsync("https://oauth2.googleapis.com/token", tokenReq, cancellationToken);
+        HttpResponseMessage response =
+            await _httpClient.PostAsync("https://oauth2.googleapis.com/token", tokenReq, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         JsonElement data = await response.Content.ReadFromJsonAsync<JsonElement>(cancellationToken);

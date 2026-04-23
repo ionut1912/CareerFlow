@@ -1,5 +1,7 @@
 ﻿using JetBrains.Annotations;
+
 using Testcontainers.PostgreSql;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;

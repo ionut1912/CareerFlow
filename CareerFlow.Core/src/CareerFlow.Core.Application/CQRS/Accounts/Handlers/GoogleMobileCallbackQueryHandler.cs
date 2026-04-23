@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Domain.Abstractions.Services;
+
 using JetBrains.Annotations;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
@@ -17,5 +18,6 @@ public class GoogleMobileCallbackQueryHandler
     }
 
     [UsedImplicitly]
-    public async Task<string> Handle(GoogleMobileCallbackQuery request, CancellationToken cancellationToken) => await _socialService.GoogleMobileCallBackAsync(request.Code, request.State, cancellationToken);
+    public async Task<string> Handle(GoogleMobileCallbackQuery request, CancellationToken cancellationToken) =>
+        await _socialService.GoogleMobileCallBackAsync(request.Code, request.State, cancellationToken);
 }

@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Domain.Abstractions.Services;
+
 using JetBrains.Annotations;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
@@ -16,5 +17,6 @@ public class GoogleMobileLoginQueryHandler
     }
 
     [UsedImplicitly]
-    public async Task<string> Handle(GoogleMobileLoginQuery request, CancellationToken cancellationToken) => await _socialService.GoogleMobileLogin(request.ReturnUrl);
+    public async Task<string> Handle(GoogleMobileLoginQuery request, CancellationToken cancellationToken) =>
+        await _socialService.GoogleMobileLogin(request.ReturnUrl);
 }

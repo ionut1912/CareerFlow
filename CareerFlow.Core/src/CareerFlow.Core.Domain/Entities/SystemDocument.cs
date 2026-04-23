@@ -1,5 +1,7 @@
 using CareerFlow.Core.Domain.Exceptions;
+
 using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
@@ -7,7 +9,7 @@ namespace CareerFlow.Core.Domain.Entities;
 public class SystemDocument : Entity
 {
     [UsedImplicitly]
-    private SystemDocument()// For EfCore
+    private SystemDocument() // For EfCore
     {
     }
 

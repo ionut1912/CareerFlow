@@ -1,5 +1,6 @@
 ﻿using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Persistence.Configurations;
+
 using Microsoft.EntityFrameworkCore;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Setup;

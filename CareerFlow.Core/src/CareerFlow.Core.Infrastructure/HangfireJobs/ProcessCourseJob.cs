@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
@@ -9,7 +10,9 @@ using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Mappers;
+
 using Hangfire;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.HangfireJobs;
@@ -66,7 +69,8 @@ public sealed partial class ProcessCourseJob
         try
         {
             DocumentProcessingResponse documentResponse = await GetOrCacheDocumentAnalysisAsync(job.Upload!, ct);
-            List<ExpandedChapterDataDto> expandedChapters = await GetOrCacheExpandedChaptersAsync(job.Upload!, documentResponse, ct);
+            List<ExpandedChapterDataDto> expandedChapters =
+                await GetOrCacheExpandedChaptersAsync(job.Upload!, documentResponse, ct);
 
             Guid courseId = await _coursePersistenceService.PersistAsync(
                 userId, job.Upload!.Title, expandedChapters.ToAssemblyModels(), ct);

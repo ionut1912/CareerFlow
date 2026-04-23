@@ -4,8 +4,11 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Rabbit.Events.Events;
+
 using JetBrains.Annotations;
+
 using Microsoft.Extensions.Logging;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;

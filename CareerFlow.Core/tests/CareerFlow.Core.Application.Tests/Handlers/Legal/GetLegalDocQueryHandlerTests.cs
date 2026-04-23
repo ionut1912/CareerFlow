@@ -8,6 +8,7 @@ using CareerFlow.Core.Domain.Models.Legal;
 using Microsoft.Extensions.Logging;
 
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Legal;

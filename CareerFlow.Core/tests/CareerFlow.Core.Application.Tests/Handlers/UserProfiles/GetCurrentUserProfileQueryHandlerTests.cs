@@ -6,7 +6,9 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
@@ -53,7 +55,8 @@ public class GetCurrentUserProfileQueryHandlerTests : BaseHandlerTest<GetCurrent
             .ReturnsAsync((UserProfile?)null);
 
         //Act
-        UserProfileNotFoundException exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(query, Ct));
+        UserProfileNotFoundException exception =
+            await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(query, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {query.AccountId} nu a fost gasit");

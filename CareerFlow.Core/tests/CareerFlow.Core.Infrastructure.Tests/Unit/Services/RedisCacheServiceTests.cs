@@ -1,13 +1,18 @@
 using System.Text.Json;
+
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
 using CareerFlow.Core.Infrastructure.Tests.Unit.Setup;
 
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Shouldly;
+
 using StackExchange.Redis;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -55,8 +60,8 @@ public class RedisCacheServiceTests
     private static RedisKey PrefixedKey(string raw) => $"{InstanceName}{raw}";
 
     /// <summary>
-    /// Sets up StringSetAsync with the StackExchange.Redis 2.12.x signature
-    /// (Expiration instead of TimeSpan?, ValueCondition instead of When) to return true.
+    ///     Sets up StringSetAsync with the StackExchange.Redis 2.12.x signature
+    ///     (Expiration instead of TimeSpan?, ValueCondition instead of When) to return true.
     /// </summary>
     private void SetupStringSetAsyncReturnsTrue()
     {
@@ -68,7 +73,7 @@ public class RedisCacheServiceTests
     }
 
     /// <summary>
-    /// Sets up StringSetAsync with the StackExchange.Redis 2.12.x signature to throw.
+    ///     Sets up StringSetAsync with the StackExchange.Redis 2.12.x signature to throw.
     /// </summary>
     private void SetupStringSetAsyncThrows(Exception ex)
     {
@@ -80,7 +85,7 @@ public class RedisCacheServiceTests
     }
 
     /// <summary>
-    /// Returns the single StringSetAsync invocation from the mock's log.
+    ///     Returns the single StringSetAsync invocation from the mock's log.
     /// </summary>
     private IInvocation GetSingleStringSetAsyncInvocation()
     {

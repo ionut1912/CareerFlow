@@ -1,9 +1,11 @@
 ﻿using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Models.Authentication;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
@@ -27,7 +29,6 @@ public class TokenService(IConfiguration configuration) : ITokenService
             new(JwtRegisteredClaimNames.Name, account.Username),
             new(JwtRegisteredClaimNames.Email, account.Email),
             new(JwtRegisteredClaimNames.Jti, jti),
-
             new("is_founder", account.IsFounder ? "true" : "false"),
             new("terms_accepted", account.TermsAccepted ? "true" : "false"),
             new("policy_accepted", account.PrivacyPolicyAccepted ? "true" : "false")

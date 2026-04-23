@@ -18,7 +18,8 @@ public class GenerateCourseCommandHandler
     public async Task<Guid> Handle(GenerateCourseCommand request, CancellationToken cancellationToken)
     {
         var skeletonRequest = new CourseSkeletonRequest(request.Topic);
-        CourseSkeletonResponse skeletonResponse = await _courseService.GetCourseSkeletonAsync(skeletonRequest, cancellationToken);
+        CourseSkeletonResponse skeletonResponse =
+            await _courseService.GetCourseSkeletonAsync(skeletonRequest, cancellationToken);
         return await _courseService.SaveCourseContentAsync(request.UserId, skeletonRequest.Topic, skeletonResponse,
             cancellationToken);
     }

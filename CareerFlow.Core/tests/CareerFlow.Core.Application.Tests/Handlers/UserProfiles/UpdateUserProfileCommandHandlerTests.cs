@@ -5,7 +5,9 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
@@ -54,7 +56,8 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
             .ReturnsAsync((UserProfile?)null);
 
         //Act
-        UserProfileNotFoundException exception = await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
+        UserProfileNotFoundException exception =
+            await Should.ThrowAsync<UserProfileNotFoundException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Profilul cu id-ul {request.Id} nu a fost gasit");
@@ -76,7 +79,8 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
             .ReturnsAsync(existingUserProfile);
 
         //Act
-        InvalidLearningTypeException exception = await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
+        InvalidLearningTypeException exception =
+            await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul de invatare {request.LearningType} e invalid");
@@ -97,7 +101,8 @@ public class UpdateUserProfileCommandHandlerTests : BaseHandlerTest<UpdateUserPr
             .ReturnsAsync(existingUserProfile);
 
         //Act
-        InvalidUserTypeException exception = await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
+        InvalidUserTypeException exception =
+            await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul {request.UserTypes[0]} este invalid");

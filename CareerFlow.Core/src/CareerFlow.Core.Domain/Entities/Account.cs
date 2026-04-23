@@ -45,10 +45,11 @@ public class Account : Entity
     public bool PrivacyPolicyAccepted { get; private set; }
     public string ResetPasswordToken { get; private set; } = string.Empty;
     public DateTime ResetPasswordTokenExpiresAt { get; private set; }
-    [UsedImplicitly]
-    public UserProfile? UserProfile { get; private set; }
 
-    public static Account Create(string email, string password, string username, string name) => new(email, password, username, name);
+    [UsedImplicitly] public UserProfile? UserProfile { get; private set; }
+
+    public static Account Create(string email, string password, string username, string name) =>
+        new(email, password, username, name);
 
     public void SetResetPasswordExpiresAt(DateTime expiresAt) => ResetPasswordTokenExpiresAt = expiresAt;
 

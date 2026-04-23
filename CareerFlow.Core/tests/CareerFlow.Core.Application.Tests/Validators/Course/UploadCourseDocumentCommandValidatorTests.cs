@@ -2,7 +2,9 @@ using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.Validators.Course;
 using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Models.Course.Dto;
+
 using FluentValidation.TestHelper;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Course;

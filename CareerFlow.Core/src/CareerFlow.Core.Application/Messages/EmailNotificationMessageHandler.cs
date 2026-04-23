@@ -1,7 +1,11 @@
-﻿using CareerFlow.Core.Domain.Abstractions.Services;
+﻿using System.Globalization;
+
+using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Rabbit.Events.Events;
+
 using JetBrains.Annotations;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.Messages;
@@ -27,10 +31,12 @@ public partial class EmailNotificationMessageHandler
             { "NumeAplicatie", "CareerFlow" },
             { "Nume", message.Name },
             { "LinkResetare", message.ResetLink },
-            { "AnCurent", DateTime.UtcNow.Year.ToString(System.Globalization.CultureInfo.InvariantCulture) }
+            { "AnCurent", DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture) }
         };
 
-        bool result = await _emailService.SendEmailWithTemplateAsync(message.Email, EmailConstants.ResetPasswordTemplateId, placeholders);
+        bool result =
+            await _emailService.SendEmailWithTemplateAsync(message.Email, EmailConstants.ResetPasswordTemplateId,
+                placeholders);
 
         if (result)
             LogResetPasswordEmailSent();

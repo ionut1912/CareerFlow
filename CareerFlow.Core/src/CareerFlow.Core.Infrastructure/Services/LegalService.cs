@@ -2,6 +2,7 @@ using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
 using CareerFlow.Core.Domain.Models.Legal;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;
@@ -60,6 +61,7 @@ public partial class LegalService : ILegalService
     [LoggerMessage(Level = LogLevel.Warning, Message = "GitHub Pages returned {StatusCode} for document type '{Type}'")]
     private static partial void LogGithubPagesError(ILogger logger, int statusCode, string type);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Legal document '{Type}' fetched from GitHub Pages and cached")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Legal document '{Type}' fetched from GitHub Pages and cached")]
     private static partial void LogDocumentFetchedAndCached(ILogger logger, string type);
 }

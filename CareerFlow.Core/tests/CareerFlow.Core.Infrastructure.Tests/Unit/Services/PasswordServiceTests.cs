@@ -1,5 +1,7 @@
 ﻿using CareerFlow.Core.Infrastructure.Services;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;

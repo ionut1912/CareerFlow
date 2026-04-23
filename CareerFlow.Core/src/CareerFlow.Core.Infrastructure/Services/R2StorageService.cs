@@ -1,7 +1,9 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Infrastructure.Configurations;
+
 using Microsoft.Extensions.Options;
 
 namespace CareerFlow.Core.Infrastructure.Services;
@@ -36,5 +38,6 @@ public sealed class R2StorageService(IAmazonS3 s3, IOptions<R2Settings> options)
         return response.ResponseStream;
     }
 
-    public async Task DeleteAsync(string fileKey, CancellationToken ct = default) => await s3.DeleteObjectAsync(_bucket, fileKey, ct);
+    public async Task DeleteAsync(string fileKey, CancellationToken ct = default) =>
+        await s3.DeleteObjectAsync(_bucket, fileKey, ct);
 }

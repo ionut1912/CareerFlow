@@ -3,11 +3,15 @@ using CareerFlow.Core.Application.CQRS.UserProfiles.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Application.Requests.UserProfile;
+
 using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Shared.Api.Endpoints;
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.UserProfiles;

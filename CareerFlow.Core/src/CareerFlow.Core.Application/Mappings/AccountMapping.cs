@@ -24,9 +24,12 @@ public static class AccountMapping
 
     public static LoginQuery ToLoginQuery(this LoginRequest request) => new(request.Email, request.Password);
 
-    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request) => new(request.Email, request.NewPassword, request.Token);
+    public static ResetPasswordCommand ToResetPasswordCommand(this ResetPasswordRequest request) =>
+        new(request.Email, request.NewPassword, request.Token);
 
-    public static CreateRefreshTokenCommand ToCreateRefreshTokenCommand(this RefreshTokenRequest request) => new(request.Token, request.RefreshToken);
+    public static CreateRefreshTokenCommand ToCreateRefreshTokenCommand(this RefreshTokenRequest request) =>
+        new(request.Token, request.RefreshToken);
 
-    public static AcceptLegalDocCommand ToAcceptLegalDocCommand(this AcceptLegalDocRequest request, Guid accountId) => new(accountId, request.Type);
+    public static AcceptLegalDocCommand ToAcceptLegalDocCommand(this AcceptLegalDocRequest request, Guid accountId) =>
+        new(accountId, request.Type);
 }

@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using CareerFlow.Core.Domain.Models.AI.Dto;
 
 namespace CareerFlow.Core.Domain.Models.AI.Responses;

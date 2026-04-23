@@ -11,6 +11,7 @@ using CareerFlow.Core.Domain.Models.Authentication;
 using Microsoft.Extensions.Logging;
 
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;

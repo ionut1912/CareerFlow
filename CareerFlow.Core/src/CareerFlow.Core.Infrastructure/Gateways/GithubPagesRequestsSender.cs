@@ -1,5 +1,6 @@
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Infrastructure.Configurations;
+
 using Microsoft.Extensions.Options;
 
 namespace CareerFlow.Core.Infrastructure.Gateways;

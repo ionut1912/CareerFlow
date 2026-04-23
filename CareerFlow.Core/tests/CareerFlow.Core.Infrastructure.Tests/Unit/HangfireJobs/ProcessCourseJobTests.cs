@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
@@ -13,7 +14,9 @@ using CareerFlow.Core.Infrastructure.Tests.Unit.Setup;
 using Microsoft.Extensions.Logging;
 
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.HangfireJobs;
@@ -22,12 +25,12 @@ public class ProcessCourseJobTests
 {
     private readonly Mock<IDocumentAnalyzerService> _analyzerMock = new();
     private readonly Mock<ICacheService> _cacheMock = new();
-    private readonly Mock<ICourseJobRepository> _jobRepoMock = new();
 
     // FakeLogger captures structured log records produced by [LoggerMessage] source-generated
     // methods. Mock<ILogger<T>> cannot intercept them: the generator creates a private TState
     // struct that Moq's It.IsAnyType matching cannot resolve even after IsEnabled returns true.
     private readonly FakeLogger<ProcessCourseJob> _fakeLogger = new();
+    private readonly Mock<ICourseJobRepository> _jobRepoMock = new();
 
     private readonly Mock<ICoursePersistenceService> _persistenceMock = new();
     private readonly Mock<IStorageService> _storageMock = new();

@@ -1,10 +1,15 @@
 using Amazon.S3;
 using Amazon.S3.Model;
+
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -12,8 +17,8 @@ namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 public class R2StorageServiceTests
 {
     private const string BucketName = "test-bucket";
-    private const string AccountId="test-account-id";
-    private const string AccessKey="test-access-key";
+    private const string AccountId = "test-account-id";
+    private const string AccessKey = "test-access-key";
     private const string SecretKey = "test-secret-key";
 
     private readonly Mock<IAmazonS3> _s3 = new();
@@ -21,7 +26,10 @@ public class R2StorageServiceTests
 
     public R2StorageServiceTests()
     {
-        IOptions<R2Settings> options = Options.Create(new R2Settings {AccountId = AccountId,AccessKey = AccessKey,SecretKey = SecretKey,BucketName = BucketName });
+        IOptions<R2Settings> options = Options.Create(new R2Settings
+        {
+            AccountId = AccountId, AccessKey = AccessKey, SecretKey = SecretKey, BucketName = BucketName
+        });
         _sut = new R2StorageService(_s3.Object, options);
     }
 

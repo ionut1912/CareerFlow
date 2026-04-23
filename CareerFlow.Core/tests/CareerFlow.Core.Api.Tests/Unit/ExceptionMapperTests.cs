@@ -1,14 +1,19 @@
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Domain.Exceptions;
+
 using FluentValidation;
 using FluentValidation.Results;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shared.Domain.Common;
 using Shared.Domain.Exceptions;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Unit;
@@ -24,18 +29,19 @@ public class ExceptionMapperTests
     }
 
     [Fact]
-    public void Constructor_NullLogger_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => new ExceptionMapper(null!));
+    public void Constructor_NullLogger_ThrowsArgumentNullException() =>
+        Should.Throw<ArgumentNullException>(() => new ExceptionMapper(null!));
 
     [Fact]
-    public void TryMap_NullException_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => _sut.TryMap(null!, out _));
+    public void TryMap_NullException_ThrowsArgumentNullException() =>
+        Should.Throw<ArgumentNullException>(() => _sut.TryMap(null!, out _));
 
     [Fact]
     public void TryMap_ValidationException_Returns400()
     {
         var failures = new List<ValidationFailure>
         {
-            new("Email", "Email is required"),
-            new("Name", "Name is required")
+            new("Email", "Email is required"), new("Name", "Name is required")
         };
         var ex = new ValidationException(failures);
 
@@ -52,9 +58,7 @@ public class ExceptionMapperTests
     {
         var failures = new List<ValidationFailure>
         {
-            new("Email", "Email is required"),
-            new("Email", "Email is invalid"),
-            new("", "General error")
+            new("Email", "Email is required"), new("Email", "Email is invalid"), new("", "General error")
         };
         var ex = new ValidationException(failures);
 
@@ -83,8 +87,7 @@ public class ExceptionMapperTests
     {
         var validationErrors = new List<ValidationError>
         {
-            new("Field1", "Field1 is required"),
-            new("Field2", "Field2 is invalid")
+            new("Field1", "Field1 is required"), new("Field2", "Field2 is invalid")
         };
         var ex = new CustomValidationException(validationErrors);
 

@@ -1,5 +1,6 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Domain.Constants;
+
 using FluentValidation;
 
 namespace CareerFlow.Core.Application.Validators.Course;

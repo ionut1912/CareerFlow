@@ -1,7 +1,9 @@
 using CareerFlow.Core.Application.CQRS.Courses.Commands;
 using CareerFlow.Core.Application.CQRS.Courses.Handlers;
 using CareerFlow.Core.Domain.Abstractions.Services;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Course;
@@ -17,7 +19,8 @@ public class FinishChapterCommandHandlerTests
     }
 
     [Fact]
-    public void Constructor_NullCourseService_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => new FinishChapterCommandHandler(null!));
+    public void Constructor_NullCourseService_ThrowsArgumentNullException() =>
+        Should.Throw<ArgumentNullException>(() => new FinishChapterCommandHandler(null!));
 
     [Fact]
     public async Task Handle_ValidCommand_CallsFinishChapterAsyncOnce()

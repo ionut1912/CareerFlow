@@ -1,5 +1,6 @@
 ﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
 using CareerFlow.Core.Application.Validators.Account;
+
 using FluentValidation.TestHelper;
 
 namespace CareerFlow.Core.Application.Tests.Validators.Accounts;

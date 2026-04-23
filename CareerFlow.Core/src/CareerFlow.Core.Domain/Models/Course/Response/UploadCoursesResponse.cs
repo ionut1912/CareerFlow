@@ -1,4 +1,5 @@
 using CareerFlow.Core.Domain.Models.Course.Dto;
+
 using JetBrains.Annotations;
 
 namespace CareerFlow.Core.Domain.Models.Course.Response;

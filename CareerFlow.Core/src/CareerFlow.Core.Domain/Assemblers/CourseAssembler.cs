@@ -34,7 +34,8 @@ public static class CourseAssembler
                         null)));
             }
 
-            foreach ((SubchapterAssemblyModel sub, SubChapter subChapter) in chData.Subchapters.Zip(chapter.SubChapters))
+            foreach ((SubchapterAssemblyModel sub, SubChapter subChapter) in
+                     chData.Subchapters.Zip(chapter.SubChapters))
             {
                 if (sub.Quiz is { Count: > 0 })
                 {

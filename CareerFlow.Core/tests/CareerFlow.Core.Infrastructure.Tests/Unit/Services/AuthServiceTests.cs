@@ -1,21 +1,26 @@
 ﻿using System.Net;
 using System.Text;
 using System.Text.Json;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Gateways.Dtos;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Configurations;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
-public class AuthServiceTests:IDisposable
+public class AuthServiceTests : IDisposable
 {
     private readonly Mock<IAccountRepository> _accountRepositoryMock;
     private readonly Mock<IGoogleTokenValidator> _googleValidatorMock;
@@ -33,12 +38,10 @@ public class AuthServiceTests:IDisposable
 
         _settings = Options.Create(new SocialAuthSettings
         {
-            Google = new GoogleSettings { ClientId = "google-client-id", ClientSecret = "google-client-secret"},
+            Google = new GoogleSettings { ClientId = "google-client-id", ClientSecret = "google-client-secret" },
             LinkedIn = new LinkedInSettings
             {
-                ClientId = "li-client-id",
-                ClientSecret = "li-secret",
-                RedirectUri = "https://app.test/callback"
+                ClientId = "li-client-id", ClientSecret = "li-secret", RedirectUri = "https://app.test/callback"
             }
         });
 
@@ -51,6 +54,13 @@ public class AuthServiceTests:IDisposable
             _httpClient,
             _settings,
             _loggerMock.Object);
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        _httpClient.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     [Fact]
@@ -282,12 +292,5 @@ public class AuthServiceTests:IDisposable
                 ? throw new InvalidOperationException("No responses queued.")
                 : Task.FromResult(_responses.Dequeue());
         }
-    }
-
-    public void Dispose()
-    {
-        _handler.Dispose();
-        _httpClient.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

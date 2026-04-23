@@ -1,9 +1,12 @@
 using System.Net;
 using System.Net.Http.Json;
+
 using CareerFlow.Core.Api.Tests.Setup;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests.UserProfile;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Api.Tests.Integration;
@@ -198,7 +201,6 @@ public class UserProfileEndpointsIntegrationTests(TestWebApplicationFactory fact
     [Fact]
     public async Task UpdateUserProfile_InvalidLearningType_Returns400()
     {
-
         (HttpClient authClient, _, _) = await CreateAndAuthenticateUserAsync();
         Guid id = await CreateProfile(authClient, new CreateUserProfileRequest("Visual", ["Student"], string.Empty));
 
@@ -261,7 +263,6 @@ public class UserProfileEndpointsIntegrationTests(TestWebApplicationFactory fact
     [Fact]
     public async Task GetUserProfiles_MultipleUsersWithProfiles_ReturnsAllProfiles()
     {
-
         (HttpClient client1, _, _) = await CreateAndAuthenticateUserAsync();
         (HttpClient client2, _, _) = await CreateAndAuthenticateUserAsync();
 

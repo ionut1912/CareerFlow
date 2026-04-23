@@ -1,4 +1,5 @@
 using JetBrains.Annotations;
+
 using Shared.Domain.Common;
 
 namespace CareerFlow.Core.Domain.Entities;
@@ -7,8 +8,7 @@ public class Course : Entity
 {
     private readonly List<Chapter> _chapters = [];
 
-    [UsedImplicitly]
-    private readonly List<UserProfile> _userProfiles = [];
+    [UsedImplicitly] private readonly List<UserProfile> _userProfiles = [];
 
     [UsedImplicitly]
     private Course()

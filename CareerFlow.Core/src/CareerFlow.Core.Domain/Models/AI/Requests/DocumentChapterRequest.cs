@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+
 using JetBrains.Annotations;
 
 namespace CareerFlow.Core.Domain.Models.AI.Requests;

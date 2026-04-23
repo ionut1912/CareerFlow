@@ -28,13 +28,15 @@ public class LegalDocumentCheckerJob
 
     public async Task CheckForUpdatesAsync(string documentType, CancellationToken cancellationToken = default)
     {
-        using HttpResponseMessage response = await _githubPagesRequestsSender.GetContentAsync(documentType, cancellationToken);
+        using HttpResponseMessage response =
+            await _githubPagesRequestsSender.GetContentAsync(documentType, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         string? currentEtag = response.Headers.ETag?.Tag;
         if (string.IsNullOrWhiteSpace(currentEtag)) return;
 
-        SystemDocument? documentRecord = await _systemDocumentRepository.FindByTypeAsync(documentType, cancellationToken);
+        SystemDocument? documentRecord =
+            await _systemDocumentRepository.FindByTypeAsync(documentType, cancellationToken);
         if (documentRecord == null)
         {
             documentRecord = SystemDocument.Create(documentType, currentEtag);

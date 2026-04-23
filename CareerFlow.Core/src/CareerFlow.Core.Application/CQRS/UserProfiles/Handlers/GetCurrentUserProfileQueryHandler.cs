@@ -4,6 +4,7 @@ using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.UserProfiles.Handlers;
@@ -24,7 +25,8 @@ public partial class GetCurrentUserProfileQueryHandler
 
     public async Task<UserProfileDto> Handle(GetCurrentUserProfileQuery request, CancellationToken cancellationToken)
     {
-        UserProfile? userProfile = await _userProfileRepository.GetCurrentUserProfile(request.AccountId, cancellationToken);
+        UserProfile? userProfile =
+            await _userProfileRepository.GetCurrentUserProfile(request.AccountId, cancellationToken);
 
         if (userProfile is not null) return userProfile.ToDto();
 

@@ -1,9 +1,11 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+
 using CareerFlow.Core.Api.Tests.Setup;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Requests.Account;
 using CareerFlow.Core.Domain.Entities;
+
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]
@@ -12,14 +14,14 @@ namespace CareerFlow.Core.Api.Tests.Integration;
 
 public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFactory>, IAsyncLifetime
 {
-    protected HttpClient AnonymousClient { get; }
-    protected TestWebApplicationFactory Factory { get; }
-
     protected IntegrationTestBase(TestWebApplicationFactory factory)
     {
         Factory = factory;
         AnonymousClient = Factory.CreateClient();
     }
+
+    protected HttpClient AnonymousClient { get; }
+    protected TestWebApplicationFactory Factory { get; }
 
     public virtual async Task InitializeAsync() => await Factory.ResetDatabaseAsync();
 
@@ -43,7 +45,8 @@ public abstract class IntegrationTestBase : IClassFixture<TestWebApplicationFact
         if (!registerResponse.IsSuccessStatusCode)
         {
             string errorBody = await registerResponse.Content.ReadAsStringAsync();
-            throw new InvalidOperationException($"Register failed with {registerResponse.StatusCode}. Body: {errorBody}");
+            throw new InvalidOperationException(
+                $"Register failed with {registerResponse.StatusCode}. Body: {errorBody}");
         }
 
         var credentials = new LoginRequest(targetEmail, password);

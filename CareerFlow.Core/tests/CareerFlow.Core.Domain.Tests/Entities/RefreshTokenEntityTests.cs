@@ -1,6 +1,8 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Domain.Tests.Entities;

@@ -10,14 +10,18 @@ using CareerFlow.Core.Infrastructure.Extensions;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Persistence;
 using CareerFlow.Core.Rabbit.Events.Events;
+
 using Hangfire;
+
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.OpenApi;
+
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
 using Shared.Application.Extensions;
 using Shared.Infra.Extensions;
+
 using Wolverine.RabbitMQ;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -75,10 +79,8 @@ app.MapClientEndpoints();
 
 app.Logger.LogStartup("CareerFlowCore", env);
 
-app.MapHangfireDashboard("/hangfire", new DashboardOptions
-{
-    Authorization = [new HangfireAuthFilter()]
-}).RequireAuthorization("HangfirePolicy");
+app.MapHangfireDashboard("/hangfire", new DashboardOptions { Authorization = [new HangfireAuthFilter()] })
+    .RequireAuthorization("HangfirePolicy");
 
 RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
     "check-terms-update",

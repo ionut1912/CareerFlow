@@ -36,7 +36,8 @@ public partial class CreateRefreshTokenCommandHandler
 
     public async Task<RefreshTokenDto> Handle(CreateRefreshTokenCommand request, CancellationToken cancellationToken)
     {
-        RefreshToken? storedToken = await _refreshTokenRepository.GetExistingTokenAsync(request.RefreshToken, cancellationToken);
+        RefreshToken? storedToken =
+            await _refreshTokenRepository.GetExistingTokenAsync(request.RefreshToken, cancellationToken);
         if (storedToken is null)
         {
             LogRefreshTokenNotFound(_logger, request.RefreshToken, request.Token);
@@ -80,15 +81,18 @@ public partial class CreateRefreshTokenCommandHandler
     [LoggerMessage(Level = LogLevel.Error, Message = "Refresh token-ul {RefreshToken} nu exista pt token-ul:{Token}")]
     private static partial void LogRefreshTokenNotFound(ILogger logger, string refreshToken, string token);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Refresh token-ul {RefreshToken} a fost deja folosit pt token-ul: {Token}")]
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Refresh token-ul {RefreshToken} a fost deja folosit pt token-ul: {Token}")]
     private static partial void LogRefreshTokenAlreadyUsed(ILogger logger, string refreshToken, string token);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Refresh token-ul {RefreshToken} a fost revocat pentru token-ul: {Token}")]
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Refresh token-ul {RefreshToken} a fost revocat pentru token-ul: {Token}")]
     private static partial void LogRefreshTokenRevoked(ILogger logger, string refreshToken, string token);
 
     [LoggerMessage(Level = LogLevel.Error, Message = "User-ul cu id-ul {Id} nu a fost gasit")]
     private static partial void LogUserNotFound(ILogger logger, Guid id);
 
-    [LoggerMessage(Level = LogLevel.Information, Message = "Refresh token-ul a fost creat cu succes pentru user-ul cu id-ul {Id}")]
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Refresh token-ul a fost creat cu succes pentru user-ul cu id-ul {Id}")]
     private static partial void LogRefreshTokenCreated(ILogger logger, Guid id);
 }

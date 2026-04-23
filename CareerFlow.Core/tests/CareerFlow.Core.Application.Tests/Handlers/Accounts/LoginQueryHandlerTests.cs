@@ -7,7 +7,9 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.Authentication;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -68,7 +70,8 @@ public class LoginQueryHandlerTests : BaseHandlerTest<LoginQueryHandler>
         _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(query.Email, Ct)).ReturnsAsync((Account?)null);
 
         // Act
-        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
+        AccountNotFoundException exception =
+            await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(query, Ct));
 
         // Assert
         exception.Message.ShouldContain(query.Email);

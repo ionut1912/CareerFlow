@@ -4,7 +4,9 @@ using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
@@ -55,7 +57,8 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .ReturnsAsync((Account?)null);
 
         //Act
-        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(request, Ct));
+        AccountNotFoundException exception =
+            await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Contul cu id-ul {request.AccountId} nu a fost gasit");
@@ -78,7 +81,8 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .ReturnsAsync(accountToReturn);
 
         //Act
-        InvalidLearningTypeException exception = await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
+        InvalidLearningTypeException exception =
+            await Should.ThrowAsync<InvalidLearningTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul de invatare {request.LearningType} e invalid");
@@ -101,7 +105,8 @@ public class CreateUserProfileCommandHandlerTests : BaseHandlerTest<CreateUserPr
             .ReturnsAsync(accountToReturn);
 
         //Act
-        InvalidUserTypeException exception = await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
+        InvalidUserTypeException exception =
+            await Should.ThrowAsync<InvalidUserTypeException>(() => _handler.Handle(request, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Tipul {request.UserTypes[0]} este invalid");

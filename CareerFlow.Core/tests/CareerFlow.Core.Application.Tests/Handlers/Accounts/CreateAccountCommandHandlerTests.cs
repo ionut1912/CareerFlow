@@ -9,6 +9,7 @@ using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -59,7 +60,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
             .ReturnsAsync(existingAccount);
 
         // Act
-        UserAlreadyExistsException exception = await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
+        UserAlreadyExistsException exception =
+            await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldContain(command.Email);
@@ -76,7 +78,8 @@ public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCom
             .ReturnsAsync((Account?)null);
 
         // Act
-        PasswordNotMatchException exception = await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
+        PasswordNotMatchException exception =
+            await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldBe("Parolele nu corespund");

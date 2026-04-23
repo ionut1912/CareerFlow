@@ -4,12 +4,13 @@ using CareerFlow.Core.Infrastructure.Configurations;
 using JetBrains.Annotations;
 
 using Microsoft.Extensions.Options;
+
 using PostmarkDotNet;
 
 namespace CareerFlow.Core.Infrastructure.Gateways;
 
 [UsedImplicitly]
-public  class PostmarkMailClient : IMailClient
+public class PostmarkMailClient : IMailClient
 {
     private readonly PostmarkClient _client;
     private readonly PostmarkSettings _settings;

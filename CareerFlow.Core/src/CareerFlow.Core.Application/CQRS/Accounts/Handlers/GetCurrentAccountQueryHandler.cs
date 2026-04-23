@@ -1,10 +1,12 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+﻿using System.Text.Json;
+
+using CareerFlow.Core.Application.CQRS.Accounts.Queries;
 using CareerFlow.Core.Application.Dtos;
 using CareerFlow.Core.Application.Mappings;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
-using System.Text.Json;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;

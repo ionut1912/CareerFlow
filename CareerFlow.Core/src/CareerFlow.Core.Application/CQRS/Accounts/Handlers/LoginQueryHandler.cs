@@ -6,6 +6,7 @@ using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.Models.Authentication;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
@@ -68,10 +69,12 @@ public partial class LoginQueryHandler
         return accountDto;
     }
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Procesul de logare a esuat,deoarece contul cu Email :{Email} nu a fost gasit")]
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Procesul de logare a esuat,deoarece contul cu Email :{Email} nu a fost gasit")]
     private partial void LogAccountNotFound(string email);
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Nu ne putem loga,deoarece parola introdusa si cea existenta nu corespund")]
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Nu ne putem loga,deoarece parola introdusa si cea existenta nu corespund")]
     private partial void LogPasswordNotMatch();
 
     [LoggerMessage(Level = LogLevel.Information, Message = "Procesul de logare realizat cu succes")]

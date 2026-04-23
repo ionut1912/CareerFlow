@@ -1,9 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 using Microsoft.EntityFrameworkCore;
+
 using Shared.Domain.Common;
 using Shared.Infra.Services;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -151,8 +154,7 @@ public class GenericRepositoryTests : IDisposable
 
     public class TestEntity : Entity
     {
-        [MaxLength(50)]
-        public string Name { get; set; } = string.Empty;
+        [MaxLength(50)] public string Name { get; set; } = string.Empty;
     }
 
     public class TestDbContext(DbContextOptions<TestDbContext> options) : DbContext(options)

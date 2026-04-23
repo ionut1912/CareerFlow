@@ -4,7 +4,9 @@ using CareerFlow.Core.Application.Tests.Common;
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -133,8 +135,8 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
             .ReturnsAsync((Account?)null);
 
         //Act
-        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(
-            () => _handler.Handle(command, Ct));
+        AccountNotFoundException exception =
+            await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         //Assert
         exception.Message.ShouldBe($"Contul cu id-ul {command.AccountId} nu a fost gasit");
@@ -159,8 +161,8 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
             .ReturnsAsync(account);
 
         //Act
-        LegalDocInvalidTypeException exception = await Should.ThrowAsync<LegalDocInvalidTypeException>(
-            () => _handler.Handle(command, Ct));
+        LegalDocInvalidTypeException exception =
+            await Should.ThrowAsync<LegalDocInvalidTypeException>(() => _handler.Handle(command, Ct));
 
         //Assert
         exception.Message.ShouldBe("Invalid legal document type");
@@ -201,9 +203,9 @@ public class AcceptLegalDocCommandHandlerTests : BaseHandlerTest<AcceptLegalDocC
         //Act & Assert
         await Should.ThrowAsync<ArgumentNullException>(() =>
             new AcceptLegalDocCommandHandler(
-                isRepoNull ? null! : _accountRepositoryMock.Object,
-                isUnitOfWorkNull ? null! : UnitOfWorkMock.Object,
-                isLoggerNull ? null! : LoggerMock.Object)
-            .Handle(command, Ct));
+                    isRepoNull ? null! : _accountRepositoryMock.Object,
+                    isUnitOfWorkNull ? null! : UnitOfWorkMock.Object,
+                    isLoggerNull ? null! : LoggerMock.Object)
+                .Handle(command, Ct));
     }
 }

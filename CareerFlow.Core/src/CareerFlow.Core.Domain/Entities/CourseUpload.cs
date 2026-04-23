@@ -9,7 +9,7 @@ namespace CareerFlow.Core.Domain.Entities;
 public sealed class CourseUpload : Entity
 {
     [UsedImplicitly]
-    private CourseUpload()//For EfCore
+    private CourseUpload() //For EfCore
     {
     }
 
@@ -37,8 +37,9 @@ public sealed class CourseUpload : Entity
     public string FileName { get; private set; } = string.Empty;
     public string FileKey { get; private set; } = string.Empty;
     public string FileType { get; private set; } = string.Empty;
-    [UsedImplicitly]
-    public CourseJob? Job { get; private set; }
 
-    public static CourseUpload Create(Guid userId, string title, string fileName, string fileKey, string fileType) => new(userId, title, fileName, fileKey, fileType);
+    [UsedImplicitly] public CourseJob? Job { get; private set; }
+
+    public static CourseUpload Create(Guid userId, string title, string fileName, string fileKey, string fileType) =>
+        new(userId, title, fileName, fileKey, fileType);
 }

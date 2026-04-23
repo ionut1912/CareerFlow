@@ -3,7 +3,9 @@ using CareerFlow.Core.Application.CQRS.Courses.Handlers;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.Models.Course.Response;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Course;
@@ -26,7 +28,8 @@ public class UploadCourseDocumentCommandHandlerTests
     }
 
     [Fact]
-    public void Constructor_NullCourseService_ThrowsArgumentNullException() => Should.Throw<ArgumentNullException>(() => new UploadCourseDocumentCommandHandler(null!));
+    public void Constructor_NullCourseService_ThrowsArgumentNullException() =>
+        Should.Throw<ArgumentNullException>(() => new UploadCourseDocumentCommandHandler(null!));
 
     [Fact]
     public async Task Handle_ValidCommand_ReturnsUploadCoursesResponse()

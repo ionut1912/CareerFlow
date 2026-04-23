@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+
 using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Constants;
@@ -10,7 +11,9 @@ using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Domain.Models.Course.Response;
 using CareerFlow.Core.Infrastructure.HangfireJobs;
 using CareerFlow.Core.Infrastructure.Mappers;
+
 using Hangfire;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;

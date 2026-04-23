@@ -6,8 +6,11 @@ using CareerFlow.Core.Domain.Abstractions.Repositories;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.UserProfiles;
@@ -115,6 +118,5 @@ public class GetCurrentUserCoursesQueryHandlerTests : BaseHandlerTest<GetCurrent
         await _sut.Handle(query, Ct);
 
         _repoMock.Verify(r => r.GetUserCourses(accountId, Ct), Times.Once);
-
     }
 }

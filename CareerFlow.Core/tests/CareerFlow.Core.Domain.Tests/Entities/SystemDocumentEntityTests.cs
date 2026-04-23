@@ -1,6 +1,8 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Domain.Tests.Entities;
@@ -21,13 +23,15 @@ public class SystemDocumentEntityTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public void Create_InvalidDocumentType_ThrowsInvalidFieldException(string? type) => Should.Throw<InvalidFieldException>(() => SystemDocument.Create(type!, "etag"));
+    public void Create_InvalidDocumentType_ThrowsInvalidFieldException(string? type) =>
+        Should.Throw<InvalidFieldException>(() => SystemDocument.Create(type!, "etag"));
 
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public void Create_InvalidEtag_ThrowsInvalidFieldException(string? etag) => Should.Throw<InvalidFieldException>(() => SystemDocument.Create("Terms", etag!));
+    public void Create_InvalidEtag_ThrowsInvalidFieldException(string? etag) =>
+        Should.Throw<InvalidFieldException>(() => SystemDocument.Create("Terms", etag!));
 
     [Fact]
     public void Update_NewEtag_UpdatesCurrentEtag()

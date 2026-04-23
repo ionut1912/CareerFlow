@@ -1,11 +1,16 @@
 using System.Net;
+
 using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Models.Legal;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Microsoft.Extensions.Logging;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -62,10 +67,7 @@ public class LegalServiceTests
             .Setup(x => x.GetAsync<LegalDocumentResponse>(cacheKey))
             .ReturnsAsync((LegalDocumentResponse?)null);
 
-        var httpResponse = new HttpResponseMessage(HttpStatusCode.OK)
-        {
-            Content = new StringContent(content)
-        };
+        var httpResponse = new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(content) };
 
         _requestsSenderMock
             .Setup(x => x.GetContentAsync(docType, It.IsAny<CancellationToken>()))

@@ -1,8 +1,11 @@
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
+
 using Moq;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Domain.Tests.Entities;
@@ -91,7 +94,6 @@ public class AccountEntityTests
     [Fact]
     public void HashPassword_ValidService_UpdatesPasswordToHash()
     {
-
         Account account = CreateValidAccount();
         var passwordService = new Mock<IPasswordService>();
         passwordService.Setup(p => p.HashPassword("Password1!")).Returns("hashed_password");

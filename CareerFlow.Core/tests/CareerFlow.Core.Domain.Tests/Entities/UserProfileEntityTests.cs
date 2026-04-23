@@ -1,7 +1,9 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.Exceptions;
 using CareerFlow.Core.Domain.ValueObjects;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Domain.Tests.Entities;
@@ -11,7 +13,8 @@ public class UserProfileEntityTests
     private static readonly LearningType ValidLearning = LearningType.Visual;
     private static readonly List<UserType> ValidTypes = [UserType.Student];
 
-    private static UserProfile Profile(Guid? id = null) => UserProfile.Create(id ?? Guid.NewGuid(), ValidLearning, ValidTypes);
+    private static UserProfile Profile(Guid? id = null) =>
+        UserProfile.Create(id ?? Guid.NewGuid(), ValidLearning, ValidTypes);
 
 
     [Fact]

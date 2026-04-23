@@ -22,7 +22,8 @@ public class GetUserProfilesQueryHandler
     [UsedImplicitly]
     public async Task<List<UserProfileDto>> Handle(GetUserProfilesQuery request, CancellationToken cancellationToken)
     {
-        IEnumerable<UserProfile> userProfiles = await _userProfileRepository.GetAllAsync(cancellationToken, up => up.Account!);
+        IEnumerable<UserProfile> userProfiles =
+            await _userProfileRepository.GetAllAsync(cancellationToken, up => up.Account!);
         return userProfiles.ToDtos();
     }
 }

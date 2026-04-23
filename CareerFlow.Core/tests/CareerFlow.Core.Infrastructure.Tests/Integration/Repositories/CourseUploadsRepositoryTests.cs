@@ -1,7 +1,9 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Repositories;
@@ -76,9 +78,7 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         // Arrange
         var uploads = new List<CourseUpload>
         {
-            CreateUpload("Upload 1"),
-            CreateUpload("Upload 2"),
-            CreateUpload("Upload 3")
+            CreateUpload("Upload 1"), CreateUpload("Upload 2"), CreateUpload("Upload 3")
         };
 
         // Act
@@ -245,5 +245,6 @@ public class CourseUploadsRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         return upload;
     }
 
-    private static CourseUpload CreateUpload(string title = "Test Title") => CourseUpload.Create(Guid.NewGuid(), title, "file.pdf", "file-key", "application/pdf");
+    private static CourseUpload CreateUpload(string title = "Test Title") =>
+        CourseUpload.Create(Guid.NewGuid(), title, "file.pdf", "file-key", "application/pdf");
 }

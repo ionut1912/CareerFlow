@@ -1,9 +1,13 @@
 using CareerFlow.Core.Application.CQRS.Legal.Queries;
 using CareerFlow.Core.Domain.Models.Legal;
+
 using JetBrains.Annotations;
+
 using Microsoft.AspNetCore.Http.HttpResults;
+
 using Shared.Api.Endpoints;
 using Shared.Api.Infrastructure;
+
 using Wolverine;
 
 namespace CareerFlow.Core.Api.Features.Legal;
@@ -21,7 +25,8 @@ public class LegalEndpointGroup : EndpointGroup
         CancellationToken cancellationToken)
     {
         var getLegalDocQuery = new GetLegalDocQuery(type);
-        LegalDocumentResponse response = await bus.InvokeAsync<LegalDocumentResponse>(getLegalDocQuery, cancellationToken);
+        LegalDocumentResponse response =
+            await bus.InvokeAsync<LegalDocumentResponse>(getLegalDocQuery, cancellationToken);
         return TypedResults.Ok(response);
     }
 }

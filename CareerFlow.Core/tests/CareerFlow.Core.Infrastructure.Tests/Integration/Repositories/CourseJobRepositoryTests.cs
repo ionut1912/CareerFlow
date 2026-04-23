@@ -2,8 +2,11 @@ using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Domain.ValueObjects;
 using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
+
 using Microsoft.EntityFrameworkCore;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Repositories;
@@ -55,8 +58,7 @@ public class CourseJobRepositoryTests : BaseRepositoryTest, IAsyncLifetime
         Guid uploadId2 = await SeedUploadAsync();
         var jobs = new List<CourseJob>
         {
-            CourseJob.Create(uploadId1, "Pending"),
-            CourseJob.Create(uploadId2, "Pending")
+            CourseJob.Create(uploadId1, "Pending"), CourseJob.Create(uploadId2, "Pending")
         };
 
         // Act

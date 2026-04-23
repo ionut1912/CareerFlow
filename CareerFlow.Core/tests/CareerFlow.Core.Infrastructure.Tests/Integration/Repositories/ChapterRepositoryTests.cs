@@ -1,7 +1,9 @@
 using CareerFlow.Core.Domain.Entities;
 using CareerFlow.Core.Infrastructure.Persistence.Repositories;
 using CareerFlow.Core.Infrastructure.Tests.Integration.Setup;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Integration.Repositories;
@@ -240,19 +242,13 @@ public class ChapterRepositoryTests : BaseRepositoryTest, IAsyncLifetime
 
     private static Chapter CreateChapter(int day = 1, string title = "Chapter Title")
     {
-        var subChapters = new List<SubChapter>
-        {
-            SubChapter.Create("Sub 1", "Summary 1", "<p>Theory 1</p>")
-        };
+        var subChapters = new List<SubChapter> { SubChapter.Create("Sub 1", "Summary 1", "<p>Theory 1</p>") };
         return Chapter.Create(day, title, "Core Concept", subChapters);
     }
 
     private async Task<(Course course, Chapter chapter)> SeedChapterAsync()
     {
-        var subChapters = new List<SubChapter>
-        {
-            SubChapter.Create("Sub 1", "Summary 1", "<p>Theory 1</p>")
-        };
+        var subChapters = new List<SubChapter> { SubChapter.Create("Sub 1", "Summary 1", "<p>Theory 1</p>") };
         var chapter = Chapter.Create(1, "Chapter Title", "Core Concept", subChapters);
         var course = Course.Create("Topic", [chapter]);
 

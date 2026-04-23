@@ -5,7 +5,9 @@ namespace CareerFlow.Core.Application.Mappings;
 
 public static class SubchapterMapping
 {
-    private static SubChapterDto ToDto(this SubChapter subChapter) => new(subChapter.Title, subChapter.Summary, subChapter.TheoryHtml);
+    private static SubChapterDto ToDto(this SubChapter subChapter) =>
+        new(subChapter.Title, subChapter.Summary, subChapter.TheoryHtml);
 
-    public static List<SubChapterDto> ToDto(this IEnumerable<SubChapter> subChapters) => subChapters.Select(s => s.ToDto()).ToList();
+    public static List<SubChapterDto> ToDto(this IEnumerable<SubChapter> subChapters) =>
+        subChapters.Select(s => s.ToDto()).ToList();
 }

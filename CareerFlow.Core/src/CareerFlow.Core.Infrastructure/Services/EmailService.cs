@@ -1,5 +1,6 @@
 ﻿using CareerFlow.Core.Domain.Abstractions.Gateways;
 using CareerFlow.Core.Domain.Abstractions.Services;
+
 using Microsoft.Extensions.Logging;
 
 namespace CareerFlow.Core.Infrastructure.Services;
@@ -55,6 +56,7 @@ public partial class EmailService : IEmailService
     [LoggerMessage(Level = LogLevel.Error, Message = "Failed to send email via provider.")]
     private partial void LogEmailFailed();
 
-    [LoggerMessage(Level = LogLevel.Error, Message = "Exception occurred while sending email with template {TemplateId}")]
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Exception occurred while sending email with template {TemplateId}")]
     private partial void LogEmailException(int templateId, Exception ex);
 }

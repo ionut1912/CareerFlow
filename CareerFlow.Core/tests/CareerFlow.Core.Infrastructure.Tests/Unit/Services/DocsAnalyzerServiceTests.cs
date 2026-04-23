@@ -1,12 +1,15 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Domain.Models.Course.Dto;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
@@ -15,8 +18,7 @@ public class DocsAnalyzerServiceTests : IDisposable
 {
     private static readonly JsonSerializerOptions SnakeCaseOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        PropertyNameCaseInsensitive = true
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true
     };
 
     private readonly FakeHttpMessageHandler _handler = new();
@@ -468,7 +470,8 @@ public class DocsAnalyzerServiceTests : IDisposable
                         part.Headers.ContentType?.MediaType));
                 }
             }
-            else if (request.Content is not null) LastRequestBody = await request.Content.ReadAsStringAsync(cancellationToken);
+            else if (request.Content is not null)
+                LastRequestBody = await request.Content.ReadAsStringAsync(cancellationToken);
 
             return new HttpResponseMessage(_statusCode) { Content = _responseContent };
         }

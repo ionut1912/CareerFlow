@@ -10,7 +10,7 @@ namespace CareerFlow.Core.Domain.Entities;
 public sealed class CourseJob : Entity
 {
     [UsedImplicitly]
-    private CourseJob()//ForEfCore
+    private CourseJob() //ForEfCore
     {
         Status = JobStatus.Pending;
     }
@@ -30,10 +30,10 @@ public sealed class CourseJob : Entity
     public string? ErrorMessage { get; private set; }
     public DateTime? StartedAt { get; private set; }
     public DateTime? CompletedAt { get; private set; }
-    [UsedImplicitly]
-    public CourseUpload? Upload { get; private set; }
-    [UsedImplicitly]
-    public Course? Course { get; private set; }
+
+    [UsedImplicitly] public CourseUpload? Upload { get; private set; }
+
+    [UsedImplicitly] public Course? Course { get; private set; }
 
     public static CourseJob Create(Guid uploadId, string status) => new(uploadId, JobStatus.FromString(status));
 

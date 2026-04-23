@@ -1,21 +1,23 @@
 using System.Net;
 using System.Text;
 using System.Text.Json;
+
 using CareerFlow.Core.Domain.Models.AI.Dto;
 using CareerFlow.Core.Domain.Models.AI.Requests;
 using CareerFlow.Core.Domain.Models.AI.Responses;
 using CareerFlow.Core.Infrastructure.Services;
+
 using Shouldly;
+
 using Xunit;
 
 namespace CareerFlow.Core.Infrastructure.Tests.Unit.Services;
 
-public class CourseGenerationServiceTests:IDisposable
+public class CourseGenerationServiceTests : IDisposable
 {
     private static readonly JsonSerializerOptions SnakeCaseOptions = new()
     {
-        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
-        PropertyNameCaseInsensitive = true
+        PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower, PropertyNameCaseInsensitive = true
     };
 
     private readonly FakeHttpMessageHandler _handler = new();
@@ -25,6 +27,12 @@ public class CourseGenerationServiceTests:IDisposable
     {
         var client = new HttpClient(_handler) { BaseAddress = new Uri("https://api.test.com") };
         _sut = new CourseGenerationService(client);
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     private static StringContent JsonContent<T>(T value)
@@ -80,7 +88,7 @@ public class CourseGenerationServiceTests:IDisposable
     public void Constructor_ShouldSetTimeoutToTenMinutes()
     {
         var client = new HttpClient(_handler) { BaseAddress = new Uri("https://api.test.com") };
-        _=new CourseGenerationService(client);
+        _ = new CourseGenerationService(client);
         client.Timeout.ShouldBe(TimeSpan.FromMinutes(10));
     }
 
@@ -113,7 +121,8 @@ public class CourseGenerationServiceTests:IDisposable
         CourseSkeletonResponse expected = BuildSkeletonResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        CourseSkeletonResponse result = await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
+        CourseSkeletonResponse result =
+            await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
 
         result.ShouldNotBeNull();
         result.EstimatedDays.ShouldBe(expected.EstimatedDays);
@@ -127,7 +136,8 @@ public class CourseGenerationServiceTests:IDisposable
         CourseSkeletonResponse expected = BuildSkeletonResponse();
         _handler.RespondWith(HttpStatusCode.OK, JsonContent(expected));
 
-        CourseSkeletonResponse result = await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
+        CourseSkeletonResponse result =
+            await _sut.GetCourseSkeletonAsync(new CourseSkeletonRequest("C# Basics"), CancellationToken.None);
 
         ChapterDto first = result.Skeleton.Chapters[0];
         first.Title.ShouldBe("Intro");
@@ -309,11 +319,5 @@ public class CourseGenerationServiceTests:IDisposable
             LastRequest = request;
             return Task.FromResult(new HttpResponseMessage(_statusCode) { Content = _content });
         }
-    }
-
-    public void Dispose()
-    {
-        _handler.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

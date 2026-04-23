@@ -8,6 +8,7 @@ using CareerFlow.Core.Domain.Exceptions;
 using Microsoft.Extensions.Logging;
 
 using Moq;
+
 using Shouldly;
 
 namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
@@ -50,7 +51,8 @@ public class DeleteAccountCommandHandlerTests : BaseHandlerTest<DeleteAccountCom
         _accountRepositoryMock.Setup(x => x.GetByIdAsync(command.Id, Ct)).ReturnsAsync((Account?)null);
 
         // Act
-        AccountNotFoundException exception = await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
+        AccountNotFoundException exception =
+            await Should.ThrowAsync<AccountNotFoundException>(() => _handler.Handle(command, Ct));
 
         // Assert
         exception.Message.ShouldContain(command.Id.ToString());

@@ -1,8 +1,11 @@
 using System.Text.Json;
+
 using CareerFlow.Core.Domain.Abstractions.Services;
 using CareerFlow.Core.Infrastructure.Configurations;
+
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+
 using StackExchange.Redis;
 
 namespace CareerFlow.Core.Infrastructure.Services;
@@ -11,8 +14,8 @@ public partial class RedisCacheService : ICacheService
 {
     private readonly IConnectionMultiplexer _connection;
     private readonly IDatabase _database;
-    private readonly CacheSettings _settings;
     private readonly ILogger<RedisCacheService> _logger;
+    private readonly CacheSettings _settings;
 
     public RedisCacheService(
         IConnectionMultiplexer connection,
@@ -24,8 +27,6 @@ public partial class RedisCacheService : ICacheService
         _settings = options.Value;
         _logger = logger;
     }
-
-    private RedisKey PrefixedKey(string key) => $"{_settings.InstanceName}{key}";
 
     public async Task<T?> GetAsync<T>(string key)
     {
@@ -75,6 +76,8 @@ public partial class RedisCacheService : ICacheService
             throw;
         }
     }
+
+    private RedisKey PrefixedKey(string key) => $"{_settings.InstanceName}{key}";
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Redis connection error while getting key: {Key}")]
     private partial void LogGetError(Exception ex, string key);
