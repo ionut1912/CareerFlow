@@ -11,3 +11,17 @@
 /CareerFlow.Core/src/CareerFlow.Core.Rabbit.Events/obj
 /CareerFlow.Core/nuget.config
 /.env
+CareerFlow.Core/CareerFlow.Core.Infrastructure.Test.Integration/obj/*
+CareerFlow.Core/tests/CareerFlow.Core.Api.IntegrationTests/bin/*
+CareerFlow.Core/tests/CareerFlow.Core.Api.IntegrationTests/obj/*
+*.dll
+*.exe
+CareerFlow.Core/tests/CareerFlow.Core.Application.Tests/bin/*
+CareerFlow.Core/tests/CareerFlow.Core.Domain.Tests/bin/*
+*.pdb
+CareerFlow.Core/tests/CareerFlow.Core.Application.Tests/obj/*
+CareerFlow.Core/tests/CareerFlow.Core.Domain.Tests/obj/*
+CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Test.Integration/bin/*
+CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Test.Integration/obj/*
+CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests.Unit/bin/*
+CareerFlow.Core/tests/CareerFlow.Core.Infrastructure.Tests.Unit/obj/*
