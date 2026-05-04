@@ -19,6 +19,7 @@ insert_final_newline = true
 # Language version
 csharp_language_version = preview
 
+
 # ── New-line preferences ──────────────────────
 csharp_new_line_before_open_brace = all
 csharp_new_line_before_else = true
