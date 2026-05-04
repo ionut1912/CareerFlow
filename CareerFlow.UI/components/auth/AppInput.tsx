@@ -1,14 +1,8 @@
 import {COLORS} from '@/constants/theme';
 import {MaterialIcons} from '@expo/vector-icons';
 import React, {useState} from 'react';
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  TextInputProps,
-  TouchableOpacity,
-  View,
-} from 'react-native';
+import {StyleSheet, Text, TextInput, TextInputProps, View} from 'react-native';
+import {PasswordVisibilityToggle} from './PasswordVisibilityToggle';
 
 interface AppInputProps extends TextInputProps {
   label: string;
@@ -31,12 +25,12 @@ export const AppInput: React.FC<AppInputProps> = ({
   ...props
 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const showError = touched && error;
+  const showError = !!(touched && error);
 
   return (
     <View style={styles.container}>
       <Text style={styles.label}>{label}</Text>
-      <View style={[styles.wrapper, !!showError && styles.wrapperError]}>
+      <View style={[styles.wrapper, showError && styles.wrapperError]}>
         <MaterialIcons
           name={icon}
           size={20}
@@ -57,19 +51,13 @@ export const AppInput: React.FC<AppInputProps> = ({
           {...props}
         />
         {isPassword && (
-          <TouchableOpacity
-            onPress={() => setIsVisible(!isVisible)}
-            accessibilityRole="button"
-            accessibilityLabel={isVisible ? 'Ascunde parola' : 'Arata parola'}>
-            <MaterialIcons
-              name={isVisible ? 'visibility' : 'visibility-off'}
-              size={20}
-              color={COLORS.textMuted}
-            />
-          </TouchableOpacity>
+          <PasswordVisibilityToggle
+            isVisible={isVisible}
+            onToggle={() => setIsVisible(v => !v)}
+          />
         )}
       </View>
-      {!!showError && (
+      {showError && (
         <Text
           style={styles.errorText}
           accessibilityLiveRegion="polite"
@@ -82,9 +70,11 @@ export const AppInput: React.FC<AppInputProps> = ({
 };
 
 const styles = StyleSheet.create({
-  container: {marginBottom: 16},
+  container: {
+    marginBottom: 16,
+  },
   label: {
-    color: '#d1d5db',
+    color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: '600',
     marginBottom: 6,
@@ -102,10 +92,16 @@ const styles = StyleSheet.create({
   },
   wrapperError: {
     borderColor: COLORS.error,
-    backgroundColor: 'rgba(239, 68, 68, 0.05)',
+    backgroundColor: COLORS.inputBg,
   },
-  input: {flex: 1, color: COLORS.text, fontSize: 14},
-  icon: {marginRight: 10},
+  input: {
+    flex: 1,
+    color: COLORS.text,
+    fontSize: 14,
+  },
+  icon: {
+    marginRight: 10,
+  },
   errorText: {
     color: COLORS.error,
     fontSize: 11,

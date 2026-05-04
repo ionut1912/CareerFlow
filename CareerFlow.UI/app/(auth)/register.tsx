@@ -1,51 +1,65 @@
 import {AppInput} from '@/components/auth/AppInput';
 import {AuthLayout} from '@/components/auth/AuthLayout';
-import {GradientButton} from '@/components/auth/GradientButton';
+import {GradientButton} from '@/components/shared/GradientButton';
+import {RegisterForm, ErrorFields} from '@/models/ui.models';
+import {registerThunk} from '@/store/auth/thunks';
+import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {useRouter} from 'expo-router';
-import React, {useState} from 'react';
+import React from 'react';
+import {useFormState} from '@/hooks/useFormState';
+import {useLegalAcceptance} from '@/hooks/useLegalAcceptance';
+import {showErrorToast, showSuccessToast} from '@/utils/toast';
+import {
+  validateName,
+  validateEmail,
+  validatePassword,
+  validateRequired,
+  validateConfirmPassword,
+} from '@/utils/validators';
+
+const INITIAL_FORM: RegisterForm = {
+  name: '',
+  email: '',
+  username: '',
+  password: '',
+  confirmPassword: '',
+};
 
 const RegisterScreen = () => {
+  const dispatch = useAppDispatch();
   const router = useRouter();
-  const [form, setForm] = useState({
-    name: '',
-    email: '',
-    username: '',
-    password: '',
-  });
-  const [touched, setTouched] = useState({
-    name: false,
-    email: false,
-    password: false,
-    username: false,
-  });
+  const {loading: isLoading} = useAppSelector(state => state.auth);
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const {form, touched, handleChange, handleBlur} =
+    useFormState<RegisterForm>(INITIAL_FORM);
 
-  const errors = {
-    name: !form.name
-      ? 'Numele este necesar'
-      : form.name.trim().length < 2
-        ? 'Numele trebuie sa aiba minim 2 caractere'
-        : null,
-    email: !form.email
-      ? 'Email-ul este necesar'
-      : !emailRegex.test(form.email)
-        ? 'Format invalid'
-        : null,
-    password: !form.password
-      ? 'Parola este necesara'
-      : form.password.length < 6
-        ? 'Parola trebuie sa aiba minim 6 caractere'
-        : null,
-    username: !form.username ? 'Numele de utilizator este necesar' : null,
+  const {legalAccepted, onAccept, onReject, isLegalComplete} =
+    useLegalAcceptance();
+
+  const errors: ErrorFields = {
+    name: validateName(form.name),
+    email: validateEmail(form.email),
+    password: validatePassword(form.password),
+    username: validateRequired(
+      form.username,
+      'Numele de utilizator este necesar',
+    ),
+    confirmPassword: validateConfirmPassword(
+      form.password,
+      form.confirmPassword,
+    ),
   };
 
-  const isFormValid =
-    !errors.name && !errors.email && !errors.password && !errors.username;
+  const isFormValid = !Object.values(errors).some(Boolean) && isLegalComplete;
 
-  const handleRegister = () => {
-    if (isFormValid) {
-      console.log('Register Success:', form);
+  const handleRegister = async () => {
+    if (!isFormValid || isLoading) return;
+    try {
+      await dispatch(registerThunk(form)).unwrap();
+      showSuccessToast('Cont creat cu succes!', 'Te rugam sa te autentifici.');
+      setTimeout(() => router.replace('/(auth)/login'), 1500);
+    } catch (error) {
+      showErrorToast('Eroare la inregistrare', error);
     }
   };
 
@@ -55,14 +69,17 @@ const RegisterScreen = () => {
       subtitle="Incepe aventura"
       footerText="Ai deja cont?"
       footerActionText="Autentificare"
-      onFooterAction={() => router.replace('/(auth)/login')}>
+      onFooterAction={() => router.replace('/(auth)/login')}
+      legalAccepted={legalAccepted}
+      onAccept={onAccept}
+      onReject={onReject}>
       <AppInput
         label="Nume"
         icon="person-outline"
         placeholder="John Doe"
         value={form.name}
-        onChangeText={text => setForm({...form, name: text})}
-        onBlur={() => setTouched({...touched, name: true})}
+        onChangeText={handleChange('name')}
+        onBlur={handleBlur('name')}
         error={errors.name}
         touched={touched.name}
       />
@@ -71,8 +88,8 @@ const RegisterScreen = () => {
         icon="person-outline"
         placeholder="jdoe"
         value={form.username}
-        onChangeText={text => setForm({...form, username: text})}
-        onBlur={() => setTouched({...touched, username: true})}
+        onChangeText={handleChange('username')}
+        onBlur={handleBlur('username')}
         error={errors.username}
         touched={touched.username}
       />
@@ -82,28 +99,38 @@ const RegisterScreen = () => {
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={text => setForm({...form, email: text})}
-        onBlur={() => setTouched({...touched, email: true})}
+        onChangeText={handleChange('email')}
+        onBlur={handleBlur('email')}
         error={errors.email}
         touched={touched.email}
       />
       <AppInput
         label="Parola"
         icon="lock-outline"
-        placeholder="Min 6 characters"
+        placeholder="Parola"
         isPassword
         value={form.password}
-        onChangeText={text => setForm({...form, password: text})}
-        onBlur={() => setTouched({...touched, password: true})}
+        onChangeText={handleChange('password')}
+        onBlur={handleBlur('password')}
         error={errors.password}
         touched={touched.password}
       />
-
+      <AppInput
+        label="Confirma parola"
+        icon="lock-outline"
+        placeholder="Confirma parola"
+        isPassword
+        value={form.confirmPassword}
+        onChangeText={handleChange('confirmPassword')}
+        onBlur={handleBlur('confirmPassword')}
+        error={errors.confirmPassword}
+        touched={touched.confirmPassword}
+      />
       <GradientButton
-        text="Creare cont"
-        icon="person-add"
+        text={isLoading ? 'Se incarca...' : 'Creare cont'}
+        icon={isLoading ? null : 'person-add'}
         onPress={handleRegister}
-        disabled={!isFormValid}
+        disabled={!isFormValid || isLoading}
       />
     </AuthLayout>
   );

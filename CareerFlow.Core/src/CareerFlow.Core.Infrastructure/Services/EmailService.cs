@@ -1,67 +1,62 @@
-﻿using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Infrastructure.Configurations;
+﻿using CareerFlow.Core.Domain.Abstractions.Gateways;
+using CareerFlow.Core.Domain.Abstractions.Services;
+
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using PostmarkDotNet;
 
 namespace CareerFlow.Core.Infrastructure.Services;
 
-public class EmailService : IEmailService
+public partial class EmailService : IEmailService
 {
-    private readonly PostmarkSettings _settings;
     private readonly ILogger<EmailService> _logger;
-    private readonly PostmarkClient _client;
+    private readonly IMailClient _mailClient;
 
-    public EmailService(IOptions<PostmarkSettings> options, ILogger<EmailService> logger)
+    public EmailService(IMailClient mailClient, ILogger<EmailService> logger)
     {
-        ArgumentNullException.ThrowIfNull(options, nameof(options));
-        ArgumentNullException.ThrowIfNull(logger, nameof(logger));
-
-        _settings = options.Value;
+        ArgumentNullException.ThrowIfNull(mailClient);
+        ArgumentNullException.ThrowIfNull(logger);
+        _mailClient = mailClient;
         _logger = logger;
-        _client = new PostmarkClient(_settings.ServerToken);
     }
 
-    public async Task<bool> SendEmailWithTemplateAsync(string to, int templateId, Dictionary<string, string> templateModel, CancellationToken cancellationToken)
+    public async Task<bool> SendEmailWithTemplateAsync(string receiver, int templateId,
+        Dictionary<string, string> placeholders)
     {
-        if (cancellationToken.IsCancellationRequested)
+        if (string.IsNullOrWhiteSpace(receiver))
         {
-            _logger.LogWarning("Email sending cancelled before execution.");
+            LogEmptyReceiver();
             return false;
         }
-
-        if (string.IsNullOrWhiteSpace(to))
-        {
-            _logger.LogError("Receiver email addres is empty");
-            return false;
-        }
-
-        var message = new TemplatedPostmarkMessage
-        {
-            To = to,
-            From = _settings.FromAddress,
-            TemplateId = templateId,
-            TemplateModel = templateModel,
-            TrackOpens = true
-        };
 
         try
         {
-            var result = await _client.SendMessageAsync(message).WaitAsync(cancellationToken);
+            bool success = await _mailClient.SendTemplatedEmailAsync(receiver, templateId, placeholders);
 
-            if (result.Status == PostmarkStatus.Success)
+            if (success)
             {
-                _logger.LogInformation("Email sent successfully  using template {TemplateId}", templateId);
+                LogEmailSent(templateId);
                 return true;
             }
 
-            _logger.LogError("Failed to send email.Postmark Error: {Message}", result.Message);
+            LogEmailFailed();
             return false;
         }
-        catch (Exception ex)
+        catch (InvalidOperationException ex)
         {
-            _logger.LogError(ex, "Exception occurred while sending email with template {TemplateId}", templateId);
+            LogEmailException(templateId, ex);
             return false;
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Receiver email address is empty")]
+    private partial void LogEmptyReceiver();
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Email sent successfully using template {TemplateId}")]
+    private partial void LogEmailSent(int templateId);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Failed to send email via provider.")]
+    private partial void LogEmailFailed();
+
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Exception occurred while sending email with template {TemplateId}")]
+    private partial void LogEmailException(int templateId, Exception ex);
 }

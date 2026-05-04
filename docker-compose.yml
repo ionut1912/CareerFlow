@@ -1,32 +1,50 @@
 include:
-  # This assumes your infra file from the previous step is saved as this name
   - docker-compose.infra.yml
 
 services:
+  reverse-proxy:
+    image: nginx:latest
+    container_name: reverse-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro,z
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    depends_on:
+      - careerflow-api
+      - careerflow-ai
+    networks:
+      - careerflow-network
+
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done"
+    restart: unless-stopped
+
   careerflow-api:
     build:
       context: CareerFlow.Core
       dockerfile: src/CareerFlow.Core.Api/Dockerfile
+      args:
+        - PACKAGE_TOKEN=${PACKAGE_TOKEN}
     container_name: careerflow-api
-    ports:
-      - "5000:8080"
+    restart: unless-stopped
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      
-      # --- Infisical (Passed as Arguments) ---
-      # These use ${VAR_NAME} syntax to pull from your host environment or .env file
+      - PACKAGE_TOKEN=${PACKAGE_TOKEN}
       - Infisical__ClientId=${INFISICAL_CLIENT_ID}
       - Infisical__ClientSecret=${INFISICAL_CLIENT_SECRET}
       - Infisical__ProjectId=${INFISICAL_PROJECT_ID}
-
-      # --- AppSettings: JwtSettings ---
       - JwtSettings__Issuer=FreelanceApp
       - JwtSettings__Audience=FreelanceAppUsers
-
       - PostmarkSettings__FromAddress=contact@carerflow-api.ro
       - PostmarkSettings__FromName=CareerFlow
-
-
+      - Redis__ConnectionString=redis:6379
     depends_on:
       postgres:
         condition: service_healthy
@@ -36,3 +54,19 @@ services:
         condition: service_healthy
     networks:
       - careerflow-network
+
+  careerflow-ai:
+    build:
+      context: CareerFlow.AI
+      dockerfile: Dockerfile
+    container_name: careerflow-ai
+    restart: unless-stopped
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ENVIRONMENT=production
+    networks:
+      - careerflow-network
+
+networks:
+  careerflow-network:
+    driver: bridge

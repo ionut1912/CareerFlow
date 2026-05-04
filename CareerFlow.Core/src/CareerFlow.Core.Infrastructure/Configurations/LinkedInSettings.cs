@@ -2,7 +2,7 @@
 
 public class LinkedInSettings
 {
-    public string ClientId { get; set; } = string.Empty;
-    public string ClientSecret { get; set; } = string.Empty;
-    public string RedirectUri { get; set; } = string.Empty;
+    public required string ClientId { get; init; }
+    public required string ClientSecret { get; init; }
+    public required string RedirectUri { get; init; }
 }

@@ -1,4 +1,5 @@
-﻿using CareerFlow.Core.Application.CQRS.Accounts.Query;
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+
 using FluentValidation;
 
 namespace CareerFlow.Core.Application.Validators.Account;
@@ -7,7 +8,8 @@ public class LoginQueryValidator : AbstractValidator<LoginQuery>
 {
     public LoginQueryValidator()
     {
-        RuleFor(x => x.Email).NotEmpty().WithMessage("Username is required");
-        RuleFor(x => x.Password).NotEmpty().WithMessage("Password is required");
+        RuleFor(a => a.Email).NotEmpty().WithMessage("Email-ul este necesar")
+            .EmailAddress().WithMessage("Email-ul are format invalid");
+        RuleFor(a => a.Password).NotEmpty().WithMessage("Parola este necesara");
     }
 }

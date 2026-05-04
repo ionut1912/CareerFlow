@@ -1,31 +1,44 @@
 import {AppInput} from '@/components/auth/AppInput';
 import {AuthLayout} from '@/components/auth/AuthLayout';
-import {GradientButton} from '@/components/auth/GradientButton';
+import {GradientButton} from '@/components/shared/GradientButton';
 import {COLORS} from '@/constants/theme';
+import {loginThunk} from '@/store/auth/thunks';
+import {useAppDispatch, useAppSelector} from '@/store/hook';
 import {useRouter} from 'expo-router';
-import React, {useState} from 'react';
+import React from 'react';
 import {StyleSheet, Text, TouchableOpacity} from 'react-native';
+import {useFormState} from '@/hooks/useFormState';
+import {useLegalAcceptance} from '@/hooks/useLegalAcceptance';
+import {showErrorToast} from '@/utils/toast';
+import {validateEmail, validateRequired} from '@/utils/validators';
+
+const INITIAL_FORM = {email: '', password: ''};
 
 const LoginScreen = () => {
   const router = useRouter();
-  const [form, setForm] = useState({email: '', password: ''});
-  const [touched, setTouched] = useState({email: false, password: false});
+  const dispatch = useAppDispatch();
+  const {loading} = useAppSelector(state => state.auth);
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const {form, touched, handleChange, handleBlur} = useFormState(INITIAL_FORM);
+  const {legalAccepted, onAccept, onReject} = useLegalAcceptance();
 
   const errors = {
-    email: !form.email
-      ? 'Email ul este necesar'
-      : !emailRegex.test(form.email)
-        ? 'Format invalid'
-        : null,
-    password: !form.password ? 'Parola este necesara' : null,
+    email: validateEmail(form.email),
+    password: validateRequired(form.password, 'Parola este necesara'),
   };
 
   const isFormValid = !errors.email && !errors.password;
 
-  const handleLogin = () => {
-    if (isFormValid) console.log('Login Success:', form);
+  const handleLogin = async () => {
+    if (!isFormValid || loading) return;
+    try {
+      await dispatch(
+        loginThunk({email: form.email, password: form.password}),
+      ).unwrap();
+      router.replace('/(auth)/preferences');
+    } catch (error) {
+      showErrorToast('Eroare la autentificare', error);
+    }
   };
 
   return (
@@ -34,15 +47,18 @@ const LoginScreen = () => {
       subtitle="Pregateste mintea pentru cunoastere"
       footerText="Nu ai cont?"
       footerActionText="Inregistreaza-te"
-      onFooterAction={() => router.replace('/(auth)/register')}>
+      onFooterAction={() => router.replace('/(auth)/register')}
+      legalAccepted={legalAccepted}
+      onAccept={onAccept}
+      onReject={onReject}>
       <AppInput
         label="Adresa de email"
         icon="mail-outline"
         placeholder="you@example.com"
         keyboardType="email-address"
         value={form.email}
-        onChangeText={text => setForm({...form, email: text})}
-        onBlur={() => setTouched({...touched, email: true})}
+        onChangeText={handleChange('email')}
+        onBlur={handleBlur('email')}
         error={errors.email}
         touched={touched.email}
       />
@@ -52,21 +68,22 @@ const LoginScreen = () => {
         placeholder="••••••••"
         isPassword
         value={form.password}
-        onChangeText={text => setForm({...form, password: text})}
-        onBlur={() => setTouched({...touched, password: true})}
+        onChangeText={handleChange('password')}
+        onBlur={handleBlur('password')}
         error={errors.password}
         touched={touched.password}
       />
-
-      <TouchableOpacity style={styles.forgotBtn}>
+      <TouchableOpacity
+        style={styles.forgotBtn}
+        onPress={() => router.push('/(auth)/forgot-password')}>
         <Text style={styles.forgotText}>Ai uitat parola?</Text>
       </TouchableOpacity>
 
       <GradientButton
-        text="Autentificare"
-        icon="login"
+        text={loading ? 'Se incarca...' : 'Autentificare'}
+        icon={loading ? null : 'login'}
         onPress={handleLogin}
-        disabled={!isFormValid}
+        disabled={!isFormValid || loading}
       />
     </AuthLayout>
   );

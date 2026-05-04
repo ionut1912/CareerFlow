@@ -1,0 +1,98 @@
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+using CareerFlow.Core.Application.Dtos;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.Exceptions;
+using CareerFlow.Core.Domain.Models.Authentication;
+
+using Microsoft.Extensions.Logging;
+
+namespace CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+
+public partial class CreateRefreshTokenCommandHandler
+{
+    private readonly IAccountRepository _accountRepository;
+    private readonly ITokenService _jwtTokenService;
+    private readonly ILogger<CreateRefreshTokenCommandHandler> _logger;
+    private readonly IRefreshTokenRepository _refreshTokenRepository;
+    private readonly IUnitOfWork _unitOfWork;
+
+    public CreateRefreshTokenCommandHandler(ILogger<CreateRefreshTokenCommandHandler> logger,
+        IAccountRepository accountRepository, ITokenService jwtTokenService,
+        IRefreshTokenRepository refreshTokenRepository, IUnitOfWork unitOfWork)
+    {
+        ArgumentNullException.ThrowIfNull(logger);
+        ArgumentNullException.ThrowIfNull(refreshTokenRepository);
+        ArgumentNullException.ThrowIfNull(accountRepository);
+        ArgumentNullException.ThrowIfNull(jwtTokenService);
+        ArgumentNullException.ThrowIfNull(unitOfWork);
+        _logger = logger;
+        _refreshTokenRepository = refreshTokenRepository;
+        _accountRepository = accountRepository;
+        _jwtTokenService = jwtTokenService;
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task<RefreshTokenDto> Handle(CreateRefreshTokenCommand request, CancellationToken cancellationToken)
+    {
+        RefreshToken? storedToken =
+            await _refreshTokenRepository.GetExistingTokenAsync(request.RefreshToken, cancellationToken);
+        if (storedToken is null)
+        {
+            LogRefreshTokenNotFound(_logger, request.RefreshToken, request.Token);
+            throw new InvalidRefreshTokenException($"Token-ul {request.RefreshToken} este invalid");
+        }
+
+        if (storedToken.IsUsed)
+        {
+            LogRefreshTokenAlreadyUsed(_logger, request.RefreshToken, request.Token);
+            throw new TokenAlreadyUsedException(
+                $"Refresh token-ul {request.RefreshToken} a fost folosit pt token-ul {request.Token}");
+        }
+
+        if (storedToken.IsRevoked)
+        {
+            LogRefreshTokenRevoked(_logger, request.RefreshToken, request.Token);
+            throw new TokenRevokedException(
+                $"Token-ul {request.RefreshToken} a fost revocat pentru token-ul {request.Token}");
+        }
+
+        Account? user = await _accountRepository.GetByIdAsync(storedToken.UserId, cancellationToken);
+        if (user is null)
+        {
+            LogUserNotFound(_logger, storedToken.UserId);
+            throw new AccountNotFoundException($"User-ul cu id-ul {storedToken.UserId} nu a fost gasit");
+        }
+
+        storedToken.MarkAsUsed();
+        storedToken.MarkAsRevoked();
+        _refreshTokenRepository.Update(storedToken);
+
+        AuthResult newJwtToken = _jwtTokenService.GenerateToken(user);
+        RefreshToken newRefreshToken = _jwtTokenService.GenerateRefreshToken(user.Id, newJwtToken.Token);
+        await _refreshTokenRepository.AddAsync(newRefreshToken, cancellationToken);
+        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        LogRefreshTokenCreated(_logger, user.Id);
+        return new RefreshTokenDto(newJwtToken.Token, newRefreshToken.TokenHash);
+    }
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "Refresh token-ul {RefreshToken} nu exista pt token-ul:{Token}")]
+    private static partial void LogRefreshTokenNotFound(ILogger logger, string refreshToken, string token);
+
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Refresh token-ul {RefreshToken} a fost deja folosit pt token-ul: {Token}")]
+    private static partial void LogRefreshTokenAlreadyUsed(ILogger logger, string refreshToken, string token);
+
+    [LoggerMessage(Level = LogLevel.Error,
+        Message = "Refresh token-ul {RefreshToken} a fost revocat pentru token-ul: {Token}")]
+    private static partial void LogRefreshTokenRevoked(ILogger logger, string refreshToken, string token);
+
+    [LoggerMessage(Level = LogLevel.Error, Message = "User-ul cu id-ul {Id} nu a fost gasit")]
+    private static partial void LogUserNotFound(ILogger logger, Guid id);
+
+    [LoggerMessage(Level = LogLevel.Information,
+        Message = "Refresh token-ul a fost creat cu succes pentru user-ul cu id-ul {Id}")]
+    private static partial void LogRefreshTokenCreated(ILogger logger, Guid id);
+}

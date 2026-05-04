@@ -1,0 +1,45 @@
+import {AxiosResponse} from 'axios';
+import {API_URL, api} from './utils';
+import {
+  AccountDto,
+  CreateAccountRequest,
+  LoginRequest,
+} from '@/models/auth.models';
+
+const API_AUTH_URL = `${API_URL}/account`;
+
+export function login(
+  payload: LoginRequest,
+): Promise<AxiosResponse<AccountDto>> {
+  return api.post<AccountDto>(`${API_AUTH_URL}/login`, payload);
+}
+
+export function register(
+  payload: CreateAccountRequest,
+): Promise<AxiosResponse<void>> {
+  return api.post<void>(`${API_AUTH_URL}/register`, payload);
+}
+
+export function getCurrentAccount(): Promise<AxiosResponse<AccountDto>> {
+  return api.get<AccountDto>(`${API_AUTH_URL}/current`, {
+    headers: {'requires-auth': ''},
+  });
+}
+
+export function forgotPassword(email: string): Promise<AxiosResponse<void>> {
+  return api.post<void>(`${API_AUTH_URL}/forgot-password`, {
+    email,
+  });
+}
+
+export function resetPassword(
+  email: string,
+  newPassword: string,
+  token: string,
+): Promise<AxiosResponse<void>> {
+  return api.post<void>(`${API_AUTH_URL}/reset-password`, {
+    email,
+    newPassword,
+    token,
+  });
+}

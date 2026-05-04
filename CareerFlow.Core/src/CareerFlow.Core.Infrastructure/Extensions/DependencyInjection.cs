@@ -1,0 +1,210 @@
+using Amazon.Runtime;
+using Amazon.S3;
+
+using CareerFlow.Core.Domain.Abstractions.Gateways;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Infrastructure.Configurations;
+using CareerFlow.Core.Infrastructure.Gateways;
+using CareerFlow.Core.Infrastructure.HangfireJobs;
+using CareerFlow.Core.Infrastructure.Persistence;
+using CareerFlow.Core.Infrastructure.Persistence.Repositories;
+using CareerFlow.Core.Infrastructure.Services;
+
+using Hangfire;
+using Hangfire.PostgreSql;
+
+using InfisicalConfiguration;
+
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
+
+using Shared.Infra.Extensions;
+
+using StackExchange.Redis;
+
+namespace CareerFlow.Core.Infrastructure.Extensions;
+
+public static class DependencyInjection
+{
+    extension(IServiceCollection services)
+    {
+        private IServiceCollection AddRedisCache(IConfiguration configuration)
+        {
+            services.Configure<CacheSettings>(
+                configuration.GetSection(CacheSettings.SectionName));
+
+            services.AddSingleton<IConnectionMultiplexer>(sp =>
+            {
+                CacheSettings options = sp.GetRequiredService<IOptions<CacheSettings>>().Value;
+
+                if (string.IsNullOrWhiteSpace(options.ConnectionString))
+                {
+                    throw new InvalidOperationException(
+                        $"Redis ConnectionString is missing. Section: {CacheSettings.SectionName}");
+                }
+
+                return ConnectionMultiplexer.Connect(new ConfigurationOptions
+                {
+                    EndPoints = { options.ConnectionString },
+                    AbortOnConnectFail = options.AbortOnConnectFail,
+                    ConnectRetry = 3,
+                    ReconnectRetryPolicy = new ExponentialRetry(5000)
+                });
+            });
+
+            services.AddSingleton<ICacheService, RedisCacheService>();
+
+            return services;
+        }
+
+        private IServiceCollection AddDatabaseConfiguration(IConfiguration configuration)
+        {
+            services.AddDatabase<ApplicationDbContext>(configuration);
+            return services;
+        }
+
+        private IServiceCollection AddRepositories()
+        {
+            services
+                .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
+                .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
+                .AddRepository<UserProfile, UserProfileRepository, IUserProfileRepository, ApplicationDbContext>()
+                .AddRepository<CourseUpload, CourseUploadsRepository, ICourseUploadsRepository, ApplicationDbContext>()
+                .AddRepository<CourseJob, CourseJobRepository, ICourseJobRepository, ApplicationDbContext>()
+                .AddRepository<Chapter, ChapterRepository, IChapterRepository, ApplicationDbContext>()
+                .AddRepository<Course, CourseRepository, ICourseRepository, ApplicationDbContext>()
+                .AddRepository<QuizQuestion, QuizRepository, IQuizRepository, ApplicationDbContext>()
+                .AddRepository<SystemDocument, SystemDocumentRepository, ISystemDocumentRepository,
+                    ApplicationDbContext>()
+                .AddRepos<ITokenService, TokenService>()
+                .AddRepos<IPasswordService, PasswordService>()
+                .AddRepos<IAuthService, AuthService>()
+                .AddRepos<IUnitOfWork, UnitOfWork>()
+                .AddRepos<IEmailService, EmailService>()
+                .AddRepos<IGoogleTokenValidator, GoogleTokenValidator>()
+                .AddRepos<IMailClient, PostmarkMailClient>()
+                .AddRepos<ISocialService, SocialService>()
+                .AddRepos<ILegalService, LegalService>()
+                .AddRepos<ICourseService, CourseService>()
+                .AddRepos<ICoursePersistenceService, CoursePersistenceService>();
+
+            return services;
+        }
+
+        private IServiceCollection AddInfisical(IConfiguration configuration, string environment)
+        {
+            string? infisicalClientId = configuration["Infisical:ClientId"];
+            string? infisicalClientSecret = configuration["Infisical:ClientSecret"];
+            string? infisicalProjectId = configuration["Infisical:ProjectId"];
+
+            if (string.IsNullOrWhiteSpace(infisicalClientId) ||
+                string.IsNullOrWhiteSpace(infisicalProjectId) ||
+                string.IsNullOrWhiteSpace(infisicalClientSecret)) return services;
+
+            if (configuration is IConfigurationManager configManager)
+            {
+                configManager.AddInfisical(new InfisicalConfigBuilder()
+                    .SetProjectId(infisicalProjectId)
+                    .SetEnvironment(environment)
+                    .SetAuth(new InfisicalAuthBuilder()
+                        .SetUniversalAuth(infisicalClientId, infisicalClientSecret)
+                        .Build())
+                    .Build());
+            }
+
+            return services;
+        }
+
+        private IServiceCollection AddSettings(IConfiguration configuration)
+        {
+            services
+                .Configure<SocialAuthSettings>(configuration.GetSection(SocialAuthSettings.SectionName))
+                .Configure<PostmarkSettings>(configuration.GetSection(PostmarkSettings.SectionName))
+                .Configure<LegalDocSettings>(configuration.GetSection(LegalDocSettings.SectionName))
+                .AddHttpClient<IAuthService, AuthService>();
+
+            services.AddHttpClient<IGithubPagesRequestsSender, GithubPagesRequestsSender>();
+
+            return services;
+        }
+
+        private IServiceCollection AddStorageConfiguration(IConfiguration configuration)
+        {
+            services.Configure<R2Settings>(configuration.GetSection(R2Settings.SectionName));
+
+            services.AddSingleton<IAmazonS3>(sp =>
+            {
+                R2Settings settings = sp.GetRequiredService<IOptions<R2Settings>>().Value;
+
+                var config = new AmazonS3Config { ServiceURL = settings.Endpoint, ForcePathStyle = true };
+
+                var credentials = new BasicAWSCredentials(settings.AccessKey, settings.SecretKey);
+                return new AmazonS3Client(credentials, config);
+            });
+
+            services.AddScoped<IStorageService, R2StorageService>();
+
+            return services;
+        }
+
+        private IServiceCollection AddAnalyzerService(IConfiguration configuration)
+        {
+            services.Configure<AnalyzerSettings>(
+                configuration.GetSection(AnalyzerSettings.SectionName));
+
+            services.AddHttpClient<IDocumentAnalyzerService, DocsAnalyzerService>((sp, client) =>
+            {
+                AnalyzerSettings settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
+                client.BaseAddress = new Uri(settings.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSec);
+            });
+
+            services.AddHttpClient<IAnalyzerService, CourseGenerationService>((sp, client) =>
+            {
+                AnalyzerSettings settings = sp.GetRequiredService<IOptions<AnalyzerSettings>>().Value;
+                client.BaseAddress = new Uri(settings.BaseUrl);
+                client.Timeout = TimeSpan.FromSeconds(settings.TimeoutSec);
+            });
+
+            return services;
+        }
+
+        private IServiceCollection AddHangfireConfiguration(IConfiguration configuration)
+        {
+            services.AddHangfire(config => config
+                .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
+                .UseSimpleAssemblyNameTypeSerializer()
+                .UseRecommendedSerializerSettings()
+                .UsePostgreSqlStorage(opts =>
+                    opts.UseNpgsqlConnection(
+                        configuration.GetConnectionString("DefaultConnection"))));
+
+            services.AddHangfireServer(opts =>
+            {
+                opts.WorkerCount = 4;
+                opts.Queues = ["default"];
+            });
+
+            services.AddScoped<LegalDocumentCheckerJob>();
+            services.AddScoped<ProcessCourseJob>();
+
+            return services;
+        }
+
+        public IServiceCollection AddInfrastructure(IConfiguration configuration, string environment)
+        {
+            return services
+                .AddHangfireConfiguration(configuration)
+                .AddInfisical(configuration, environment)
+                .AddSettings(configuration)
+                .AddDatabaseConfiguration(configuration)
+                .AddRepositories()
+                .AddRedisCache(configuration)
+                .AddStorageConfiguration(configuration)
+                .AddAnalyzerService(configuration);
+        }
+    }
+}

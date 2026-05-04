@@ -8,6 +8,10 @@ export const COLORS = {
   error: '#ef4444',
   border: 'rgba(255, 255, 255, 0.1)',
   inputBg: 'rgba(0,0,0,0.2)',
+  // New colors extracted from the stylesheet
+  primaryWash: 'rgba(175, 37, 244, 0.08)',
+  primaryBorder: 'rgba(175, 37, 244, 0.3)',
+  surfaceLight: 'rgba(255,255,255,0.08)',
 };
 
 export const STYLES = {

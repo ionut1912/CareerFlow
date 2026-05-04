@@ -1,4 +1,5 @@
 ﻿using CareerFlow.Core.Domain.Entities;
+
 using Shared.Domain.Interfaces;
 
 namespace CareerFlow.Core.Domain.Abstractions.Repositories;
@@ -6,4 +7,5 @@ namespace CareerFlow.Core.Domain.Abstractions.Repositories;
 public interface IAccountRepository : IGenericRepository<Account>
 {
     Task<Account?> GetAccountByEmailAsync(string email, CancellationToken cancellationToken);
+    Task UpdateTermsAsync(string documentType, CancellationToken cancellationToken);
 }

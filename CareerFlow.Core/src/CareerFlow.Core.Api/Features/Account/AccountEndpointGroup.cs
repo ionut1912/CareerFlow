@@ -1,0 +1,131 @@
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+using CareerFlow.Core.Application.CQRS.Accounts.Queries;
+using CareerFlow.Core.Application.Dtos;
+using CareerFlow.Core.Application.Mappings;
+using CareerFlow.Core.Application.Requests.Account;
+using CareerFlow.Core.Application.Requests.LegalDoc;
+
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
+
+using Shared.Api.Endpoints;
+using Shared.Api.Extensions;
+using Shared.Api.Infrastructure;
+
+using Wolverine;
+
+namespace CareerFlow.Core.Api.Features.Account;
+
+public class AccountEndpointGroup : EndpointGroup
+{
+    public override void Map(IEndpointRouteBuilder app)
+    {
+        RouteGroupBuilder group = app.MapGroup(this);
+        group.MapPost(Register, "/register");
+        group.MapPost(Login, "/login");
+        group.MapPost(RefreshToken, "/refresh-token");
+        group.MapPost(ForgotPassword, "/forgot-password");
+        group.MapPost(AcceptLegal, "/accept-legaldoc");
+        group.MapPut(ResetPassword, "/reset-password");
+        group.MapGet(GetCurrentAccount, "/current");
+        group.MapDelete(DeleteUserAccount);
+    }
+
+    private static async Task<Ok<Guid>> Register(
+        IMessageBus bus,
+        CreateAccountRequest createAccountRequest,
+        CancellationToken cancellationToken)
+    {
+        CreateAccountCommand createAccountCommand = createAccountRequest.ToCreateCommand();
+        Guid createdAccount = await bus.InvokeAsync<Guid>(createAccountCommand, cancellationToken);
+        return TypedResults.Ok(createdAccount);
+    }
+
+    private static async Task<Ok<AccountDto>> Login(
+        IMessageBus bus,
+        LoginRequest loginRequest,
+        CancellationToken cancellationToken)
+    {
+        var loginQuery = loginRequest.ToLoginQuery();
+        AccountDto result = await bus.InvokeAsync<AccountDto>(loginQuery, cancellationToken);
+        return TypedResults.Ok(result);
+    }
+
+    private static async Task<NoContent> ForgotPassword(
+        IMessageBus bus,
+        ForgotPasswordRequest forgotPasswordRequest,
+        CancellationToken cancellationToken)
+    {
+        string resetToken = Guid.NewGuid().ToString();
+        const string resetPasswordLink = "https://carerflow-api.ro/reset-password";
+        string finalLink = $"{resetPasswordLink}?token={resetToken}";
+        var command = forgotPasswordRequest.ToForgotPasswordCommand(finalLink, resetToken);
+        await bus.InvokeAsync(command, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    private static async Task<NoContent> ResetPassword(
+        IMessageBus bus,
+        HttpContext httpContext,
+        ResetPasswordRequest resetPasswordRequest,
+        CancellationToken cancellationToken)
+    {
+        var resetPasswordCommand = resetPasswordRequest.ToResetPasswordCommand();
+        await bus.InvokeAsync(resetPasswordCommand, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    [Authorize]
+    private static async Task<Results<NoContent, UnauthorizedHttpResult>> AcceptLegal(
+        IMessageBus bus,
+        AcceptLegalDocRequest acceptLegalDocRequest,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        Guid accountId = httpContext.GetAccountId();
+        if (accountId == Guid.Empty) return TypedResults.Unauthorized();
+
+        var acceptLegalDocCommand = acceptLegalDocRequest.ToAcceptLegalDocCommand(accountId);
+        await bus.InvokeAsync(acceptLegalDocCommand, cancellationToken);
+        return TypedResults.NoContent();
+    }
+
+    [Authorize]
+    private static async Task<Ok<RefreshTokenDto>> RefreshToken(
+        IMessageBus bus,
+        RefreshTokenRequest refreshTokenRequest,
+        CancellationToken cancellationToken)
+    {
+        var refreshTokenCommand = refreshTokenRequest.ToCreateRefreshTokenCommand();
+        RefreshTokenDto result = await bus.InvokeAsync<RefreshTokenDto>(refreshTokenCommand, cancellationToken);
+        return TypedResults.Ok(result);
+    }
+
+    [Authorize]
+    private static async Task<Results<Ok<AccountDto>, UnauthorizedHttpResult>> GetCurrentAccount(
+        IMessageBus bus,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        Guid accountId = httpContext.GetAccountId();
+        if (accountId == Guid.Empty) return TypedResults.Unauthorized();
+
+        var currentUserQuery = new GetCurrentAccountQuery(accountId);
+        AccountDto result = await bus.InvokeAsync<AccountDto>(currentUserQuery, cancellationToken);
+        return TypedResults.Ok(result);
+    }
+
+    [Authorize]
+    private static async Task<Results<NoContent, UnauthorizedHttpResult>> DeleteUserAccount(
+        IMessageBus bus,
+        HttpContext httpContext,
+        CancellationToken cancellationToken)
+    {
+        Guid accountId = httpContext.GetAccountId();
+        if (accountId == Guid.Empty) return TypedResults.Unauthorized();
+
+        var deleteAccountCommand = new DeleteAccountCommand(accountId);
+        await bus.InvokeAsync(deleteAccountCommand, cancellationToken);
+        return TypedResults.NoContent();
+    }
+}

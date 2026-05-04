@@ -6,4 +6,5 @@ public interface IAuthService
 {
     Task<Account> LoginWithGoogleAsync(string idToken, CancellationToken cancellationToken);
     Task<Account> LoginWithLinkedInAsync(string authorizationCode, CancellationToken cancellationToken);
+    Task<string> ExchangeGoogleCodeAsync(string code, CancellationToken cancellationToken = default);
 }

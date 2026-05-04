@@ -1,86 +1,73 @@
-﻿using CareerFlow.Core.Api.Endpoints;
+﻿using CareerFlow.Core.Api;
+using CareerFlow.Core.Api.Features.Account;
+using CareerFlow.Core.Api.Filters;
 using CareerFlow.Core.Api.Mappers;
 using CareerFlow.Core.Application.Messages;
+using CareerFlow.Core.Application.Serialization;
 using CareerFlow.Core.Application.Validators;
-using CareerFlow.Core.Domain.Abstractions.Repositories;
-using CareerFlow.Core.Domain.Abstractions.Services;
-using CareerFlow.Core.Domain.Entities;
-using CareerFlow.Core.Infrastructure.Configurations;
-using CareerFlow.Core.Infrastructure.Persistance;
-using CareerFlow.Core.Infrastructure.Persistance.Repositories;
-using CareerFlow.Core.Infrastructure.Services;
+using CareerFlow.Core.Domain.Constants;
+using CareerFlow.Core.Infrastructure.Extensions;
+using CareerFlow.Core.Infrastructure.HangfireJobs;
+using CareerFlow.Core.Infrastructure.Persistence;
 using CareerFlow.Core.Rabbit.Events.Events;
-using InfisicalConfiguration;
+
+using Hangfire;
+
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.OpenApi;
+using Microsoft.OpenApi;
+
 using Shared.Api.Extensions;
 using Shared.Api.Infrastructure;
-using Shared.Domain.Interfaces;
-using Shared.Infra.Services;
+using Shared.Application.Extensions;
+using Shared.Infra.Extensions;
+
 using Wolverine.RabbitMQ;
 
-var builder = WebApplication.CreateBuilder(args);
-var configuration = builder.Configuration;
-var infisicalClientId = configuration["Infisical:ClientId"];
-var infisicalClientSecret = configuration["Infisical:ClientSecret"];
-var infisicalProjectId = configuration["Infisical:ProjectId"];
-var env = builder.Environment.IsProduction() ? "prod" : "dev";
-if (!string.IsNullOrWhiteSpace(infisicalClientId) &&
-    !string.IsNullOrWhiteSpace(infisicalProjectId) &&
-    !string.IsNullOrWhiteSpace(infisicalClientSecret))
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
+
+builder.Services.ConfigureHttpJsonOptions(options =>
 {
+    options.SerializerOptions.TypeInfoResolverChain.Insert(0, CareerFlowJsonContext.Default);
+});
 
-    builder.Configuration.AddInfisical(new InfisicalConfigBuilder()
-        .SetProjectId(infisicalProjectId)
-        .SetEnvironment(env)
-        .SetAuth(new InfisicalAuthBuilder()
-            .SetUniversalAuth(infisicalClientId, infisicalClientSecret)
-            .Build())
-        .Build());
-}
+string env = builder.Environment.IsProduction() ? "prod" : "dev";
 
+builder.Services
+    .AddInfrastructure(builder.Configuration, env)
+    .AddApplicationServices(typeof(ValidationsAssemblyReference).Assembly)
+    .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
+
+builder.Services.ConfigureAll<OpenApiOptions>(options =>
+{
+    options.AddDocumentTransformer((document, _, _) =>
+    {
+        document.Servers = new List<OpenApiServer> { new() { Url = "/core" } };
+        return Task.CompletedTask;
+    });
+});
 
 builder.AddWolverineMessaging(
     typeof(EmailNotificationMessageHandler).Assembly,
-    (appBuilder, opt) =>
+    (_, opt) =>
     {
-
-        var emailQueueName = "email-notifications-queue";
-        opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(emailQueueName);
-        opt.ListenToRabbitQueue(emailQueueName)
-                .UseDurableInbox();
+        opt.PublishMessage<ResetPasswordNotificationMessage>().ToRabbitQueue(QueueNames.EmailNotifications);
+        opt.ListenToRabbitQueue(QueueNames.EmailNotifications).UseDurableInbox();
     });
 
-builder.Services.AddStackExchangeRedisCache(options =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("HangfirePolicy", policy => policy.RequireAuthenticatedUser());
+
+WebApplication app = builder.Build();
+
+app.UseForwardedHeaders(new ForwardedHeadersOptions
 {
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "CarrerFlow_";
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
 });
 
-builder.Services.Configure<SocialAuthSettings>(
-    builder.Configuration.GetSection(SocialAuthSettings.SectionName));
+app.UsePathBase("/core");
 
-builder.Services.Configure<PostmarkSettings>(
-    builder.Configuration.GetSection(PostmarkSettings.SectionName));
-
-builder.Services.AddHttpClient<IAuthService, AuthService>();
-
-builder.Services
-    .AddDatabaseConfig<ApplicationDbContext>(builder.Configuration)
-    .AddRepository<Account, AccountRepository, IAccountRepository, ApplicationDbContext>()
-    .AddRepository<LegalDoc, LegalDocRepository, ILegalDocRepository, ApplicationDbContext>()
-    .AddRepository<RefreshToken, RefreshTokenRepository, IRefreshTokenRepository, ApplicationDbContext>()
-    .AddRepositoriesConfig<IJwtTokenService, JwtTokenService>()
-    .AddRepositoriesConfig<IPasswordService, PasswordService>()
-    .AddRepositoriesConfig<IAuthService, AuthService>()
-    .AddRepositoriesConfig<IUnitOfWork, UnitOfWork>()
-    .AddRepositoriesConfig<ICacheService, CacheService>()
-    .AddRepositoriesConfig<IEmailService, EmailService>()
-    .AddAplicationConfig(typeof(ValidationsAssemblyReference).Assembly)
-    .AddPresentation<ExceptionMapper>(builder.Configuration, "CareerFlowCore");
-
-var app = builder.Build();
-
-app.MigrateDatabaseConfig<ApplicationDbContext>();
-
+app.MigrateServiceDatabase<ApplicationDbContext>();
 app.UseGlobalExceptionHandler<Program>()
     .UseRequestDurationLogging<Program>()
     .UseStandardMiddleware()
@@ -88,7 +75,36 @@ app.UseGlobalExceptionHandler<Program>()
 
 app.MapApiDocumentation();
 app.MapEndpoints(typeof(AccountEndpointGroup).Assembly);
+app.MapClientEndpoints();
 
-app.Logger.LogInformation("🚀 {ServiceName} starting up in {Environment} environment", "CareerFlowCore", env);
+app.Logger.LogStartup("CareerFlowCore", env);
+
+app.MapHangfireDashboard("/hangfire", new DashboardOptions { Authorization = [new HangfireAuthFilter()] })
+    .RequireAuthorization("HangfirePolicy");
+
+RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
+    "check-terms-update",
+    job => job.CheckForUpdatesAsync("Terms", CancellationToken.None),
+    Cron.Daily);
+
+RecurringJob.AddOrUpdate<LegalDocumentCheckerJob>(
+    "check-privacy-update",
+    job => job.CheckForUpdatesAsync("Privacy", CancellationToken.None),
+    Cron.Daily);
 
 app.Run();
+
+namespace CareerFlow.Core.Api
+{
+    // ReSharper disable once PartialTypeWithSinglePart
+    public abstract partial class Program;
+
+    public static partial class LoggerExtensions
+    {
+        [LoggerMessage(
+            EventId = 1,
+            Level = LogLevel.Information,
+            Message = "{ServiceName} starting up in {Environment} environment")]
+        public static partial void LogStartup(this ILogger logger, string serviceName, string environment);
+    }
+}

@@ -1,0 +1,114 @@
+﻿using CareerFlow.Core.Application.CQRS.Accounts.Commands;
+using CareerFlow.Core.Application.CQRS.Accounts.Handlers;
+using CareerFlow.Core.Application.Tests.Common;
+using CareerFlow.Core.Domain.Abstractions.Repositories;
+using CareerFlow.Core.Domain.Abstractions.Services;
+using CareerFlow.Core.Domain.Entities;
+using CareerFlow.Core.Domain.Exceptions;
+
+using Microsoft.Extensions.Logging;
+
+using Moq;
+
+using Shouldly;
+
+namespace CareerFlow.Core.Application.Tests.Handlers.Accounts;
+
+public class CreateAccountCommandHandlerTests : BaseHandlerTest<CreateAccountCommandHandler>
+{
+    private readonly Mock<IAccountRepository> _accountRepositoryMock;
+    private readonly CreateAccountCommandHandler _handler;
+    private readonly Mock<IPasswordService> _passwordServiceMock;
+
+    public CreateAccountCommandHandlerTests()
+    {
+        _accountRepositoryMock = new Mock<IAccountRepository>();
+        _passwordServiceMock = new Mock<IPasswordService>();
+        _handler = new CreateAccountCommandHandler(
+            _accountRepositoryMock.Object,
+            _passwordServiceMock.Object,
+            UnitOfWorkMock.Object,
+            LoggerMock.Object);
+    }
+
+    [Fact]
+    public async Task Handle_WhenEmailIsUnique_CreatesAccount()
+    {
+        // Arrange
+        var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
+            .ReturnsAsync((Account?)null);
+
+        // Act
+        Guid result = await _handler.Handle(command, Ct);
+
+        // Assert
+        result.ShouldNotBe(Guid.Empty);
+        _passwordServiceMock.Verify(x => x.HashPassword(command.Password), Times.Once);
+        _accountRepositoryMock.Verify(x => x.AddAsync(It.IsAny<Account>(), Ct), Times.Once);
+        UnitOfWorkMock.VerifySaveChanges(Times.Once());
+    }
+
+    [Fact]
+    public async Task Handle_WhenEmailExists_ThrowsUserAlreadyExistsException()
+    {
+        // Arrange
+        var command = new CreateAccountCommand("exist@email.com", "pass", "pass", "user", "name");
+        Account existingAccount = TestDataFactory.CreateAccount();
+
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
+            .ReturnsAsync(existingAccount);
+
+        // Act
+        UserAlreadyExistsException exception =
+            await Should.ThrowAsync<UserAlreadyExistsException>(() => _handler.Handle(command, Ct));
+
+        // Assert
+        exception.Message.ShouldContain(command.Email);
+        LoggerMock.VerifyLogError(command.Email, Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
+    }
+
+    [Fact]
+    public async Task Handle_WhenPasswordsAreDifferent_ThrowsPasswordNotMatchException()
+    {
+        // Arrange
+        var command = new CreateAccountCommand("new@email.com", "pass", "pass2", "user", "name");
+        _accountRepositoryMock.Setup(x => x.GetAccountByEmailAsync(command.Email, Ct))
+            .ReturnsAsync((Account?)null);
+
+        // Act
+        PasswordNotMatchException exception =
+            await Should.ThrowAsync<PasswordNotMatchException>(() => _handler.Handle(command, Ct));
+
+        // Assert
+        exception.Message.ShouldBe("Parolele nu corespund");
+        LoggerMock.VerifyLogError("nu corespund", Times.Once());
+        UnitOfWorkMock.VerifySaveChanges(Times.Never());
+    }
+
+    [Theory]
+    [InlineData(true, false, false, false)]
+    [InlineData(false, true, false, false)]
+    [InlineData(false, false, true, false)]
+    [InlineData(false, false, false, true)]
+    [InlineData(true, true, true, true)]
+    public async Task Handle_WhenDependenciesAreNull_ThrowsArgumentNullException(
+        bool isRepoNull, bool isPasswordServiceNull, bool isUowNull, bool isLoggerNull)
+    {
+        // Arrange
+        var command = new CreateAccountCommand("new@email.com", "pass", "pass", "user", "name");
+
+        IAccountRepository repo = isRepoNull ? null! : _accountRepositoryMock.Object;
+        IPasswordService passwordService = isPasswordServiceNull ? null! : _passwordServiceMock.Object;
+        IUnitOfWork uow = isUowNull ? null! : UnitOfWorkMock.Object;
+        ILogger<CreateAccountCommandHandler> logger = isLoggerNull ? null! : LoggerMock.Object;
+
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(async () =>
+        {
+            var handler = new CreateAccountCommandHandler(repo, passwordService, uow, logger);
+            await handler.Handle(command, Ct);
+        });
+    }
+}
